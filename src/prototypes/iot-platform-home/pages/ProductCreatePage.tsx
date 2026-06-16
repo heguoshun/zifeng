@@ -1358,18 +1358,7 @@ export default function ProductCreatePage({
                                 </div>
                             </div>
 
-                            {!isThingModelEntry && (
-                                <p className="pcp-basic-note">
-                                    <span className="pcp-basic-note__mark">* 说明</span>
-                                    <span>
-                                        | 1. 产品类型已更名为节点类型，避免与产品分类混淆；
-                                        2. 产品编号输入框已去除，保存后平台按 P+6位随机数字规则自动生成唯一编号；
-                                        3. 供应商改为非必填；
-                                        4. 设备接入已更名为网络协议；
-                                        5. 启用/禁用产品功能已去除。
-                                    </span>
-                                </p>
-                            )}
+
                         </div>
                     ) : (
                         <div className="pcp-model-body">

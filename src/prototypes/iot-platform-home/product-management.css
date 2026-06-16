@@ -471,6 +471,13 @@
 .pm-table--product-list td:nth-child(5) {
     width: 88px;
     min-width: 88px;
+    padding-right: 56px;
+}
+
+.pm-table--product-list th:nth-child(6),
+.pm-table--product-list td:nth-child(6) {
+    padding-left: 72px;
+    min-width: 148px;
 }
 
 .pm-table--product-list th:nth-child(8),

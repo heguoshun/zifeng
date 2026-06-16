@@ -131,12 +131,10 @@ export default function DeviceGroupPage({
     const [nodeType, setNodeType] = useState('全部');
     const [deviceStatus, setDeviceStatus] = useState('全部');
     const [department, setDepartment] = useState('all');
-    const [space, setSpace] = useState('all');
     const [deviceKeyword, setDeviceKeyword] = useState('');
     const [draftNodeType, setDraftNodeType] = useState('全部');
     const [draftDeviceStatus, setDraftDeviceStatus] = useState('全部');
     const [draftDepartment, setDraftDepartment] = useState('all');
-    const [draftSpace, setDraftSpace] = useState('all');
     const [draftDeviceKeyword, setDraftDeviceKeyword] = useState('');
     const [devicePageSize, setDevicePageSize] = useState('10');
     const [deviceCurrentPage, setDeviceCurrentPage] = useState(1);
@@ -196,14 +194,13 @@ export default function DeviceGroupPage({
         return enrichedDevices.filter((device) => {
             const matchType = nodeType === '全部' || device.nodeType === nodeType;
             const matchDepartment = matchesTreeSelection(department, device.departmentId, DEPARTMENT_TREE);
-            const matchSpace = matchesTreeSelection(space, device.spaceId, SPACE_TREE);
             const matchKeyword = !deviceKeyword
                 || device.name.includes(deviceKeyword)
                 || device.code.includes(deviceKeyword);
-            return matchType && matchDepartment && matchSpace && matchKeyword
+            return matchType && matchDepartment && matchKeyword
                 && deviceMatchesGroup(device, groupTypes, viewingGroup);
         });
-    }, [department, deviceKeyword, enrichedDevices, groupTypes, nodeType, space, viewingGroup]);
+    }, [department, deviceKeyword, enrichedDevices, groupTypes, nodeType, viewingGroup]);
 
     const filteredDevices = useMemo(() => {
         const statusFilter = STATUS_FILTER_MAP[deviceStatus];
@@ -242,7 +239,7 @@ export default function DeviceGroupPage({
         setDeviceCurrentPage(1);
         setDeviceJumpPage('1');
         setSelectedDeviceIds([]);
-    }, [viewingGroup, nodeType, deviceStatus, department, space, deviceKeyword, devicePageSize]);
+    }, [viewingGroup, nodeType, deviceStatus, department, deviceKeyword, devicePageSize]);
 
     useEffect(() => {
         setDeviceJumpPage(String(devicePagination.currentPage));
@@ -377,12 +374,10 @@ export default function DeviceGroupPage({
         setDraftNodeType('全部');
         setDraftDeviceStatus('全部');
         setDraftDepartment('all');
-        setDraftSpace('all');
         setDraftDeviceKeyword('');
         setNodeType('全部');
         setDeviceStatus('全部');
         setDepartment('all');
-        setSpace('all');
         setDeviceKeyword('');
     };
 
@@ -426,12 +421,10 @@ export default function DeviceGroupPage({
         setDraftNodeType('全部');
         setDraftDeviceStatus('全部');
         setDraftDepartment('all');
-        setDraftSpace('all');
         setDraftDeviceKeyword('');
         setNodeType('全部');
         setDeviceStatus('全部');
         setDepartment('all');
-        setSpace('all');
         setDeviceKeyword('');
     };
 
@@ -560,16 +553,6 @@ export default function DeviceGroupPage({
                                                 onChange={setDraftDepartment}
                                             />
                                         </label>
-                                        <label className="pm-filter-field">
-                                            <span className="pm-filter-label">所属空间</span>
-                                            <ElTreeSelect
-                                                className="el-select--medium dm-tree-select"
-                                                size="medium"
-                                                value={draftSpace}
-                                                tree={SPACE_TREE}
-                                                onChange={setDraftSpace}
-                                            />
-                                        </label>
                                         <div className="pm-filter-inline-group">
                                             <label className="pm-filter-field">
                                                 <span className="pm-filter-label">设备搜索</span>
@@ -589,7 +572,6 @@ export default function DeviceGroupPage({
                                                         setNodeType(draftNodeType);
                                                         setDeviceStatus(draftDeviceStatus);
                                                         setDepartment(draftDepartment);
-                                                        setSpace(draftSpace);
                                                         setDeviceKeyword(draftDeviceKeyword.trim());
                                                     }}
                                                 >
@@ -646,7 +628,6 @@ export default function DeviceGroupPage({
                                                 <th>设备名称</th>
                                                 <th>所属产品</th>
                                                 <th>设备状态</th>
-                                                <th>所属空间</th>
                                                 <th>所属部门</th>
                                                 <th>设备分组</th>
                                                 <th>操作</th>
@@ -667,7 +648,6 @@ export default function DeviceGroupPage({
                                                     <td>{device.name}</td>
                                                     <td>{device.productName}</td>
                                                     <td><StatusTag status={device.status} /></td>
-                                                    <td>{device.space}</td>
                                                     <td>{device.department}</td>
                                                     <td>
                                                         <DeviceGroupTags groups={device.groups} />
@@ -686,7 +666,7 @@ export default function DeviceGroupPage({
                                             ))}
                                             {!devicePagination.items.length && (
                                                 <tr>
-                                                    <td colSpan={9} className="dg-table-empty">该分组下暂无设备</td>
+                                                    <td colSpan={8} className="dg-table-empty">该分组下暂无设备</td>
                                                 </tr>
                                             )}
                                         </tbody>

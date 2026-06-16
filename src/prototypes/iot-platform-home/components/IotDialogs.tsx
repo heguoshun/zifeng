@@ -31,36 +31,36 @@ export function ConfirmDialog({
     message,
     onClose,
     onConfirm,
-    drawerClassName = '',
 }: {
     title: string;
     message: string;
     onClose: () => void;
     onConfirm: () => void;
-    drawerClassName?: string;
 }) {
     useDrawerBodyLock(true);
 
     return createPortal(
-        <div className={`pcp-drawer-mask ${drawerClassName ? `${drawerClassName}-mask` : ''}`.trim()} role="presentation" onMouseDown={handleMaskMouseDown(onClose)}>
-            <aside
-                className={`pcp-drawer pcp-drawer--form iot-confirm-drawer ${drawerClassName}`.trim()}
-                role="dialog"
+        <div className="iot-dialog-mask" role="presentation" onMouseDown={handleMaskMouseDown(onClose)}>
+            <div
+                className="iot-dialog iot-confirm-dialog"
+                role="alertdialog"
                 aria-modal="true"
+                aria-labelledby="iot-confirm-dialog-title"
+                aria-describedby="iot-confirm-dialog-message"
                 onMouseDown={(event) => event.stopPropagation()}
             >
-                <div className="pcp-drawer__head">
-                    <h3>{title}</h3>
-                    <button type="button" className="pcp-drawer__close" onClick={onClose} aria-label="关闭">×</button>
+                <div className="iot-confirm-dialog__body">
+                    <span className="iot-confirm-dialog__icon" aria-hidden="true">!</span>
+                    <div className="iot-confirm-dialog__content">
+                        <h3 id="iot-confirm-dialog-title" className="iot-confirm-dialog__title">{title}</h3>
+                        <p id="iot-confirm-dialog-message" className="iot-dialog__message">{message}</p>
+                    </div>
                 </div>
-                <div className="pcp-drawer__body">
-                    <p className="iot-dialog__message">{message}</p>
-                </div>
-                <div className="pcp-drawer__foot">
+                <div className="iot-dialog__foot">
                     <button type="button" className="pm-btn pm-btn-ghost" onClick={onClose}>取消</button>
                     <button type="button" className="pm-btn pm-btn-primary" onClick={onConfirm}>确定</button>
                 </div>
-            </aside>
+            </div>
         </div>,
         document.body,
     );

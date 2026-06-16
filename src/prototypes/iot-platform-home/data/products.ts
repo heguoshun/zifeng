@@ -477,6 +477,14 @@ export function getProductDisplayRemark(product: ProductRecord): string {
     return product.remark;
 }
 
+export function truncateProductRemark(text: string, max = 20): string {
+    const remark = String(text ?? '');
+    if (remark.length <= max) {
+        return remark;
+    }
+    return `${remark.slice(0, max)}...`;
+}
+
 export function categoryIdToLabel(categoryId: string): string {
     return getProductCategoryLabel(categoryId);
 }

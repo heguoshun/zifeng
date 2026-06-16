@@ -5,7 +5,6 @@ import DeviceAccessSidebar, { type DeviceAccessPageId } from '../components/Devi
 import ElSelect from '../components/ElSelect';
 import ListPagination from '../components/ListPagination';
 import FirmwarePackageFormDialog from '../components/FirmwarePackageFormDialog';
-import SoftwarePackageFormDialog from '../components/SoftwarePackageFormDialog';
 import UpgradeTaskFormDialog from '../components/UpgradeTaskFormDialog';
 import UpgradeTaskDetailView from '../components/UpgradeTaskDetailView';
 import { ConfirmDialog } from '../components/IotDialogs';
@@ -15,17 +14,11 @@ import type { ProductRecord } from '../data/products';
 import {
     formatRemoteUpgradeNow,
     FIRMWARE_SEARCH_FIELD_OPTIONS,
-    SOFTWARE_SEARCH_FIELD_OPTIONS,
     generateFirmwarePackageId,
-    generateSoftwarePackageId,
     generateUpgradeTaskId,
     toFirmwarePackageFormValue,
-    toSoftwarePackageFormValue,
     type FirmwarePackageFormValue,
     type FirmwarePackageRecord,
-    type SoftwarePackageFormValue,
-    type SoftwarePackageRecord,
-    type UpgradePackageKind,
     type UpgradePackageTarget,
     upgradeTaskToBatch,
     type UpgradeDeviceDetailRecord,
@@ -40,18 +33,14 @@ import '../product-management.css';
 import '../product-create.css';
 import '../remote-upgrade.css';
 
-type MainTab = 'firmware' | 'software';
-
 type RemoteUpgradePageProps = {
     products: ProductRecord[];
     devices: DeviceRecord[];
     firmwarePackages: FirmwarePackageRecord[];
-    softwarePackages: SoftwarePackageRecord[];
     upgradeTasks: UpgradeTaskRecord[];
     upgradeBatches: UpgradeTaskBatchRecord[];
     upgradeDeviceDetails: UpgradeDeviceDetailRecord[];
     onUpdateFirmwarePackages: React.Dispatch<React.SetStateAction<FirmwarePackageRecord[]>>;
-    onUpdateSoftwarePackages: React.Dispatch<React.SetStateAction<SoftwarePackageRecord[]>>;
     onUpdateUpgradeTasks: React.Dispatch<React.SetStateAction<UpgradeTaskRecord[]>>;
     onUpdateUpgradeBatches: React.Dispatch<React.SetStateAction<UpgradeTaskBatchRecord[]>>;
     onNavigateHome: () => void;
@@ -92,7 +81,7 @@ function filterPackages<T extends { name: string; productName: string }>(
     });
 }
 
-function toUpgradeTarget(record: FirmwarePackageRecord | SoftwarePackageRecord): UpgradePackageTarget {
+function toUpgradeTarget(record: FirmwarePackageRecord): UpgradePackageTarget {
     return {
         id: record.id,
         name: record.name,
@@ -105,12 +94,10 @@ export default function RemoteUpgradePage({
     products,
     devices,
     firmwarePackages,
-    softwarePackages,
     upgradeTasks,
     upgradeBatches,
     upgradeDeviceDetails,
     onUpdateFirmwarePackages,
-    onUpdateSoftwarePackages,
     onUpdateUpgradeTasks,
     onUpdateUpgradeBatches,
     onNavigateHome,
@@ -119,53 +106,42 @@ export default function RemoteUpgradePage({
     onNavigate,
     onNavigateOmManagement,
 }: RemoteUpgradePageProps) {
-    const [mainTab, setMainTab] = useState<MainTab>('firmware');
-    const [fwSearch, setFwSearch] = useState<ListSearchState>(INITIAL_SEARCH);
-    const [swSearch, setSwSearch] = useState<ListSearchState>(INITIAL_SEARCH);
+    const [search, setSearch] = useState<ListSearchState>(INITIAL_SEARCH);
     const [fwFormMode, setFwFormMode] = useState<'add' | 'edit' | null>(null);
-    const [swFormMode, setSwFormMode] = useState<'add' | 'edit' | null>(null);
     const [fwEditingRecord, setFwEditingRecord] = useState<FirmwarePackageRecord | null>(null);
-    const [swEditingRecord, setSwEditingRecord] = useState<SoftwarePackageRecord | null>(null);
     const [fwDeleteTarget, setFwDeleteTarget] = useState<FirmwarePackageRecord | null>(null);
-    const [swDeleteTarget, setSwDeleteTarget] = useState<SoftwarePackageRecord | null>(null);
-    const [taskContext, setTaskContext] = useState<{ kind: UpgradePackageKind; target: UpgradePackageTarget } | null>(null);
-    const [taskDetail, setTaskDetail] = useState<{ kind: UpgradePackageKind; record: FirmwarePackageRecord | SoftwarePackageRecord } | null>(null);
+    const [taskContext, setTaskContext] = useState<UpgradePackageTarget | null>(null);
+    const [taskDetail, setTaskDetail] = useState<FirmwarePackageRecord | null>(null);
     const [toast, setToast] = useState<IotToastData | null>(null);
 
     const showToast = (message: string, type: IotToastType = 'success') => {
         triggerIotToast(setToast, message, type);
     };
 
-    const isFirmwareTab = mainTab === 'firmware';
-    const activeSearch = isFirmwareTab ? fwSearch : swSearch;
-    const setActiveSearch = isFirmwareTab ? setFwSearch : setSwSearch;
-    const activePackages = isFirmwareTab ? firmwarePackages : softwarePackages;
-    const searchOptions = isFirmwareTab ? FIRMWARE_SEARCH_FIELD_OPTIONS : SOFTWARE_SEARCH_FIELD_OPTIONS;
-
     const filteredPackages = useMemo(
-        () => filterPackages(activePackages, activeSearch.keyword, activeSearch.searchField),
-        [activePackages, activeSearch.keyword, activeSearch.searchField],
+        () => filterPackages(firmwarePackages, search.keyword, search.searchField),
+        [firmwarePackages, search.keyword, search.searchField],
     );
 
     const pagination = useMemo(
-        () => paginateItems(filteredPackages, activeSearch.currentPage, Number(activeSearch.pageSize)),
-        [filteredPackages, activeSearch.currentPage, activeSearch.pageSize],
+        () => paginateItems(filteredPackages, search.currentPage, Number(search.pageSize)),
+        [filteredPackages, search.currentPage, search.pageSize],
     );
 
     useEffect(() => {
-        setActiveSearch((prev) => ({ ...prev, currentPage: 1, jumpPage: '1' }));
-    }, [activeSearch.keyword, activeSearch.searchField, activeSearch.pageSize, mainTab, setActiveSearch]);
+        setSearch((prev) => ({ ...prev, currentPage: 1, jumpPage: '1' }));
+    }, [search.keyword, search.searchField, search.pageSize]);
 
     useEffect(() => {
-        setActiveSearch((prev) => ({ ...prev, jumpPage: String(pagination.currentPage) }));
-    }, [pagination.currentPage, setActiveSearch]);
+        setSearch((prev) => ({ ...prev, jumpPage: String(pagination.currentPage) }));
+    }, [pagination.currentPage]);
 
     const resolveProductName = (productId: string) => (
         products.find((item) => item.id === productId)?.name ?? '—'
     );
 
     const handleSearch = () => {
-        setActiveSearch((prev) => ({
+        setSearch((prev) => ({
             ...prev,
             keyword: prev.draftKeyword,
             currentPage: 1,
@@ -174,7 +150,7 @@ export default function RemoteUpgradePage({
     };
 
     const handleReset = () => {
-        setActiveSearch(INITIAL_SEARCH);
+        setSearch(INITIAL_SEARCH);
     };
 
     const handleSaveFirmware = (value: FirmwarePackageFormValue) => {
@@ -203,32 +179,6 @@ export default function RemoteUpgradePage({
         setFwEditingRecord(null);
     };
 
-    const handleSaveSoftware = (value: SoftwarePackageFormValue) => {
-        const productName = resolveProductName(value.productId);
-        if (swFormMode === 'edit' && swEditingRecord) {
-            onUpdateSoftwarePackages((prev) => prev.map((item) => (
-                item.id === swEditingRecord.id
-                    ? { ...item, ...value, productName, description: value.description || '—' }
-                    : item
-            )));
-            showToast('软件包保存成功');
-        } else {
-            onUpdateSoftwarePackages((prev) => [
-                {
-                    id: generateSoftwarePackageId(),
-                    ...value,
-                    productName,
-                    description: value.description || '—',
-                    createdAt: formatRemoteUpgradeNow(),
-                },
-                ...prev,
-            ]);
-            showToast('软件包添加成功');
-        }
-        setSwFormMode(null);
-        setSwEditingRecord(null);
-    };
-
     const handleDeleteFirmware = () => {
         if (!fwDeleteTarget) return;
         onUpdateFirmwarePackages((prev) => prev.filter((item) => item.id !== fwDeleteTarget.id));
@@ -238,24 +188,15 @@ export default function RemoteUpgradePage({
         showToast('固件包已删除');
     };
 
-    const handleDeleteSoftware = () => {
-        if (!swDeleteTarget) return;
-        onUpdateSoftwarePackages((prev) => prev.filter((item) => item.id !== swDeleteTarget.id));
-        onUpdateUpgradeTasks((prev) => prev.filter((item) => !(item.packageKind === 'software' && item.packageId === swDeleteTarget.id)));
-        onUpdateUpgradeBatches((prev) => prev.filter((item) => item.packageId !== swDeleteTarget.id));
-        setSwDeleteTarget(null);
-        showToast('软件包已删除');
-    };
-
     const handleCreateTask = (value: UpgradeTaskFormValue) => {
         if (!taskContext) return;
         const taskId = generateUpgradeTaskId();
         const createdAt = formatRemoteUpgradeNow();
         const newTask: UpgradeTaskRecord = {
             id: taskId,
-            packageKind: taskContext.kind,
-            packageId: taskContext.target.id,
-            packageName: taskContext.target.name,
+            packageKind: 'firmware',
+            packageId: taskContext.id,
+            packageName: taskContext.name,
             targetVersion: value.targetVersion,
             scope: value.scope,
             deviceIds: value.deviceIds,
@@ -268,15 +209,12 @@ export default function RemoteUpgradePage({
         };
         onUpdateUpgradeTasks((prev) => [newTask, ...prev]);
         onUpdateUpgradeBatches((prev) => [
-            upgradeTaskToBatch(newTask, taskContext.target.version),
+            upgradeTaskToBatch(newTask, taskContext.version),
             ...prev,
         ]);
         setTaskContext(null);
         showToast('升级任务创建成功');
     };
-
-    const packageLabel = isFirmwareTab ? '固件包' : '软件包';
-    const versionLabel = isFirmwareTab ? '固件包版本号' : '软件包版本号';
 
     const sidebar = <DeviceAccessSidebar pageId="remote-upgrade" onNavigate={onNavigate} />;
 
@@ -296,8 +234,7 @@ export default function RemoteUpgradePage({
 
                 {taskDetail ? (
                     <UpgradeTaskDetailView
-                        kind={taskDetail.kind}
-                        record={taskDetail.record}
+                        record={taskDetail}
                         upgradeTasks={upgradeTasks}
                         upgradeBatches={upgradeBatches}
                         deviceDetails={upgradeDeviceDetails}
@@ -306,40 +243,18 @@ export default function RemoteUpgradePage({
                     />
                 ) : (
                 <section className="panel pm-list-panel">
-                    <div className="ru-main-tabs">
-                        <button
-                            type="button"
-                            className={`ru-main-tab ${mainTab === 'firmware' ? 'is-active' : ''}`}
-                            onClick={() => setMainTab('firmware')}
-                        >
-                            固件包管理
-                        </button>
-                        <button
-                            type="button"
-                            className={`ru-main-tab ${mainTab === 'software' ? 'is-active' : ''}`}
-                            onClick={() => setMainTab('software')}
-                        >
-                            软件包管理
-                        </button>
-                    </div>
-
-                    <div className="pm-section-head" style={{ marginTop: 16 }}>
-                        <h3>{packageLabel}列表</h3>
+                    <div className="pm-section-head">
+                        <h3>固件包列表</h3>
                         <button
                             type="button"
                             className="pm-btn pm-btn-primary"
                             onClick={() => {
-                                if (isFirmwareTab) {
-                                    setFwEditingRecord(null);
-                                    setFwFormMode('add');
-                                } else {
-                                    setSwEditingRecord(null);
-                                    setSwFormMode('add');
-                                }
+                                setFwEditingRecord(null);
+                                setFwFormMode('add');
                             }}
                         >
                             <Plus size={14} />
-                            {isFirmwareTab ? '添加固件包' : '添加软件包'}
+                            添加固件包
                         </button>
                     </div>
 
@@ -347,19 +262,18 @@ export default function RemoteUpgradePage({
                         <div className="ru-search-row">
                             <div className="ru-search-input-group">
                                 <ElSelect
-                                    key={mainTab}
                                     className="el-select--medium ru-search-field-select"
                                     size="medium"
-                                    value={activeSearch.searchField}
-                                    options={searchOptions}
-                                    onChange={(value) => setActiveSearch((prev) => ({ ...prev, searchField: value }))}
+                                    value={search.searchField}
+                                    options={FIRMWARE_SEARCH_FIELD_OPTIONS}
+                                    onChange={(value) => setSearch((prev) => ({ ...prev, searchField: value }))}
                                 />
                                 <input
                                     type="text"
                                     className="pm-filter-input ru-search-keyword-input"
                                     placeholder="请输入搜索内容"
-                                    value={activeSearch.draftKeyword}
-                                    onChange={(event) => setActiveSearch((prev) => ({ ...prev, draftKeyword: event.target.value }))}
+                                    value={search.draftKeyword}
+                                    onChange={(event) => setSearch((prev) => ({ ...prev, draftKeyword: event.target.value }))}
                                 />
                             </div>
                             <button type="button" className="pm-btn pm-btn-primary" onClick={handleSearch}>
@@ -377,10 +291,10 @@ export default function RemoteUpgradePage({
                             <thead>
                                 <tr>
                                     <th>序号</th>
-                                    <th>{packageLabel}名称</th>
-                                    {isFirmwareTab && <th>固件包类型</th>}
+                                    <th>固件包名称</th>
+                                    <th>固件包类型</th>
                                     <th>产品名称</th>
-                                    <th>{versionLabel}</th>
+                                    <th>固件包版本号</th>
                                     <th>添加时间</th>
                                     <th>操作</th>
                                 </tr>
@@ -388,9 +302,9 @@ export default function RemoteUpgradePage({
                             <tbody>
                                 {pagination.items.map((record, index) => (
                                     <tr key={record.id}>
-                                        <td>{(pagination.currentPage - 1) * Number(activeSearch.pageSize) + index + 1}</td>
+                                        <td>{(pagination.currentPage - 1) * Number(search.pageSize) + index + 1}</td>
                                         <td>{record.name}</td>
-                                        {isFirmwareTab && <td>{(record as FirmwarePackageRecord).type}</td>}
+                                        <td>{record.type}</td>
                                         <td>{record.productName}</td>
                                         <td>{record.version}</td>
                                         <td>{record.createdAt}</td>
@@ -399,44 +313,27 @@ export default function RemoteUpgradePage({
                                                 <button
                                                     type="button"
                                                     onClick={() => {
-                                                        if (isFirmwareTab) {
-                                                            setFwEditingRecord(record as FirmwarePackageRecord);
-                                                            setFwFormMode('edit');
-                                                        } else {
-                                                            setSwEditingRecord(record as SoftwarePackageRecord);
-                                                            setSwFormMode('edit');
-                                                        }
+                                                        setFwEditingRecord(record);
+                                                        setFwFormMode('edit');
                                                     }}
                                                 >
                                                     编辑
                                                 </button>
                                                 <button
                                                     type="button"
-                                                    onClick={() => setTaskContext({
-                                                        kind: isFirmwareTab ? 'firmware' : 'software',
-                                                        target: toUpgradeTarget(record),
-                                                    })}
+                                                    onClick={() => setTaskContext(toUpgradeTarget(record))}
                                                 >
                                                     创建任务
                                                 </button>
                                                 <button
                                                     type="button"
-                                                    onClick={() => setTaskDetail({
-                                                        kind: isFirmwareTab ? 'firmware' : 'software',
-                                                        record,
-                                                    })}
+                                                    onClick={() => setTaskDetail(record)}
                                                 >
                                                     任务详情
                                                 </button>
                                                 <button
                                                     type="button"
-                                                    onClick={() => {
-                                                        if (isFirmwareTab) {
-                                                            setFwDeleteTarget(record as FirmwarePackageRecord);
-                                                        } else {
-                                                            setSwDeleteTarget(record as SoftwarePackageRecord);
-                                                        }
-                                                    }}
+                                                    onClick={() => setFwDeleteTarget(record)}
                                                 >
                                                     删除
                                                 </button>
@@ -446,7 +343,7 @@ export default function RemoteUpgradePage({
                                 ))}
                                 {!pagination.items.length && (
                                     <tr>
-                                        <td colSpan={isFirmwareTab ? 7 : 6} className="pc-empty-cell">暂无{packageLabel}数据</td>
+                                        <td colSpan={7} className="pc-empty-cell">暂无固件包数据</td>
                                     </tr>
                                 )}
                             </tbody>
@@ -457,11 +354,11 @@ export default function RemoteUpgradePage({
                         total={pagination.total}
                         currentPage={pagination.currentPage}
                         totalPages={pagination.totalPages}
-                        pageSize={activeSearch.pageSize}
-                        jumpPage={activeSearch.jumpPage}
-                        onPageChange={(page) => setActiveSearch((prev) => ({ ...prev, currentPage: page }))}
-                        onPageSizeChange={(size) => setActiveSearch((prev) => ({ ...prev, pageSize: size }))}
-                        onJumpPageChange={(page) => setActiveSearch((prev) => ({ ...prev, jumpPage: page }))}
+                        pageSize={search.pageSize}
+                        jumpPage={search.jumpPage}
+                        onPageChange={(page) => setSearch((prev) => ({ ...prev, currentPage: page }))}
+                        onPageSizeChange={(size) => setSearch((prev) => ({ ...prev, pageSize: size }))}
+                        onJumpPageChange={(page) => setSearch((prev) => ({ ...prev, jumpPage: page }))}
                     />
                 </section>
                 )}
@@ -476,18 +373,9 @@ export default function RemoteUpgradePage({
                 onSubmit={handleSaveFirmware}
             />
 
-            <SoftwarePackageFormDialog
-                open={swFormMode !== null}
-                mode={swFormMode ?? 'add'}
-                initialValue={swEditingRecord ? toSoftwarePackageFormValue(swEditingRecord) : undefined}
-                products={products}
-                onClose={() => { setSwFormMode(null); setSwEditingRecord(null); }}
-                onSubmit={handleSaveSoftware}
-            />
-
             <UpgradeTaskFormDialog
                 open={Boolean(taskContext)}
-                upgradePackage={taskContext?.target ?? null}
+                upgradePackage={taskContext}
                 devices={devices}
                 onClose={() => setTaskContext(null)}
                 onSubmit={handleCreateTask}
@@ -497,19 +385,8 @@ export default function RemoteUpgradePage({
                 <ConfirmDialog
                     title="删除固件包"
                     message={`确定删除固件包「${fwDeleteTarget.name}」吗？关联升级任务将一并删除。`}
-                    drawerClassName="dcp-group-dialog ru-drawer"
                     onClose={() => setFwDeleteTarget(null)}
                     onConfirm={handleDeleteFirmware}
-                />
-            )}
-
-            {swDeleteTarget && (
-                <ConfirmDialog
-                    title="删除软件包"
-                    message={`确定删除软件包「${swDeleteTarget.name}」吗？关联升级任务将一并删除。`}
-                    drawerClassName="dcp-group-dialog ru-drawer"
-                    onClose={() => setSwDeleteTarget(null)}
-                    onConfirm={handleDeleteSoftware}
                 />
             )}
 

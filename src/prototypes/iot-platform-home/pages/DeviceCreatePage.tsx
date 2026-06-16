@@ -223,13 +223,33 @@ export default function DeviceCreatePage({
     };
 
     const handleSelectMapPoint = () => {
-        if (readonly) return;
+        if (readonly || form.positioning !== 'manual') return;
         setMapPickerInitial({
             longitude: form.mapLongitude,
             latitude: form.mapLatitude,
             location: form.mapLocation,
         });
         setMapPickerOpen(true);
+    };
+
+    const handlePositioningChange = (value: string) => {
+        setForm((prev) => ({
+            ...prev,
+            positioning: value,
+            ...(value === 'auto'
+                ? { mapLongitude: '', mapLatitude: '', mapLocation: '' }
+                : {}),
+        }));
+    };
+
+    const handleClearMapPoint = () => {
+        if (readonly || form.positioning !== 'manual') return;
+        setForm((prev) => ({
+            ...prev,
+            mapLongitude: '',
+            mapLatitude: '',
+            mapLocation: '',
+        }));
     };
 
     const handleConfirmMapPoint = (value: { longitude: string; latitude: string; location: string }) => {
@@ -245,12 +265,12 @@ export default function DeviceCreatePage({
     const buildDevicePayload = (baseDevice?: DeviceRecord): DeviceRecord => {
         const groupTags = buildDeviceFormTags(form.groups);
         const groupNames = groupTags.map((tag) => tag.split(':')[1]).filter(Boolean);
-        const longitude = form.positioning === 'manual' && form.mapLongitude
+        const longitude = form.positioning === 'manual' && form.mapLongitude.trim()
             ? Number(form.mapLongitude)
-            : baseDevice?.longitude ?? 0;
-        const latitude = form.positioning === 'manual' && form.mapLatitude
+            : 0;
+        const latitude = form.positioning === 'manual' && form.mapLatitude.trim()
             ? Number(form.mapLatitude)
-            : baseDevice?.latitude ?? 0;
+            : 0;
 
         return {
             id: baseDevice?.id ?? `device-${Date.now()}`,
@@ -287,8 +307,8 @@ export default function DeviceCreatePage({
             showToast('请选择定位方式');
             return;
         }
-        if (form.positioning === 'manual' && (!form.mapLongitude || !form.mapLatitude)) {
-            showToast('手动定位时，地图位置必选');
+        if (form.positioning === 'manual' && (!form.mapLongitude.trim() || !form.mapLatitude.trim())) {
+            showToast('手动定位时，请通过地图选点标注经纬度');
             return;
         }
 
@@ -317,6 +337,8 @@ export default function DeviceCreatePage({
     }
 
     const sidebar = <DeviceAccessSidebar pageId="device-create" onNavigate={onNavigate} />;
+    const isManualPositioning = form.positioning === 'manual';
+    const isAutoPositioning = form.positioning === 'auto';
 
     return (
         <AppShell
@@ -406,7 +428,7 @@ export default function DeviceCreatePage({
                                     value={form.positioning}
                                     disabled={readonly}
                                     options={[{ label: '请选择', value: '' }, ...POSITIONING_OPTIONS]}
-                                    onChange={(value) => setForm((prev) => ({ ...prev, positioning: value }))}
+                                    onChange={handlePositioningChange}
                                 />
                             </label>
                             <label className="dcp-form-field">
@@ -433,8 +455,11 @@ export default function DeviceCreatePage({
                         <div className="dcp-geo-grid">
                             <div className="dcp-geo-panel">
                                 <div className="dcp-geo-panel__head">
-                                    <strong>地图位置</strong>
-                                    {!readonly && (
+                                    <strong className="dcp-geo-panel__title">
+                                        {isManualPositioning ? <em>*</em> : null}
+                                        地图位置
+                                    </strong>
+                                    {!readonly && isManualPositioning && (
                                         <div className="dcp-geo-panel__actions">
                                             <button type="button" className="pm-link-btn" onClick={handleSelectMapPoint}>
                                                 <Plus size={14} />
@@ -443,18 +468,20 @@ export default function DeviceCreatePage({
                                             <button
                                                 type="button"
                                                 className="pm-link-btn"
-                                                onClick={() => setForm((prev) => ({
-                                                    ...prev,
-                                                    mapLongitude: '',
-                                                    mapLatitude: '',
-                                                    mapLocation: '',
-                                                }))}
+                                                onClick={handleClearMapPoint}
                                             >
                                                 清空
                                             </button>
                                         </div>
                                     )}
                                 </div>
+                                <p className="dcp-geo-panel__hint">
+                                    {isManualPositioning
+                                        ? '手动定位时，地图位置必选，请通过地图选点标注设备经纬度。'
+                                        : isAutoPositioning
+                                            ? '自动定位时，地图位置非必选；设备上线后，具备定位功能的设备将自动上报经纬度信息。'
+                                            : '请先选择定位方式。'}
+                                </p>
                                 <div className="dcp-geo-panel__fields">
                                     <div className="dcp-geo-field">
                                         <span>经度：</span>

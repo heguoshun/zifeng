@@ -17,11 +17,9 @@
     overflow: hidden;
     background: #e8edf3;
     border: 1px solid var(--border);
-    --dm-map-mode-bottom: 48px;
-    --dm-map-mode-height: 34px;
     --dm-map-product-gap: 20px;
     --dm-map-panel-top: 12px;
-    --dm-map-panel-bottom: calc(var(--dm-map-mode-bottom) + var(--dm-map-mode-height) + var(--dm-map-product-gap));
+    --dm-map-panel-bottom: 64px;
     --dm-map-panel-header: 36px;
 }
 
@@ -531,35 +529,6 @@
 .dm-map-search-group-list li button span {
     font-size: 12px;
     color: var(--text-secondary);
-}
-
-.dm-map-mode-switch {
-    position: absolute;
-    right: 12px;
-    bottom: var(--dm-map-mode-bottom);
-    height: var(--dm-map-mode-height);
-    display: flex;
-    background: #fff;
-    border: 1px solid #dcdfe6;
-    border-radius: 4px;
-    overflow: hidden;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-    z-index: 4;
-}
-
-.dm-map-mode-switch button {
-    border: 0;
-    background: #fff;
-    color: var(--text-secondary);
-    font-size: 12px;
-    font-family: inherit;
-    padding: 8px 12px;
-    cursor: pointer;
-}
-
-.dm-map-mode-switch button.is-active {
-    background: var(--blue);
-    color: #fff;
 }
 
 .dm-map-legend {

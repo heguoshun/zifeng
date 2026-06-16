@@ -458,17 +458,6 @@
     line-height: 1.6;
 }
 
-.pcp-basic-note {
-    margin: 24px 0 0;
-    font-size: 12px;
-    color: #f56c6c;
-    line-height: 1.7;
-}
-
-.pcp-basic-note__mark {
-    margin-right: 4px;
-}
-
 .pcp-model-tabs {
     display: inline-flex;
     border: 1px solid var(--blue);
@@ -598,12 +587,13 @@
 .pcp-footer {
     display: flex;
     justify-content: center;
+    gap: 12px;
     padding-top: 8px;
     border-top: 1px solid #f0f2f5;
     margin-top: auto;
 }
 
-.pcp-save-btn {
+.pcp-footer .pm-btn {
     min-width: 120px;
     height: 36px;
     justify-content: center;

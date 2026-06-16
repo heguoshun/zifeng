@@ -150,6 +150,13 @@
     font-size: 12px;
 }
 
+.dcp-geo-panel__hint {
+    margin: 0;
+    font-size: 12px;
+    line-height: 1.6;
+    color: var(--text-muted);
+}
+
 .dcp-geo-panel__fields {
     display: flex;
     flex-direction: column;
@@ -371,12 +378,13 @@
 .dcp-footer {
     display: flex;
     justify-content: center;
+    gap: 12px;
     padding-top: 8px;
     border-top: 1px solid #f0f2f5;
     margin-top: auto;
 }
 
-.dcp-save-btn {
+.dcp-footer .pm-btn {
     min-width: 120px;
     height: 36px;
     justify-content: center;

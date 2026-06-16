@@ -52,9 +52,7 @@ import { createInitialLoginLogs } from './data/loginLogs';
 import { createInitialOperationLogs } from './data/operationLogs';
 import {
     createInitialFirmwarePackages,
-    createInitialSoftwarePackages,
     type FirmwarePackageRecord,
-    type SoftwarePackageRecord,
     type UpgradeDeviceDetailRecord,
     type UpgradeTaskBatchRecord,
     type UpgradeTaskRecord,

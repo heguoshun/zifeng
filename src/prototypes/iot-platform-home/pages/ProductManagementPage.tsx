@@ -11,7 +11,7 @@ import DeviceAccessSidebar, { type DeviceAccessPageId } from '../components/Devi
 import ElSelect from '../components/ElSelect';
 import { ConfirmDialog } from '../components/IotDialogs';
 import IotToast, { type IotToastData, type IotToastType, triggerIotToast } from '../components/IotToast';
-import type { ProductRecord } from '../data/products';
+import { truncateProductRemark, type ProductRecord } from '../data/products';
 import {
     DEFAULT_PRODUCT_TREE_EXPANDED,
     PRODUCT_CATEGORY_TREE,
@@ -198,7 +198,7 @@ function ProductTable({
                             </td>
                             <td>{product.nodeType}</td>
                             <td>{product.vendor}</td>
-                            <td>{product.remark}</td>
+                            <td title={product.remark}>{truncateProductRemark(product.remark)}</td>
                             <td>
                                 <div className="pm-table-actions">
                                     <button type="button" onClick={() => onView(product)}>查看</button>

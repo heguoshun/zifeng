@@ -1,6 +1,7 @@
 import type { ProductRecord } from './products';
 import { findTreeNode, getTreeNodeLabel, DEPARTMENT_TREE, SPACE_TREE } from './orgHierarchy';
 import { BAIDU_MAP_DEFAULT_CENTER } from '../config/baiduMap';
+import { formatDeviceDateTime, formatOnlineDuration } from '../utils/deviceTime';
 
 export type DeviceStatus = 'online' | 'offline' | 'fault' | 'disabled';
 
@@ -85,6 +86,22 @@ function buildDeviceCode(product: ProductRecord, seq: number) {
     return `${prefix}${String(seq).padStart(6, '0')}`;
 }
 
+const ONE_MONTH_MS = 30 * 24 * 60 * 60 * 1000;
+
+function buildDeviceEnabledAt(index: number, now: Date) {
+    const offsetMs = seededRandom(index * 3 + 7) * ONE_MONTH_MS;
+    return new Date(now.getTime() - offsetMs);
+}
+
+function buildDeviceOnlineDuration(index: number, enabledAt: Date, enabled: boolean, now: Date) {
+    const maxActiveMs = Math.max(0, now.getTime() - enabledAt.getTime());
+    if (!enabled) {
+        const activeMs = maxActiveMs * (0.2 + seededRandom(index * 5 + 11) * 0.8);
+        return formatOnlineDuration(enabledAt, new Date(enabledAt.getTime() + activeMs));
+    }
+    return formatOnlineDuration(enabledAt, now);
+}
+
 export function buildDeviceTagsFromGroups(groups: string[]): string[] {
     return groups.flatMap((group) => {
         if (['大表', '户表', '压力计', '水质仪', '智慧水站'].includes(group)) {
@@ -129,7 +146,9 @@ export function buildDeviceFormTags(groups: Record<DeviceGroupFormKey, string[]>
 }
 
 export function deviceRecordToFormState(device: DeviceRecord) {
-    const hasCoords = Number.isFinite(device.longitude) && Number.isFinite(device.latitude);
+    const hasCoords = Number.isFinite(device.longitude)
+        && Number.isFinite(device.latitude)
+        && (device.longitude !== 0 || device.latitude !== 0);
     return {
         name: device.name,
         productId: device.productId,
@@ -150,7 +169,7 @@ export function deviceRecordToFormState(device: DeviceRecord) {
     };
 }
 
-export function createInitialDevices(products: ProductRecord[]): DeviceRecord[] {
+export function createInitialDevices(products: ProductRecord[], now = new Date()): DeviceRecord[] {
     if (!products.length) return [];
 
     const typeCounters: Record<string, number> = {};
@@ -164,6 +183,8 @@ export function createInitialDevices(products: ProductRecord[]): DeviceRecord[] 
         const tags = buildDeviceTags(product, index);
         const groups = buildDeviceGroups(tags);
         const { longitude, latitude } = buildDeviceCoordinates(index);
+        const enabled = index % 13 !== 6;
+        const enabledAtDate = buildDeviceEnabledAt(index, now);
 
         return {
             id: String(index + 1),
@@ -175,9 +196,9 @@ export function createInitialDevices(products: ProductRecord[]): DeviceRecord[] 
             spaceId: SPACE_IDS[index % SPACE_IDS.length],
             groups: groups.length ? groups : [product.category],
             tags,
-            enabled: index % 13 !== 6,
-            enabledAt: '2024.09.12 12:00',
-            onlineDuration: '304天17小时7分钟',
+            enabled,
+            enabledAt: formatDeviceDateTime(enabledAtDate),
+            onlineDuration: buildDeviceOnlineDuration(index, enabledAtDate, enabled, now),
             longitude,
             latitude,
             collectFrequency: '1440',

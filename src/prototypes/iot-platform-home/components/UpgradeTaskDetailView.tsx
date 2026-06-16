@@ -7,9 +7,7 @@ import {
     mergePackageBatches,
     type FirmwarePackageRecord,
     type PackageUpgradeStats,
-    type SoftwarePackageRecord,
     type UpgradeDeviceDetailRecord,
-    type UpgradePackageKind,
     type UpgradeTaskBatchRecord,
     type UpgradeTaskRecord,
 } from '../data/remoteUpgrade';
@@ -17,8 +15,7 @@ import { paginateItems } from '../utils/listPagination';
 import '../remote-upgrade.css';
 
 type UpgradeTaskDetailViewProps = {
-    kind: UpgradePackageKind;
-    record: FirmwarePackageRecord | SoftwarePackageRecord;
+    record: FirmwarePackageRecord;
     upgradeTasks: UpgradeTaskRecord[];
     upgradeBatches: UpgradeTaskBatchRecord[];
     deviceDetails: UpgradeDeviceDetailRecord[];
@@ -49,7 +46,6 @@ const DEFAULT_STATS: PackageUpgradeStats = {
 };
 
 export default function UpgradeTaskDetailView({
-    kind,
     record,
     upgradeTasks,
     upgradeBatches,
@@ -57,7 +53,6 @@ export default function UpgradeTaskDetailView({
     onBack,
     onToast,
 }: UpgradeTaskDetailViewProps) {
-    const packageLabel = kind === 'firmware' ? '固件' : '软件';
     const [draftKeyword, setDraftKeyword] = useState('');
     const [keyword, setKeyword] = useState('');
     const [pageSize, setPageSize] = useState('10');
@@ -70,10 +65,10 @@ export default function UpgradeTaskDetailView({
     const [hiddenBatchIds, setHiddenBatchIds] = useState<string[]>([]);
 
     const batches = useMemo(
-        () => mergePackageBatches(record.id, kind, record.version, upgradeTasks, upgradeBatches)
+        () => mergePackageBatches(record.id, 'firmware', record.version, upgradeTasks, upgradeBatches)
             .filter((item) => !hiddenBatchIds.includes(item.id))
             .map((item) => batchOverrides[item.id] ?? item),
-        [record.id, kind, record.version, upgradeTasks, upgradeBatches, hiddenBatchIds, batchOverrides],
+        [record.id, record.version, upgradeTasks, upgradeBatches, hiddenBatchIds, batchOverrides],
     );
 
     const filteredBatches = useMemo(() => {
@@ -97,7 +92,6 @@ export default function UpgradeTaskDetailView({
     }, [pagination.currentPage]);
 
     const description = record.description === '—' ? '—' : record.description;
-    const firmwareRecord = kind === 'firmware' ? (record as FirmwarePackageRecord) : null;
 
     const handleCancelBatch = () => {
         if (!cancelBatch) return;
@@ -126,22 +120,20 @@ export default function UpgradeTaskDetailView({
             <section className="ru-task-detail-head panel">
                 <h2 className="ru-task-detail-title">{record.name}</h2>
                 <dl className="ru-task-detail-meta">
-                    {kind === 'firmware' && firmwareRecord && (
-                        <div>
-                            <dt>{packageLabel}包类型</dt>
-                            <dd>{firmwareRecord.type}</dd>
-                        </div>
-                    )}
+                    <div>
+                        <dt>固件包类型</dt>
+                        <dd>{record.type}</dd>
+                    </div>
                     <div>
                         <dt>所属产品</dt>
                         <dd>{record.productName}</dd>
                     </div>
                     <div>
-                        <dt>{packageLabel}版本号</dt>
+                        <dt>固件版本号</dt>
                         <dd>{record.version}</dd>
                     </div>
                     <div className="ru-task-detail-meta__desc">
-                        <dt>{packageLabel}描述</dt>
+                        <dt>固件描述</dt>
                         <dd>{description}</dd>
                     </div>
                 </dl>
@@ -266,7 +258,6 @@ export default function UpgradeTaskDetailView({
                 <ConfirmDialog
                     title="取消批次"
                     message={`确定取消批次「${cancelBatch.batchNo}」吗？`}
-                    drawerClassName="dcp-group-dialog ru-drawer"
                     onClose={() => setCancelBatch(null)}
                     onConfirm={handleCancelBatch}
                 />
@@ -276,7 +267,6 @@ export default function UpgradeTaskDetailView({
                 <ConfirmDialog
                     title="删除批次"
                     message={`确定删除批次「${deleteBatch.batchNo}」吗？`}
-                    drawerClassName="dcp-group-dialog ru-drawer"
                     onClose={() => setDeleteBatch(null)}
                     onConfirm={handleDeleteBatch}
                 />

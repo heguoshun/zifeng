@@ -295,13 +295,16 @@
 
 .dm-group-tags {
     display: flex;
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
     gap: 4px;
+    overflow: hidden;
+    white-space: nowrap;
 }
 
 .dm-group-tag {
     display: inline-flex;
     align-items: center;
+    flex: 0 0 auto;
     height: 22px;
     padding: 0 8px;
     border-radius: 3px;

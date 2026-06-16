@@ -71,6 +71,7 @@ export default defineConfig(({ command }) => {
   const isServe = command === 'serve';
 
   const config: any = {
+    envDir: projectRoot,
     plugins: [
       tailwindcss(),
       isServe ? canvasHotUpdateFilterPlugin() : null,

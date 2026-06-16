@@ -23,7 +23,8 @@
     --sidebar-bg: #ffffff;
     --font: "Helvetica Neue", Helvetica, Arial, "PingFang SC", "Microsoft YaHei", sans-serif;
 
-    min-height: 100vh;
+    height: 100vh;
+    min-height: 0;
     background: var(--bg);
     color: var(--text);
     font-family: var(--font);
@@ -31,6 +32,7 @@
     line-height: 1.5;
     display: flex;
     flex-direction: column;
+    overflow: hidden;
 }
 
 .iot-tree-toggle-icon {
@@ -219,6 +221,131 @@
     font-weight: 500;
 }
 
+/* 统一列表左侧列间距：有复选框时 24px + checkbox + 30px + 序号；无复选框时序号距左 24px。 */
+.iot-page :where(
+    .pm-table,
+    .pc-table,
+    .pcp-table,
+    .um-table,
+    .tm-table,
+    .rm-table,
+    .ms-table,
+    .mm-table,
+    .hm-table,
+    .hm-push-table,
+    .mt-var-table
+) th:first-child,
+.iot-page :where(
+    .pm-table,
+    .pc-table,
+    .pcp-table,
+    .um-table,
+    .tm-table,
+    .rm-table,
+    .ms-table,
+    .mm-table,
+    .hm-table,
+    .hm-push-table,
+    .mt-var-table
+) td:first-child {
+    padding-left: 24px !important;
+}
+
+.iot-page :where(
+    .pm-table,
+    .pc-table,
+    .pcp-table,
+    .um-table,
+    .tm-table,
+    .rm-table,
+    .ms-table,
+    .mm-table,
+    .hm-table,
+    .hm-push-table,
+    .mt-var-table
+):has(thead th:first-child input[type="checkbox"]) th:first-child,
+.iot-page :where(
+    .pm-table,
+    .pc-table,
+    .pcp-table,
+    .um-table,
+    .tm-table,
+    .rm-table,
+    .ms-table,
+    .mm-table,
+    .hm-table,
+    .hm-push-table,
+    .mt-var-table
+):has(thead th:first-child input[type="checkbox"]) td:first-child {
+    width: 40px !important;
+    min-width: 40px !important;
+    padding-left: 24px !important;
+    padding-right: 0 !important;
+    text-align: left !important;
+    overflow: visible !important;
+}
+
+.iot-page :where(
+    .pm-table,
+    .pc-table,
+    .pcp-table,
+    .um-table,
+    .tm-table,
+    .rm-table,
+    .ms-table,
+    .mm-table,
+    .hm-table,
+    .hm-push-table,
+    .mt-var-table
+):has(thead th:first-child input[type="checkbox"]) th:nth-child(2),
+.iot-page :where(
+    .pm-table,
+    .pc-table,
+    .pcp-table,
+    .um-table,
+    .tm-table,
+    .rm-table,
+    .ms-table,
+    .mm-table,
+    .hm-table,
+    .hm-push-table,
+    .mt-var-table
+):has(thead th:first-child input[type="checkbox"]) td:nth-child(2) {
+    width: 64px !important;
+    min-width: 64px !important;
+    padding-left: 30px !important;
+}
+
+.iot-page :where(
+    .pm-table,
+    .pc-table,
+    .pcp-table,
+    .um-table,
+    .tm-table,
+    .rm-table,
+    .ms-table,
+    .mm-table,
+    .hm-table,
+    .hm-push-table,
+    .mt-var-table
+) th:first-child input[type="checkbox"],
+.iot-page :where(
+    .pm-table,
+    .pc-table,
+    .pcp-table,
+    .um-table,
+    .tm-table,
+    .rm-table,
+    .ms-table,
+    .mm-table,
+    .hm-table,
+    .hm-push-table,
+    .mt-var-table
+) td:first-child input[type="checkbox"] {
+    margin: 0 !important;
+    vertical-align: middle;
+}
+
 .top-tabs button.tab-active::after {
     content: "";
     position: absolute;
@@ -280,6 +407,7 @@
     flex: 1;
     display: flex;
     min-height: 0;
+    overflow: hidden;
 }
 
 .sidebar {
@@ -290,6 +418,8 @@
     display: flex;
     flex-direction: column;
     padding-top: 8px;
+    min-height: 0;
+    overflow: hidden;
 }
 
 .sidebar nav {
@@ -352,8 +482,10 @@
 .main-shell {
     flex: 1;
     min-width: 0;
+    min-height: 0;
     padding: 12px 16px 20px;
-    overflow: auto;
+    overflow-x: hidden;
+    overflow-y: auto;
 }
 
 .crumb {
@@ -1831,6 +1963,55 @@
     gap: 8px;
     padding: 12px 20px 16px;
     border-top: 1px solid #f0f2f5;
+}
+
+.iot-confirm-dialog {
+    width: min(420px, 100%);
+}
+
+.iot-confirm-dialog__body {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+    padding: 24px 24px 8px;
+}
+
+.iot-confirm-dialog__icon {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: #faad14;
+    color: #fff;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    font-weight: 700;
+    line-height: 1;
+    flex-shrink: 0;
+    margin-top: 2px;
+}
+
+.iot-confirm-dialog__content {
+    flex: 1;
+    min-width: 0;
+}
+
+.iot-confirm-dialog__title {
+    margin: 0 0 8px;
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text);
+    line-height: 1.4;
+}
+
+.iot-confirm-dialog .iot-dialog__message {
+    margin: 0;
+}
+
+.iot-confirm-dialog .iot-dialog__foot {
+    border-top: 0;
+    padding-top: 8px;
 }
 
 .iot-view-drawer__body {

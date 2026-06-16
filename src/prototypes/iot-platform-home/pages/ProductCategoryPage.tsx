@@ -350,10 +350,7 @@ export default function ProductCategoryPage({ onNavigateHome, onNavigate }: Prod
                     <div className="pc-table-head">
                         <div className="pc-table-title">
                             <h3>产品分类列表</h3>
-                            <p className="pc-table-note">
-                                <span className="pc-table-note__mark">* 说明</span>
-                                <span>| 1. 平台根据定义的产品分类编号规范，PC+4位数字+字母组合，自动生成唯一编号</span>
-                            </p>
+
                         </div>
                         <div className="pc-table-actions">
                             <button

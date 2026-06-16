@@ -61,6 +61,13 @@ type MapCluster = {
     devices: DeviceRecord[];
 };
 
+function getClusterCellSize(zoom: number): number {
+    const safeZoom = Number.isFinite(zoom) ? zoom : BAIDU_MAP_DEFAULT_ZOOM;
+    const zoomDelta = BAIDU_MAP_DEFAULT_ZOOM - safeZoom;
+    const size = 0.0018 * 2 ** zoomDelta;
+    return Math.min(0.0144, Math.max(0.00012, size));
+}
+
 function clusterDevices(devices: DeviceRecord[], cellSize = 0.0018): MapCluster[] {
     const buckets = new Map<string, DeviceRecord[]>();
     devices.forEach((device) => {
@@ -106,10 +113,28 @@ const PIN_ICON_CACHE = new Map<string, string>();
 function createPinIconUrl(color: string) {
     const cached = PIN_ICON_CACHE.get(color);
     if (cached) return cached;
-    const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="40" viewBox="0 0 32 40">
-        <path d="M16 0C9.373 0 4 5.373 4 12c0 9 12 26 12 26s12-17 12-26C28 5.373 22.627 0 16 0z" fill="${color}"/>
-        <rect x="11" y="8" width="10" height="8" rx="1.5" fill="#fff"/>
-        <circle cx="16" cy="12" r="2" fill="${color}"/>
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="38" height="46" viewBox="0 0 38 46">
+        <defs>
+            <filter id="shadow" x="-30%" y="-20%" width="160%" height="160%">
+                <feDropShadow dx="0" dy="4" stdDeviation="3" flood-color="#18324d" flood-opacity="0.28"/>
+            </filter>
+            <linearGradient id="pinFill" x1="9" y1="4" x2="29" y2="37" gradientUnits="userSpaceOnUse">
+                <stop offset="0" stop-color="${color}"/>
+                <stop offset="1" stop-color="${color}" stop-opacity="0.82"/>
+            </linearGradient>
+            <linearGradient id="glass" x1="12" y1="7" x2="25" y2="23" gradientUnits="userSpaceOnUse">
+                <stop offset="0" stop-color="#fff" stop-opacity="0.9"/>
+                <stop offset="1" stop-color="#fff" stop-opacity="0.35"/>
+            </linearGradient>
+        </defs>
+        <path filter="url(#shadow)" d="M19 2C11.18 2 4.84 8.26 4.84 15.98c0 10.5 14.16 27.52 14.16 27.52s14.16-17.02 14.16-27.52C33.16 8.26 26.82 2 19 2z" fill="url(#pinFill)"/>
+        <path d="M19 4.8c-6.23 0-11.28 4.96-11.28 11.08 0 8.08 8.22 19.52 11.28 23.44 3.06-3.92 11.28-15.36 11.28-23.44C30.28 9.76 25.23 4.8 19 4.8z" fill="none" stroke="#fff" stroke-opacity="0.55" stroke-width="1.4"/>
+        <circle cx="19" cy="16" r="9.2" fill="#fff"/>
+        <circle cx="19" cy="16" r="7.5" fill="url(#glass)"/>
+        <rect x="14.1" y="12.2" width="9.8" height="7.1" rx="1.4" fill="${color}"/>
+        <rect x="15.8" y="13.7" width="6.4" height="3.5" rx="0.6" fill="#fff" fill-opacity="0.96"/>
+        <path d="M16 21h6M19 19.4V21" stroke="${color}" stroke-width="1.5" stroke-linecap="round"/>
+        <ellipse cx="19" cy="43.4" rx="5.2" ry="1.6" fill="#18324d" opacity="0.18"/>
     </svg>`;
     const url = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
     PIN_ICON_CACHE.set(color, url);
@@ -130,8 +155,8 @@ function createDevicePinMarker(
 ): BMap.Marker {
     const icon = new BMap.Icon(
         createPinIconUrl(color),
-        new BMap.Size(32, 40),
-        { anchor: new BMap.Size(16, 40), imageSize: new BMap.Size(32, 40) },
+        new BMap.Size(38, 46),
+        { anchor: new BMap.Size(19, 43), imageSize: new BMap.Size(38, 46) },
     );
     const marker = new BMap.Marker(point, { icon });
     marker.addEventListener('click', () => {
@@ -158,23 +183,39 @@ function createClusterLabel(
     count: number,
     onClick?: () => void,
 ): BMap.Label {
-    const label = new BMap.Label(String(count), {
-        position: point,
-        offset: new BMap.Size(-16, -16),
-    });
+    const label = new BMap.Label(
+        `<div style="
+            width: 58px;
+            height: 58px;
+            border-radius: 999px;
+            border: 3px solid rgba(255,255,255,.92);
+            background: radial-gradient(circle at 34% 28%, rgba(255,255,255,.34), rgba(255,255,255,0) 28%), linear-gradient(135deg, #14b8a6 0%, #2563eb 100%);
+            box-shadow: 0 14px 28px rgba(37,99,235,.30), 0 4px 12px rgba(15,23,42,.20);
+            color: #fff;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            line-height: 1;
+            user-select: none;
+        ">
+            <strong style="font-size: 18px; font-weight: 800; letter-spacing: 0;">${count}</strong>
+            <span style="margin-top: 4px; font-size: 11px; font-weight: 700; opacity: .92;">设备</span>
+        </div>`,
+        {
+            position: point,
+            offset: new BMap.Size(-29, -29),
+        },
+    );
     label.setStyle({
-        color: '#fff',
-        backgroundColor: '#1890ff',
-        border: '2px solid #fff',
-        borderRadius: '50%',
-        width: '32px',
-        height: '32px',
-        lineHeight: '28px',
-        textAlign: 'center',
-        fontSize: '13px',
-        fontWeight: '600',
-        boxShadow: '0 2px 6px rgba(0,0,0,0.25)',
+        backgroundColor: 'transparent',
+        border: '0',
+        boxShadow: 'none',
         cursor: 'pointer',
+        height: '58px',
+        padding: '0',
+        width: '58px',
     });
     if (onClick) {
         label.addEventListener('click', onClick);
@@ -232,6 +273,8 @@ export default function DeviceMapPage({
     const infoPanelRef = useRef<HTMLDivElement>(null);
     const mapRef = useRef<BMap.Map | null>(null);
     const overlaysRef = useRef<BMap.Overlay[]>([]);
+    const renderMarkersRef = useRef<() => void>(() => {});
+    const skipNextViewportFitRef = useRef(false);
 
     const [mapReady, setMapReady] = useState(false);
     const [mapError, setMapError] = useState('');
@@ -241,7 +284,6 @@ export default function DeviceMapPage({
     const [selectedProductId, setSelectedProductId] = useState<string | null>(null);
     const [productPanelOpen, setProductPanelOpen] = useState(true);
     const [searchPanelOpen, setSearchPanelOpen] = useState(false);
-    const [mapMode, setMapMode] = useState<'public' | 'private'>('public');
     const [selectedDevice, setSelectedDevice] = useState<DeviceRecord | null>(null);
     const [infoPanelAnchor, setInfoPanelAnchor] = useState<InfoPanelAnchor | null>(null);
     const [moveModeDeviceId, setMoveModeDeviceId] = useState<string | null>(null);
@@ -307,6 +349,14 @@ export default function DeviceMapPage({
     const showSearchPanel = searchPanelOpen && Boolean(trimmedKeyword);
 
     const productCards = products;
+    const expandedClusterDeviceIdSet = useMemo(
+        () => new Set(expandedClusterDeviceIds),
+        [expandedClusterDeviceIds],
+    );
+
+    useEffect(() => {
+        setExpandedClusterDeviceIds([]);
+    }, [searchType, selectedProductId, statusFilter, trimmedKeyword]);
 
     onDeviceSelectRef.current = (device: DeviceRecord) => {
         setMoveModeDeviceId(null);
@@ -386,7 +436,7 @@ export default function DeviceMapPage({
             return;
         }
 
-        const clusters = clusterDevices(filteredDevices);
+        const clusters = clusterDevices(filteredDevices, getClusterCellSize(map.getZoom()));
         const points: BMap.Point[] = [];
 
         clusters.forEach((cluster) => {
@@ -405,20 +455,47 @@ export default function DeviceMapPage({
                 return;
             }
 
+            const isExpandedCluster = cluster.devices.every((device) => expandedClusterDeviceIdSet.has(device.id));
+            if (isExpandedCluster) {
+                cluster.devices.forEach((device, index) => {
+                    const markerPoint = getExpandedClusterPoint(cluster, device, index);
+                    const marker = createDevicePinMarker(
+                        markerPoint,
+                        STATUS_MARKER_COLOR[device.status],
+                        () => onDeviceSelectRef.current(device),
+                    );
+                    map.addOverlay(marker);
+                    overlaysRef.current.push(marker);
+                });
+                return;
+            }
+
             const label = createClusterLabel(point, cluster.devices.length, () => {
-                map.centerAndZoom(point, map.getZoom() + 2);
+                setSelectedDevice(null);
+                setInfoPanelAnchor(null);
+                setMoveModeDeviceId(null);
+                setExpandedClusterDeviceIds(cluster.devices.map((device) => device.id));
+                skipNextViewportFitRef.current = true;
+                map.centerAndZoom(point, Math.min(map.getZoom() + 3, 19));
+                window.setTimeout(() => {
+                    renderMarkersRef.current();
+                }, 260);
             });
             map.addOverlay(label);
             overlaysRef.current.push(label);
         });
 
-        if (points.length === 1) {
+        if (skipNextViewportFitRef.current) {
+            skipNextViewportFitRef.current = false;
+        } else if (points.length === 1) {
             map.centerAndZoom(points[0], BAIDU_MAP_DEFAULT_ZOOM);
         } else if (points.length > 1) {
             map.setViewport(points, { margins: [80, 80, 80, 324] });
         }
         triggerMapResize(map);
-    }, [clearOverlays, filteredDevices, moveModeDeviceId]);
+    }, [clearOverlays, expandedClusterDeviceIdSet, filteredDevices, moveModeDeviceId]);
+
+    renderMarkersRef.current = renderMarkers;
 
     useEffect(() => {
         let cancelled = false;
@@ -644,23 +721,6 @@ export default function DeviceMapPage({
                                 </div>
                             </aside>
                         )}
-                    </div>
-
-                    <div className="dm-map-mode-switch">
-                        <button
-                            type="button"
-                            className={mapMode === 'public' ? 'is-active' : ''}
-                            onClick={() => setMapMode('public')}
-                        >
-                            公有地图
-                        </button>
-                        <button
-                            type="button"
-                            className={mapMode === 'private' ? 'is-active' : ''}
-                            onClick={() => setMapMode('private')}
-                        >
-                            私有地图
-                        </button>
                     </div>
 
                     <div className="dm-map-legend">
