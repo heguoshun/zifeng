@@ -1,0 +1,230 @@
+/**
+ * 左侧「类型 / 分类」列表统一样式（一级 / 二级 / 三级及更深层级）
+ * 适用于：产品分类、所属产品、分组类型、物模型场景目录、空间树、告警规则分类树、消息模版树等
+ */
+
+.iot-side-menu,
+.pm-category-tree,
+.pm-category-tree--nested,
+.dg-type-list,
+.ml-tree,
+.ml-tree--nested,
+.sc-tree,
+.sc-tree--nested,
+.arc-tree,
+.arc-tree--nested,
+.mt-tree,
+.mt-tree--nested {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+/* 节点容器：保证「当前行」与「子级列表」之间也有 10px 间距 */
+.pm-category-node,
+.ml-tree-node,
+.sc-tree-node,
+.arc-tree-node,
+.mt-tree-node,
+.dg-type-list > li {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.pm-category-item,
+.dg-type-item,
+.ml-tree-item,
+.sc-tree-item,
+.arc-tree-item,
+.mt-tree-row {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    width: 100%;
+    box-sizing: border-box;
+    min-height: 32px;
+    border-radius: 4px;
+    transition: background 0.15s;
+}
+
+.pm-category-item,
+.ml-tree-item,
+.sc-tree-item,
+.arc-tree-item,
+.mt-tree-row {
+    padding-right: 4px;
+}
+
+.dg-type-item {
+    border: 0;
+    background: transparent;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 6px 12px;
+    font-size: 13px;
+    color: var(--text);
+    font-family: inherit;
+    cursor: pointer;
+    text-align: left;
+}
+
+.pm-category-item:hover,
+.dg-type-item:hover,
+.ml-tree-item:hover,
+.sc-tree-item:hover,
+.arc-tree-item:hover,
+.mt-tree-row:hover,
+.pm-category-item.is-active,
+.dg-type-item.is-active,
+.ml-tree-item.is-active,
+.sc-tree-item.is-active,
+.arc-tree-item.is-active,
+.mt-tree-row.is-active {
+    background: var(--blue-light);
+}
+
+.pm-category-toggle,
+.pm-category-spacer,
+.ml-tree-toggle,
+.ml-tree-spacer,
+.sc-tree-toggle,
+.sc-tree-spacer,
+.arc-tree-toggle,
+.arc-tree-spacer,
+.mt-tree-toggle,
+.mt-tree-spacer {
+    width: 20px;
+    height: 20px;
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.pm-category-toggle,
+.ml-tree-toggle,
+.sc-tree-toggle,
+.arc-tree-toggle,
+.mt-tree-toggle {
+    border: 0;
+    background: transparent;
+    color: var(--text-muted);
+    cursor: pointer;
+    padding: 0;
+}
+
+.pm-category-label-btn,
+.ml-tree-label-btn,
+.sc-tree-label-btn,
+.arc-tree-label-btn,
+.mt-tree-label {
+    flex: 1;
+    min-width: 0;
+    border: 0;
+    background: transparent;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 4px 6px 0;
+    font-family: inherit;
+    cursor: pointer;
+    text-align: left;
+}
+
+.ml-tree-label-btn,
+.sc-tree-label-btn,
+.arc-tree-label-btn,
+.mt-tree-label {
+    font-size: 13px;
+    color: var(--text);
+    line-height: 1.4;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.pm-category-label {
+    flex: 1;
+    font-size: 13px;
+    color: var(--text);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.pm-category-count,
+.dg-type-item__count {
+    color: var(--text-muted);
+    font-size: 12px;
+    flex-shrink: 0;
+}
+
+.pm-category-item.is-active .pm-category-label,
+.pm-category-item.is-active .pm-category-count,
+.dg-type-item.is-active,
+.dg-type-item.is-active .dg-type-item__count,
+.ml-tree-item.is-active .ml-tree-label-btn,
+.sc-tree-item.is-active .sc-tree-label-btn,
+.arc-tree-item.is-active .arc-tree-label-btn,
+.mt-tree-row.is-active,
+.mt-tree-row.is-active .mt-tree-label {
+    color: var(--text);
+    font-weight: 500;
+}
+
+.dg-type-item.is-active .dg-type-item__count {
+    color: var(--text);
+}
+
+.ml-tree-menu-btn,
+.sc-tree-menu-btn,
+.arc-tree-menu-btn {
+    width: 24px;
+    height: 24px;
+    border: 0;
+    border-radius: 4px;
+    background: transparent;
+    color: var(--text-muted);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: opacity 0.15s, background 0.15s, color 0.15s;
+}
+
+.ml-tree-item:hover .ml-tree-menu-btn,
+.ml-tree-item.is-active .ml-tree-menu-btn,
+.sc-tree-item:hover .sc-tree-menu-btn,
+.sc-tree-item.is-active .sc-tree-menu-btn,
+.arc-tree-item:hover .arc-tree-menu-btn,
+.arc-tree-item.is-active .arc-tree-menu-btn {
+    opacity: 1;
+}
+
+.ml-tree-menu-btn:hover,
+.sc-tree-menu-btn:hover,
+.arc-tree-menu-btn:hover {
+    background: #eef2f7;
+    color: #606266;
+}
+
+.sc-tree-menu-btn:hover,
+.arc-tree-menu-btn:hover {
+    color: var(--blue);
+    background: rgba(24, 144, 255, 0.08);
+}
+
+/* 多段树容器（如告警规则「全部分类」+ 分类树）之间也保持 10px */
+.arc-tree-body,
+.ml-tree-body {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}

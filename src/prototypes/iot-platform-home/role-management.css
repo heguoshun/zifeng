@@ -1,0 +1,229 @@
+.rm-page {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    min-height: 100%;
+}
+
+.rm-filter-panel {
+    padding: 14px 18px;
+    --pm-filter-control-width: 198px;
+    --pm-filter-date-width: 240px;
+}
+
+.rm-filter-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.rm-filter-row .pm-filter-actions {
+    margin-left: auto;
+}
+
+.rm-table-panel {
+    padding: 14px 18px 18px;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-height: 620px;
+}
+
+.rm-table-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 12px;
+    flex-shrink: 0;
+}
+
+.rm-table-head h3 {
+    margin: 0;
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.rm-table-head h3::before {
+    content: "";
+    width: 3px;
+    height: 14px;
+    border-radius: 2px;
+    background: var(--blue);
+}
+
+.rm-table-wrap {
+    flex: 1;
+    min-height: 420px;
+    min-width: 0;
+    overflow-x: auto;
+    overflow-y: auto;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+}
+
+.rm-table {
+    width: max(100%, 980px);
+    min-width: 980px;
+    margin: 0;
+    table-layout: auto;
+    border-collapse: collapse;
+    font-size: 13px;
+}
+
+.rm-table th,
+.rm-table td {
+    min-width: 104px;
+    padding: 11px 18px;
+    border-bottom: 1px solid var(--border);
+    text-align: left;
+    vertical-align: middle;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.rm-table th:first-child,
+.rm-table td:first-child {
+    padding-left: 24px;
+}
+
+.rm-table th:last-child,
+.rm-table td:last-child {
+    padding-right: 24px;
+}
+
+.rm-table td:has(.rm-table-actions),
+.rm-table th:last-child {
+    min-width: 168px;
+    overflow: visible;
+    text-overflow: clip;
+    white-space: normal;
+}
+
+.rm-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+.rm-table thead tr {
+    background-color: #fafbfd;
+}
+
+.rm-table thead th {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    background-color: #fafbfd;
+    color: var(--text-secondary);
+    font-weight: 500;
+    white-space: nowrap;
+    border-bottom: none;
+    box-shadow: inset 0 -1px 0 var(--border);
+}
+
+.rm-table-actions {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    flex-wrap: nowrap;
+    white-space: nowrap;
+}
+
+.rm-table-actions button {
+    border: 0;
+    background: transparent;
+    color: var(--blue);
+    font-size: 13px;
+    font-family: inherit;
+    cursor: pointer;
+    padding: 0;
+}
+
+.rm-table-actions button:hover {
+    text-decoration: underline;
+}
+
+.rm-table-actions button.is-disabled,
+.rm-table-actions button:disabled {
+    color: var(--text-muted);
+    cursor: not-allowed;
+    text-decoration: none;
+}
+
+.rm-form-drawer {
+    width: min(620px, 100%);
+    max-width: 100vw;
+    overflow: hidden;
+}
+
+.rm-form-drawer--with-auth {
+    width: min(860px, 100%);
+}
+
+.rm-form-drawer .pcp-drawer__body {
+    overflow-x: hidden;
+    overflow-y: auto;
+}
+
+.rm-form-drawer .pcp-drawer-field {
+    width: 100%;
+    min-width: 0;
+}
+
+.rm-form-drawer .pcp-drawer-field .pcp-form-input,
+.rm-form-drawer .pcp-drawer-field .el-select {
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+    box-sizing: border-box;
+}
+
+.rm-form-error {
+    margin: 6px 0 0;
+    font-size: 12px;
+    color: #f56c6c;
+    line-height: 1.4;
+}
+
+.rm-form-hint {
+    margin: -4px 0 12px;
+    font-size: 12px;
+    color: var(--text-muted);
+    line-height: 1.5;
+}
+
+.rm-auth-field {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+}
+
+.rm-auth-field .pcp-form-label {
+    flex-shrink: 0;
+}
+
+.rm-permission-panel {
+    width: 100%;
+    min-width: 0;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.rm-permission-panel .tm-authorize-toolbar {
+    margin-bottom: 0;
+    padding: 12px 14px;
+    border-bottom: 1px solid var(--border);
+}
+
+.rm-permission-tree {
+    max-height: 360px;
+    overflow: auto;
+    padding: 8px 0 12px;
+}

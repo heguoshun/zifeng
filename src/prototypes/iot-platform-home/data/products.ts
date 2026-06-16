@@ -1,0 +1,482 @@
+import { getProductCategoryLabel } from './productCategories';
+
+export type PropertyRow = {
+    id: string;
+    identifier: string;
+    name: string;
+    dataType: string;
+    accessMode: string;
+    description: string;
+};
+
+export type FunctionRow = {
+    id: string;
+    identifier: string;
+    name: string;
+    async: string;
+    description: string;
+    inputJson: string;
+};
+
+const FUNCTION_PARAM_DEFAULTS: Record<string, unknown> = {
+    delay: 3,
+    threshold: 80,
+    metric: 'temperature',
+    timestamp: 1718188800,
+    version: '1.2.0',
+    url: 'https://example.com/fw.bin',
+    md5: 'abc123',
+};
+
+export function parseFunctionInputKeys(inputJson: string): string[] {
+    if (!inputJson?.trim() || inputJson.trim() === '{}') return [];
+
+    try {
+        const parsed = JSON.parse(inputJson) as Record<string, unknown>;
+        if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
+            return Object.keys(parsed);
+        }
+    } catch {
+        // fallback to regex for legacy strings
+    }
+
+    const matches = inputJson.match(/"([^"]+)":/g);
+    return matches?.map((match) => match.replace(/"/g, '').replace(':', '')) ?? [];
+}
+
+export function normalizeFunctionRow(row: FunctionRow): FunctionRow {
+    const fallback = DEFAULT_FUNCTION_ROWS.find((item) => item.identifier === row.identifier);
+    const hasInputJson = Boolean(row.inputJson?.trim() && row.inputJson.trim() !== '{}');
+    return {
+        ...row,
+        inputJson: hasInputJson ? row.inputJson : (fallback?.inputJson ?? '{}'),
+    };
+}
+
+export function getFunctionInputParams(row: FunctionRow): string[] {
+    return parseFunctionInputKeys(normalizeFunctionRow(row).inputJson);
+}
+
+export function buildFunctionInputJson(paramKeys: string[], previousJson?: string): string {
+    if (!paramKeys.length) return '{}';
+
+    let previous: Record<string, unknown> = {};
+    if (previousJson?.trim()) {
+        try {
+            previous = JSON.parse(previousJson) as Record<string, unknown>;
+        } catch {
+            previous = {};
+        }
+    }
+
+    const result: Record<string, unknown> = {};
+    paramKeys.forEach((key) => {
+        result[key] = previous[key] ?? FUNCTION_PARAM_DEFAULTS[key] ?? '';
+    });
+    return JSON.stringify(result);
+}
+
+export type EventRow = {
+    id: string;
+    identifier: string;
+    name: string;
+    eventType: string;
+    jsonObject: string;
+    description: string;
+};
+
+export type ProductRecord = {
+    id: string;
+    code: string;
+    name: string;
+    categoryId: string;
+    category: string;
+    nodeType: string;
+    vendor: string;
+    remark: string;
+    protocolId: string;
+    protocolLabel: string;
+    deviceCount: number;
+    properties: PropertyRow[];
+    functions: FunctionRow[];
+    events: EventRow[];
+};
+
+export const DEFAULT_PROPERTY_ROWS: PropertyRow[] = [
+    { id: '1', identifier: 'flow_rate', name: '瞬时流量', dataType: 'float', accessMode: '只读', description: '当前瞬时流量，单位 m³/h' },
+    { id: '2', identifier: 'total_flow', name: '累计流量', dataType: 'float', accessMode: '只读', description: '累计用水量，单位 m³' },
+    { id: '3', identifier: 'pressure', name: '压力', dataType: 'float', accessMode: '只读', description: '管网压力，单位 MPa' },
+    { id: '4', identifier: 'water_temp', name: '水温', dataType: 'float', accessMode: '只读', description: '水体温度，单位 ℃' },
+    { id: '5', identifier: 'battery', name: '电池电量', dataType: 'int', accessMode: '只读', description: '设备电池剩余电量，单位 %' },
+];
+
+export const DEFAULT_FUNCTION_ROWS: FunctionRow[] = [
+    {
+        id: '1',
+        identifier: 'remote_valve',
+        name: '远程开关阀',
+        async: '是',
+        description: '远程控制设备阀门开/关，适用于户表及大表',
+        inputJson: '{"action":"open"}',
+    },
+    {
+        id: '2',
+        identifier: 'set_threshold',
+        name: '设置告警阈值',
+        async: '否',
+        description: '调整压力、流量或水质等告警阈值参数',
+        inputJson: '{"threshold":0.6,"metric":"pressure"}',
+    },
+    {
+        id: '3',
+        identifier: 'sync_time',
+        name: '同步时间',
+        async: '否',
+        description: '将平台时间同步至设备本地时钟',
+        inputJson: '{"timestamp":1718188800}',
+    },
+    {
+        id: '4',
+        identifier: 'firmware_upgrade',
+        name: '固件升级',
+        async: '是',
+        description: '下发 OTA 固件包并触发升级流程',
+        inputJson: '{"version":"1.2.0","url":"https://example.com/fw.bin","md5":"abc123"}',
+    },
+];
+
+export const DEFAULT_EVENT_ROWS: EventRow[] = [
+    { id: '1', identifier: 'leak_alarm', name: '漏水告警', eventType: '告警', jsonObject: '{ "leak": true, "level": "warning" }', description: '检测到管道或设备漏水时上报' },
+    { id: '2', identifier: 'flow_abnormal', name: '流量异常', eventType: '告警', jsonObject: '{ "flow_rate": 120.5 }', description: '瞬时流量超出设定阈值时上报' },
+    { id: '3', identifier: 'online_event', name: '上线事件', eventType: '信息', jsonObject: '{ "status": "online" }', description: '设备成功接入平台并建立连接' },
+    { id: '4', identifier: 'offline_event', name: '离线事件', eventType: '信息', jsonObject: '{ "status": "offline" }', description: '设备与平台连接断开时上报' },
+    { id: '5', identifier: 'low_battery', name: '电池电量低', eventType: '告警', jsonObject: '{ "battery": 15 }', description: '设备电池电量低于告警阈值时上报' },
+    { id: '6', identifier: 'sensor_fault', name: '传感器故障', eventType: '故障', jsonObject: '{ "code": "F102" }', description: '传感器硬件或通信异常时上报' },
+];
+
+function cloneModelRows<T>(rows: T[]): T[] {
+    return rows.map((row) => ({ ...row }));
+}
+
+type ProductSeed = {
+    categoryId: string;
+    category: string;
+    name: string;
+    code: string;
+    nodeType: string;
+    deviceCount: number;
+    remark?: string;
+    protocolId?: string;
+    protocolLabel?: string;
+    vendor?: string;
+    properties?: PropertyRow[];
+    functions?: FunctionRow[];
+    events?: EventRow[];
+};
+
+type CategoryThingModel = {
+    properties: PropertyRow[];
+    functions: FunctionRow[];
+    events: EventRow[];
+};
+
+/** 智慧水站网关物模型 */
+const GATEWAY_PROPERTIES: PropertyRow[] = [
+    { id: 'gw-p1', identifier: 'inlet_pressure', name: '进水压力', dataType: 'float', accessMode: '只读', description: '进水口压力，单位 MPa' },
+    { id: 'gw-p2', identifier: 'outlet_flow', name: '出水流量', dataType: 'float', accessMode: '只读', description: '出水瞬时流量，单位 m³/h' },
+    { id: 'gw-p3', identifier: 'run_status', name: '运行状态', dataType: 'enum', accessMode: '只读', description: '枚举型：运行/待机/故障' },
+    { id: 'gw-p4', identifier: 'water_quality_index', name: '水质综合指数', dataType: 'float', accessMode: '只读', description: '综合水质评价指数，0-100' },
+    { id: 'gw-p5', identifier: 'pump_power', name: '泵站功率', dataType: 'float', accessMode: '只读', description: '当前泵站运行功率，单位 kW' },
+];
+
+const GATEWAY_FUNCTIONS: FunctionRow[] = [
+    { id: 'gw-f1', identifier: 'start_pump', name: '启动泵站', async: '是', description: '远程启动智慧水站供水泵站', inputJson: '{"mode":"auto"}' },
+    { id: 'gw-f2', identifier: 'stop_pump', name: '停止泵站', async: '是', description: '远程停止智慧水站供水泵站', inputJson: '{"mode":"manual"}' },
+    { id: 'gw-f3', identifier: 'set_pressure_threshold', name: '设置压力阈值', async: '否', description: '调整进水/出水压力告警阈值', inputJson: '{"inlet_max":0.8,"outlet_min":0.2}' },
+    { id: 'gw-f4', identifier: 'firmware_upgrade', name: '固件升级', async: '是', description: '下发 OTA 固件包并触发升级', inputJson: '{"version":"2.0.0","url":"https://example.com/zhsz.bin"}' },
+];
+
+const GATEWAY_EVENTS: EventRow[] = [
+    { id: 'gw-e1', identifier: 'pressureAlarm', name: '压力异常', eventType: '告警', jsonObject: '{ "pressure": 0.85 }', description: '管网压力超出设定阈值时上报' },
+    { id: 'gw-e2', identifier: 'pump_fault', name: '泵站故障', eventType: '故障', jsonObject: '{ "fault_code": "P001" }', description: '泵站运行异常或保护停机时上报' },
+    { id: 'gw-e3', identifier: 'quality_alarm', name: '水质告警', eventType: '告警', jsonObject: '{ "index": 62 }', description: '水质综合指数低于标准时上报' },
+    { id: 'gw-e4', identifier: 'offline_event', name: '离线事件', eventType: '信息', jsonObject: '{ "status": "offline" }', description: '设备与平台连接断开时上报' },
+];
+
+const CATEGORY_THING_MODELS: Record<string, CategoryThingModel> = {
+    dabiao: {
+        properties: [
+            { id: 'db-p1', identifier: 'flow_rate', name: '瞬时流量', dataType: 'float', accessMode: '只读', description: '当前瞬时流量，单位 m³/h' },
+            { id: 'db-p2', identifier: 'total_flow', name: '累计流量', dataType: 'float', accessMode: '只读', description: '累计用水量，单位 m³' },
+            { id: 'db-p3', identifier: 'pressure', name: '管网压力', dataType: 'float', accessMode: '只读', description: '安装点管网压力，单位 MPa' },
+            { id: 'db-p4', identifier: 'valve_status', name: '阀门状态', dataType: 'bool', accessMode: '读写', description: '0-关闭，1-开启' },
+            { id: 'db-p5', identifier: 'battery', name: '电池电量', dataType: 'int', accessMode: '只读', description: '设备电池剩余电量，单位 %' },
+            { id: 'db-p6', identifier: 'signal_strength', name: '信号强度', dataType: 'int', accessMode: '只读', description: '通信信号强度 RSSI，单位 dBm' },
+        ],
+        functions: [
+            { id: 'db-f1', identifier: 'remote_valve', name: '远程开关阀', async: '是', description: '远程控制大表阀门开/关', inputJson: '{"action":"open"}' },
+            { id: 'db-f2', identifier: 'set_report_interval', name: '设置上报周期', async: '否', description: '调整数据上报间隔，单位分钟', inputJson: '{"interval":60}' },
+            { id: 'db-f3', identifier: 'sync_time', name: '同步时间', async: '否', description: '将平台时间同步至设备', inputJson: '{"timestamp":1718188800}' },
+            { id: 'db-f4', identifier: 'firmware_upgrade', name: '固件升级', async: '是', description: '下发 OTA 固件升级包', inputJson: '{"version":"1.2.0"}' },
+        ],
+        events: [
+            { id: 'db-e1', identifier: 'leak_alarm', name: '漏水告警', eventType: '告警', jsonObject: '{ "leak": true }', description: '检测到异常漏水时上报' },
+            { id: 'db-e2', identifier: 'flow_abnormal', name: '流量异常', eventType: '告警', jsonObject: '{ "flow_rate": 520 }', description: '瞬时流量超出阈值时上报' },
+            { id: 'db-e3', identifier: 'offline_event', name: '离线事件', eventType: '信息', jsonObject: '{ "status": "offline" }', description: '设备离线时上报' },
+            { id: 'db-e4', identifier: 'low_battery', name: '低电量告警', eventType: '告警', jsonObject: '{ "battery": 18 }', description: '电池电量低于阈值时上报' },
+        ],
+    },
+    hubiao: {
+        properties: [
+            { id: 'hb-p1', identifier: 'total_flow', name: '累计流量', dataType: 'float', accessMode: '只读', description: '累计用水量，单位 m³' },
+            { id: 'hb-p2', identifier: 'daily_flow', name: '日用水量', dataType: 'float', accessMode: '只读', description: '当日累计用水量，单位 m³' },
+            { id: 'hb-p3', identifier: 'valve_status', name: '阀门状态', dataType: 'bool', accessMode: '读写', description: '0-关闭，1-开启' },
+            { id: 'hb-p4', identifier: 'battery', name: '电池电量', dataType: 'int', accessMode: '只读', description: '设备电池剩余电量，单位 %' },
+            { id: 'hb-p5', identifier: 'signal_strength', name: '信号强度', dataType: 'int', accessMode: '只读', description: 'NB-IoT/LoRa 信号强度' },
+        ],
+        functions: [
+            { id: 'hb-f1', identifier: 'remote_valve', name: '远程开关阀', async: '是', description: '远程控制户表阀门', inputJson: '{"action":"close"}' },
+            { id: 'hb-f2', identifier: 'set_report_interval', name: '设置上报周期', async: '否', description: '调整抄表上报间隔', inputJson: '{"interval":1440}' },
+            { id: 'hb-f3', identifier: 'sync_time', name: '同步时间', async: '否', description: '同步平台时间至设备', inputJson: '{"timestamp":1718188800}' },
+        ],
+        events: [
+            { id: 'hb-e1', identifier: 'leak_alarm', name: '漏水告警', eventType: '告警', jsonObject: '{ "leak": true }', description: '户内漏水检测告警' },
+            { id: 'hb-e2', identifier: 'tamper_alarm', name: '拆表告警', eventType: '告警', jsonObject: '{ "tamper": true }', description: '检测到非法拆表时上报' },
+            { id: 'hb-e3', identifier: 'low_battery', name: '低电量告警', eventType: '告警', jsonObject: '{ "battery": 20 }', description: '电池电量不足时上报' },
+            { id: 'hb-e4', identifier: 'offline_event', name: '离线事件', eventType: '信息', jsonObject: '{ "status": "offline" }', description: '设备离线时上报' },
+        ],
+    },
+    yaliji: {
+        properties: [
+            { id: 'yl-p1', identifier: 'pressure', name: '压力值', dataType: 'float', accessMode: '只读', description: '监测点压力，单位 MPa' },
+            { id: 'yl-p2', identifier: 'water_temp', name: '水温', dataType: 'float', accessMode: '只读', description: '水体温度，单位 ℃' },
+            { id: 'yl-p3', identifier: 'battery', name: '电池电量', dataType: 'int', accessMode: '只读', description: '设备电池剩余电量，单位 %' },
+            { id: 'yl-p4', identifier: 'signal_strength', name: '信号强度', dataType: 'int', accessMode: '只读', description: '无线通信信号强度' },
+        ],
+        functions: [
+            { id: 'yl-f1', identifier: 'set_threshold', name: '设置压力阈值', async: '否', description: '设置高压/低压告警阈值', inputJson: '{"high":0.8,"low":0.15}' },
+            { id: 'yl-f2', identifier: 'calibrate', name: '零点校准', async: '是', description: '触发压力传感器零点校准', inputJson: '{"mode":"zero"}' },
+            { id: 'yl-f3', identifier: 'sync_time', name: '同步时间', async: '否', description: '同步平台时间至设备', inputJson: '{"timestamp":1718188800}' },
+        ],
+        events: [
+            { id: 'yl-e1', identifier: 'pressure_high', name: '高压告警', eventType: '告警', jsonObject: '{ "pressure": 0.82 }', description: '压力超过上限阈值时上报' },
+            { id: 'yl-e2', identifier: 'pressure_low', name: '低压告警', eventType: '告警', jsonObject: '{ "pressure": 0.12 }', description: '压力低于下限阈值时上报' },
+            { id: 'yl-e3', identifier: 'sensor_fault', name: '传感器故障', eventType: '故障', jsonObject: '{ "code": "S001" }', description: '压力传感器异常时上报' },
+            { id: 'yl-e4', identifier: 'offline_event', name: '离线事件', eventType: '信息', jsonObject: '{ "status": "offline" }', description: '设备离线时上报' },
+        ],
+    },
+    shuizhiyi: {
+        properties: [
+            { id: 'szy-p1', identifier: 'turbidity', name: '浊度', dataType: 'float', accessMode: '只读', description: '水体浊度，单位 NTU' },
+            { id: 'szy-p2', identifier: 'ph', name: 'PH值', dataType: 'float', accessMode: '只读', description: '水体酸碱度' },
+            { id: 'szy-p3', identifier: 'residual_chlorine', name: '余氯', dataType: 'float', accessMode: '只读', description: '余氯含量，单位 mg/L' },
+            { id: 'szy-p4', identifier: 'conductivity', name: '电导率', dataType: 'float', accessMode: '只读', description: '水体电导率，单位 μS/cm' },
+            { id: 'szy-p5', identifier: 'water_temp', name: '水温', dataType: 'float', accessMode: '只读', description: '水体温度，单位 ℃' },
+        ],
+        functions: [
+            { id: 'szy-f1', identifier: 'calibrate', name: '传感器校准', async: '是', description: '触发水质传感器校准流程', inputJson: '{"sensor":"turbidity"}' },
+            { id: 'szy-f2', identifier: 'set_threshold', name: '设置告警阈值', async: '否', description: '设置浊度、余氯等告警阈值', inputJson: '{"turbidity_max":5,"chlorine_min":0.3}' },
+            { id: 'szy-f3', identifier: 'sync_time', name: '同步时间', async: '否', description: '同步平台时间至设备', inputJson: '{"timestamp":1718188800}' },
+        ],
+        events: [
+            { id: 'szy-e1', identifier: 'quality_alarm', name: '水质超标', eventType: '告警', jsonObject: '{ "turbidity": 5.2 }', description: '水质指标超出标准时上报' },
+            { id: 'szy-e2', identifier: 'chlorine_low', name: '余氯不足', eventType: '告警', jsonObject: '{ "residual_chlorine": 0.15 }', description: '余氯低于标准值时上报' },
+            { id: 'szy-e3', identifier: 'sensor_fault', name: '传感器故障', eventType: '故障', jsonObject: '{ "code": "Q102" }', description: '水质传感器故障时上报' },
+            { id: 'szy-e4', identifier: 'offline_event', name: '离线事件', eventType: '信息', jsonObject: '{ "status": "offline" }', description: '设备离线时上报' },
+        ],
+    },
+    zhuishuizhan: {
+        properties: [
+            { id: 'zhsz-p1', identifier: 'inlet_pressure', name: '进水压力', dataType: 'float', accessMode: '只读', description: '进水口压力，单位 MPa' },
+            { id: 'zhsz-p2', identifier: 'outlet_flow', name: '出水流量', dataType: 'float', accessMode: '只读', description: '出水瞬时流量，单位 m³/h' },
+            { id: 'zhsz-p3', identifier: 'turbidity', name: '出水浊度', dataType: 'float', accessMode: '只读', description: '出水浊度，单位 NTU' },
+            { id: 'zhsz-p4', identifier: 'residual_chlorine', name: '出水余氯', dataType: 'float', accessMode: '只读', description: '出水余氯，单位 mg/L' },
+            { id: 'zhsz-p5', identifier: 'run_status', name: '运行状态', dataType: 'enum', accessMode: '只读', description: '运行/待机/故障' },
+        ],
+        functions: [
+            { id: 'zhsz-f1', identifier: 'start_supply', name: '启动供水', async: '是', description: '远程启动智慧水站供水', inputJson: '{"mode":"auto"}' },
+            { id: 'zhsz-f2', identifier: 'stop_supply', name: '停止供水', async: '是', description: '远程停止智慧水站供水', inputJson: '{"mode":"manual"}' },
+            { id: 'zhsz-f3', identifier: 'set_threshold', name: '设置告警阈值', async: '否', description: '设置压力、水质告警阈值', inputJson: '{"pressure_max":0.8}' },
+        ],
+        events: [
+            { id: 'zhsz-e1', identifier: 'pressure_alarm', name: '压力异常', eventType: '告警', jsonObject: '{ "pressure": 0.85 }', description: '进出水压力异常时上报' },
+            { id: 'zhsz-e2', identifier: 'quality_alarm', name: '水质告警', eventType: '告警', jsonObject: '{ "turbidity": 4.8 }', description: '出水水质超标时上报' },
+            { id: 'zhsz-e3', identifier: 'offline_event', name: '离线事件', eventType: '信息', jsonObject: '{ "status": "offline" }', description: '设备离线时上报' },
+        ],
+    },
+};
+
+function getCategoryThingModel(categoryId: string, isGateway: boolean): CategoryThingModel {
+    if (isGateway) {
+        return {
+            properties: GATEWAY_PROPERTIES,
+            functions: GATEWAY_FUNCTIONS,
+            events: GATEWAY_EVENTS,
+        };
+    }
+    return CATEGORY_THING_MODELS[categoryId] ?? {
+        properties: DEFAULT_PROPERTY_ROWS,
+        functions: DEFAULT_FUNCTION_ROWS,
+        events: DEFAULT_EVENT_ROWS,
+    };
+}
+
+const PRODUCT_REMARKS: Record<string, string> = {
+    dabiao: '适用于 DN50 及以上管网大口径计量场景，支持远程抄表与阀门控制。',
+    hubiao: '适用于居民及商业户用远传抄表，支持 NB-IoT / LoRa 等多种通信方式。',
+    yaliji: '适用于供水管网压力监测，支持高低压告警与传感器校准。',
+    shuizhiyi: '适用于水源地、水厂及管网水质在线监测，支持多参数采集。',
+    zhuishuizhan: '集成水质监测、压力监测与供水控制的一体化智慧水站产品。',
+};
+
+const VARIANT_REMARKS: Record<string, string> = {
+    '电磁流量型': '采用电磁感应原理，适用于清洁水质大流量计量。',
+    '超声波型': '非接触式超声波计量，低维护成本。',
+    '机械流量型': '传统机械传动计量，稳定可靠。',
+    'NB-IoT型': '内置 NB-IoT 通信模组，低功耗广覆盖。',
+    'LoRa型': 'LoRa 无线组网，适合密集部署场景。',
+    '有线远传型': 'RS485 有线通信，适用于集中抄表。',
+    '光电直读型': '光电直读技术，抄读准确率高。',
+    '管网型': '专用于主管网及配水管网压力监测。',
+    '泵站型': '安装于泵站进出口，监测泵房运行压力。',
+    '二供型': '二次供水泵房专用压力监测设备。',
+    '无线型': '内置无线通信模组，免布线快速部署。',
+    '在线监测型': '固定安装式在线水质监测终端。',
+    '便携型': '便携式水质快速检测，适合巡检抽检。',
+    '多参数型': '同时监测浊度、PH、余氯、电导率等多指标。',
+    '余氯型': '专用于出水余氯在线监测。',
+    '标准型': '标准配置智慧水站，满足常规监测需求。',
+    '增强型': '增强型配置，增加多路传感器接入能力。',
+    '微型站': '小型一体化水站，适合末端监测点位。',
+    '网关型': '作为边缘网关接入子设备，支持本地汇聚上报。',
+};
+
+const PRODUCT_TEMPLATES: Array<{
+    categoryId: string;
+    category: string;
+    prefix: string;
+    variants: string[];
+    nodeTypes?: string[];
+}> = [
+    {
+        categoryId: 'dabiao',
+        category: '大表',
+        prefix: 'DB',
+        variants: ['电磁流量型', '超声波型', '机械流量型', 'NB-IoT型'],
+    },
+    {
+        categoryId: 'hubiao',
+        category: '户表',
+        prefix: 'HB',
+        variants: ['NB-IoT型', 'LoRa型', '有线远传型', '光电直读型'],
+    },
+    {
+        categoryId: 'yaliji',
+        category: '压力计',
+        prefix: 'YL',
+        variants: ['管网型', '泵站型', '二供型', '无线型'],
+    },
+    {
+        categoryId: 'shuizhiyi',
+        category: '水质仪',
+        prefix: 'SZY',
+        variants: ['在线监测型', '便携型', '多参数型', '余氯型'],
+    },
+    {
+        categoryId: 'zhihuishuizhan',
+        category: '智慧水站',
+        prefix: 'ZHSZ',
+        variants: ['标准型', '增强型', '微型站', '网关型'],
+        nodeTypes: ['直连设备', '直连设备', '直连设备', '网关设备'],
+    },
+];
+
+function buildProductSeeds(): ProductSeed[] {
+    const seeds: ProductSeed[] = [];
+
+    PRODUCT_TEMPLATES.forEach((template) => {
+        template.variants.forEach((variant, index) => {
+            const nodeType = template.nodeTypes?.[index] ?? '直连设备';
+            const isGateway = nodeType === '网关设备';
+            const thingModel = getCategoryThingModel(template.categoryId, isGateway);
+            const protocol = isGateway
+                ? { protocolId: 'modbus-tcp', protocolLabel: 'Modbus TCP' }
+                : index % 2 === 0
+                    ? { protocolId: 'mqtt', protocolLabel: 'MQTT' }
+                    : { protocolId: 'coap', protocolLabel: 'CoAP' };
+
+            seeds.push({
+                categoryId: template.categoryId,
+                category: template.category,
+                name: `${template.category}-${variant}`,
+                code: `${template.prefix}-${String(index + 1).padStart(3, '0')}`,
+                nodeType,
+                deviceCount: nodeType === '直连设备' ? 16 + index * 2 : 8,
+                remark: `${PRODUCT_REMARKS[template.categoryId] ?? ''}${VARIANT_REMARKS[variant] ?? ''}`,
+                vendor: '紫峰装备',
+                ...protocol,
+                properties: thingModel.properties,
+                functions: thingModel.functions,
+                events: thingModel.events,
+            });
+        });
+    });
+
+    return seeds;
+}
+
+const PRODUCT_SEEDS: ProductSeed[] = buildProductSeeds();
+
+export function createInitialProducts(): ProductRecord[] {
+    return PRODUCT_SEEDS.map((seed, index) => ({
+        id: String(index + 1),
+        code: seed.code,
+        name: seed.name,
+        categoryId: seed.categoryId,
+        category: seed.category,
+        nodeType: seed.nodeType,
+        vendor: seed.vendor ?? '紫峰装备',
+        remark: seed.remark ?? '—',
+        protocolId: seed.protocolId ?? 'mqtt',
+        protocolLabel: seed.protocolLabel ?? 'MQTT',
+        deviceCount: seed.deviceCount,
+        properties: cloneModelRows(seed.properties ?? DEFAULT_PROPERTY_ROWS),
+        functions: cloneModelRows(seed.functions ?? DEFAULT_FUNCTION_ROWS).map((row) => normalizeFunctionRow(row)),
+        events: cloneModelRows(seed.events ?? DEFAULT_EVENT_ROWS),
+    }));
+}
+
+export function createEmptyProductForm() {
+    return {
+        name: '',
+        nodeType: '',
+        categoryId: '',
+        vendor: '',
+        remark: '',
+        protocolId: '',
+        protocolLabel: '',
+    };
+}
+
+export function productToForm(product: ProductRecord) {
+    return {
+        name: product.name,
+        nodeType: product.nodeType,
+        categoryId: product.categoryId,
+        vendor: product.vendor,
+        remark: product.remark === '—' ? '' : product.remark,
+        protocolId: product.protocolId,
+        protocolLabel: product.protocolLabel,
+    };
+}
+
+export function getProductDisplayRemark(product: ProductRecord): string {
+    if (!product.remark || product.remark === '—') {
+        return '暂无备注';
+    }
+    return product.remark;
+}
+
+export function categoryIdToLabel(categoryId: string): string {
+    return getProductCategoryLabel(categoryId);
+}

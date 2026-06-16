@@ -1,0 +1,218 @@
+.ms-page {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    min-height: 100%;
+}
+
+.ms-list-panel {
+    padding: 14px 18px 18px;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-height: 620px;
+}
+
+.ms-table-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 12px;
+    flex-shrink: 0;
+}
+
+.ms-table-head h3 {
+    margin: 0;
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.ms-table-head h3::before {
+    content: "";
+    width: 3px;
+    height: 14px;
+    border-radius: 2px;
+    background: var(--blue);
+}
+
+.ms-settings-btn {
+    width: 32px;
+    height: 32px;
+    border: 1px solid #dcdfe6;
+    border-radius: 4px;
+    background: #fff;
+    color: var(--text-secondary);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    padding: 0;
+    transition: color 0.2s ease, border-color 0.2s ease;
+}
+
+.ms-settings-btn:hover {
+    color: var(--blue);
+    border-color: var(--blue);
+}
+
+.ms-table-wrap {
+    flex: 1;
+    min-height: 420px;
+    min-width: 0;
+    overflow: auto;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+}
+
+.ms-table {
+    width: max(100%, 920px);
+    min-width: 920px;
+    margin: 0;
+    table-layout: auto;
+    border-collapse: collapse;
+    font-size: 13px;
+}
+
+.ms-table th,
+.ms-table td {
+    padding: 12px 20px;
+    border-bottom: 1px solid var(--border);
+    text-align: left;
+    vertical-align: middle;
+}
+
+.ms-table th:first-child,
+.ms-table td:first-child {
+    padding-left: 24px;
+}
+.ms-table th:last-child,
+.ms-table td:last-child {
+    padding-right: 24px;
+}
+
+.ms-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+.ms-table thead th {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    background-color: #fafbfd;
+    color: var(--text-secondary);
+    font-weight: 500;
+    white-space: nowrap;
+    border-bottom: none;
+    box-shadow: inset 0 -1px 0 var(--border);
+}
+
+.ms-table th:nth-child(1),
+.ms-table td:nth-child(1) {
+    width: 220px;
+    min-width: 220px;
+}
+
+.ms-table th:nth-child(3),
+.ms-table td:nth-child(3) {
+    width: 120px;
+    min-width: 120px;
+    text-align: center;
+}
+
+.ms-desc-cell {
+    line-height: 1.6;
+    color: var(--text-secondary);
+}
+
+.ms-switch {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.ms-switch input {
+    appearance: none;
+    width: 44px;
+    height: 24px;
+    border-radius: 12px;
+    background: #dcdfe6;
+    position: relative;
+    cursor: pointer;
+    transition: background 0.2s ease;
+}
+
+.ms-switch input::after {
+    content: "";
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: #fff;
+    transition: transform 0.2s ease;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+}
+
+.ms-switch input:checked {
+    background: var(--blue);
+}
+
+.ms-switch input:checked::after {
+    transform: translateX(20px);
+}
+
+.ms-push-drawer {
+    width: min(480px, 100%);
+}
+
+.ms-push-drawer .pcp-drawer-field {
+    width: 100%;
+    min-width: 0;
+}
+
+.ms-push-drawer .pcp-drawer-field .pcp-form-input,
+.ms-push-drawer .pcp-drawer-field .el-select {
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+    box-sizing: border-box;
+}
+
+.ms-push-field {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.ms-time-field {
+    position: relative;
+    width: 100%;
+}
+
+.ms-time-field .pcp-form-input {
+    padding-right: 36px;
+}
+
+.ms-time-icon {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #c0c4cc;
+    pointer-events: none;
+    display: inline-flex;
+}
+
+.ms-field-error {
+    font-size: 12px;
+    color: #f5222d;
+    line-height: 1.4;
+}

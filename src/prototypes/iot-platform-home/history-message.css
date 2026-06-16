@@ -1,0 +1,591 @@
+/* ── History Message Page ── */
+
+.hm-page {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    min-height: 100%;
+}
+
+/* ── Filter Panel ── */
+
+.hm-filter-row {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    flex-wrap: wrap;
+}
+
+.hm-filter-row .pm-filter-actions {
+    margin-left: auto;
+}
+
+/* ── Table Panel ── */
+
+.hm-table-panel {
+    padding: 14px 18px;
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-height: 480px;
+}
+
+.hm-table-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 12px;
+    flex-shrink: 0;
+}
+
+.hm-table-head h3 {
+    margin: 0;
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.hm-table-head h3::before {
+    content: "";
+    width: 3px;
+    height: 14px;
+    border-radius: 2px;
+    background: var(--blue);
+}
+
+.hm-table-wrap {
+    flex: 1;
+    overflow: auto;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+}
+
+.hm-table {
+    width: max(100%, 1120px);
+    min-width: 1120px;
+    border-collapse: collapse;
+    font-size: 13px;
+    table-layout: auto;
+}
+
+.hm-table th,
+.hm-table td {
+    min-width: 104px;
+    padding: 11px 18px;
+    border-bottom: 1px solid #f0f2f5;
+    text-align: left;
+    color: var(--text-secondary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.hm-table th:first-child,
+.hm-table td:first-child {
+    padding-left: 24px;
+}
+.hm-table th:last-child,
+.hm-table td:last-child {
+    padding-right: 24px;
+}
+
+.hm-table th {
+    background: #fafbfd;
+    color: var(--text);
+    font-weight: 600;
+    font-size: 13px;
+}
+
+.hm-table tbody tr:hover {
+    background: #fafcff;
+}
+
+.hm-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+.hm-content-cell {
+    max-width: 360px;
+}
+
+/* ── Status & Result text ── */
+
+.hm-text-danger {
+    color: #cf1322;
+}
+
+/* ── Link button ── */
+
+.hm-link-btn {
+    border: 0;
+    background: transparent;
+    color: var(--blue);
+    font-size: 13px;
+    font-family: inherit;
+    cursor: pointer;
+    padding: 0;
+}
+
+.hm-link-btn:hover {
+    text-decoration: underline;
+}
+
+.hm-link-btn--disabled {
+    color: #ccc;
+    cursor: default;
+    text-decoration: none;
+}
+
+/* ── Pagination ── */
+
+.hm-pagination {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-top: 12px;
+    font-size: 13px;
+    color: var(--text-secondary);
+}
+
+.hm-pagination__info {
+    white-space: nowrap;
+}
+
+.hm-pagination__controls {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.hm-pagination__controls button {
+    height: 30px;
+    min-width: 30px;
+    padding: 0 8px;
+    border: 1px solid #dcdfe6;
+    border-radius: 4px;
+    background: #fff;
+    color: var(--text-secondary);
+    font-size: 12px;
+    font-family: inherit;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    white-space: nowrap;
+}
+
+.hm-pagination__controls button:hover:not(:disabled) {
+    border-color: var(--blue);
+    color: var(--blue);
+}
+
+.hm-pagination__controls button:disabled {
+    color: #c0c4cc;
+    cursor: not-allowed;
+}
+
+.hm-page-num.is-active {
+    border-color: var(--blue);
+    color: var(--blue);
+    background: #e6f0ff;
+}
+
+/* ── Detail Drawer ── */
+
+.hm-drawer-mask {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.35);
+    z-index: 1000;
+    display: flex;
+    justify-content: flex-end;
+}
+
+.hm-drawer {
+    width: 580px;
+    max-width: 90vw;
+    height: 100%;
+    background: #fff;
+    display: flex;
+    flex-direction: column;
+    box-shadow: -4px 0 20px rgba(0, 0, 0, 0.12);
+    animation: hmSlideIn 0.25s ease;
+}
+
+@keyframes hmSlideIn {
+    from { transform: translateX(100%); }
+    to { transform: translateX(0); }
+}
+
+.hm-drawer__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 20px;
+    border-bottom: 1px solid #f0f2f5;
+}
+
+.hm-drawer__head h4 {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text);
+}
+
+.hm-drawer__tabs {
+    display: flex;
+    gap: 0;
+    padding: 0 20px;
+    border-bottom: 1px solid #f0f2f5;
+}
+
+.hm-drawer__tab {
+    border: 0;
+    background: transparent;
+    padding: 10px 0;
+    margin-right: 28px;
+    font-size: 14px;
+    font-family: inherit;
+    color: var(--text-secondary);
+    cursor: pointer;
+    position: relative;
+    transition: color 0.15s;
+}
+
+.hm-drawer__tab:hover {
+    color: var(--blue);
+}
+
+.hm-drawer__tab.is-active {
+    color: var(--blue);
+    font-weight: 600;
+}
+
+.hm-drawer__tab.is-active::after {
+    content: '';
+    position: absolute;
+    bottom: -1px;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: var(--blue);
+}
+
+.hm-drawer__body {
+    flex: 1;
+    padding: 20px;
+    overflow: auto;
+}
+
+.hm-drawer__foot {
+    display: flex;
+    gap: 10px;
+    padding: 14px 20px;
+    border-top: 1px solid #f0f2f5;
+    justify-content: flex-end;
+}
+
+.hm-forward-drawer-mask {
+    z-index: 1100;
+}
+
+.hm-forward-drawer {
+    width: min(760px, 100%);
+}
+
+.hm-forward-drawer__body {
+    overflow: auto;
+}
+
+/* ── Info Grid ── */
+
+.hm-info-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+}
+
+.hm-info-item {
+    display: flex;
+    align-items: flex-start;
+    padding: 12px 0;
+    border-bottom: 1px solid #f5f5f5;
+    gap: 16px;
+}
+
+.hm-info-item--full {
+    flex-direction: column;
+}
+
+.hm-info-label {
+    width: 70px;
+    flex-shrink: 0;
+    font-size: 13px;
+    color: var(--text-muted);
+    padding-top: 1px;
+}
+
+.hm-info-value {
+    font-size: 13px;
+    color: var(--text);
+    flex: 1;
+}
+
+.hm-info-content-block {
+    background: #fafbfd;
+    border: 1px solid #f0f2f5;
+    border-radius: 4px;
+    padding: 12px;
+    margin-top: 6px;
+    position: relative;
+}
+
+.hm-info-content-block p {
+    margin: 0;
+    font-size: 13px;
+    color: var(--text-secondary);
+    line-height: 1.7;
+    padding-right: 50px;
+}
+
+.hm-copy-btn {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    height: 28px;
+    padding: 0 12px;
+    border: 1px solid var(--blue);
+    border-radius: 4px;
+    background: #e6f0ff;
+    color: var(--blue);
+    font-size: 12px;
+    font-family: inherit;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.hm-copy-btn:hover {
+    background: var(--blue);
+    color: #fff;
+}
+
+/* ── Push table ── */
+
+.hm-push-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+}
+
+.hm-push-table th,
+.hm-push-table td {
+    padding: 10px 12px;
+    border-bottom: 1px solid #f0f2f5;
+    text-align: left;
+    color: var(--text-secondary);
+}
+
+.hm-push-table th:first-child,
+.hm-push-table td:first-child {
+    padding-left: 24px;
+}
+.hm-push-table th:last-child,
+.hm-push-table td:last-child {
+    padding-right: 24px;
+}
+
+.hm-push-table th {
+    background: #fafbfd;
+    color: var(--text);
+    font-weight: 600;
+}
+
+.hm-push-table tbody tr:hover {
+    background: #fafcff;
+}
+
+/* ── Dialog ── */
+
+.hm-dialog-mask {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.35);
+    z-index: 1100;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.hm-dialog {
+    background: #fff;
+    border-radius: 6px;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
+    display: flex;
+    flex-direction: column;
+    max-height: 80vh;
+}
+
+.hm-forward-dialog {
+    width: 680px;
+}
+
+.hm-dialog__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 20px;
+    border-bottom: 1px solid #f0f2f5;
+}
+
+.hm-dialog__head h4 {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text);
+}
+
+.hm-dialog__close {
+    width: 28px;
+    height: 28px;
+    border: 0;
+    background: transparent;
+    font-size: 20px;
+    color: var(--text-muted);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+    transition: background 0.15s;
+}
+
+.hm-dialog__close:hover {
+    background: #f5f5f5;
+    color: var(--text);
+}
+
+.hm-dialog__foot {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+    padding: 14px 20px;
+    border-top: 1px solid #f0f2f5;
+}
+
+/* ── Forward dialog ── */
+
+.hm-forward-body {
+    display: flex;
+    flex: 1;
+    min-height: 360px;
+    padding: 16px;
+    gap: 12px;
+}
+
+.hm-forward-panel {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    border: 1px solid #e8e8e8;
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.hm-forward-panel__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 12px;
+    border-bottom: 1px solid #f0f2f5;
+    background: #fafbfd;
+}
+
+.hm-forward-panel__title {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text);
+}
+
+.hm-forward-panel__count {
+    font-size: 12px;
+    color: var(--blue);
+    font-weight: 500;
+}
+
+.hm-forward-panel__select {
+    padding: 8px 12px;
+    border-bottom: 1px solid #f0f2f5;
+}
+
+.hm-forward-panel__select .el-select {
+    width: 100%;
+}
+
+.hm-forward-list {
+    list-style: none;
+    margin: 0;
+    padding: 4px 0;
+    flex: 1;
+    overflow: auto;
+}
+
+.hm-forward-item {
+    list-style: none;
+}
+
+.hm-forward-check {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 12px;
+    cursor: pointer;
+    font-size: 13px;
+    color: var(--text);
+    transition: background 0.15s;
+}
+
+.hm-forward-check:hover {
+    background: #f5f7fa;
+}
+
+.hm-forward-check input[type="checkbox"] {
+    accent-color: var(--blue);
+}
+
+.hm-forward-arrows {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.hm-forward-arrows button {
+    width: 32px;
+    height: 32px;
+    border: 1px solid #dcdfe6;
+    border-radius: 4px;
+    background: #fff;
+    font-size: 18px;
+    color: var(--text-secondary);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: border-color 0.2s, color 0.2s;
+}
+
+.hm-forward-arrows button:hover:not(:disabled) {
+    border-color: var(--blue);
+    color: var(--blue);
+}
+
+.hm-forward-arrows button:disabled {
+    color: #ccc;
+    cursor: not-allowed;
+}

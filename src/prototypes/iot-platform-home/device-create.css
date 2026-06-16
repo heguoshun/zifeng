@@ -1,0 +1,817 @@
+.dcp-page {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    min-height: 100%;
+}
+
+.dcp-panel {
+    padding: 20px 20px 24px;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 28px;
+}
+
+.dcp-section {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.dcp-form-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 18px 24px;
+}
+
+.dcp-form-field {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    min-width: 0;
+}
+
+.dcp-form-field--span-2 {
+    grid-column: span 2;
+}
+
+.dcp-form-label {
+    font-size: 13px;
+    color: var(--text-secondary);
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.dcp-form-label em {
+    color: #f56c6c;
+    font-style: normal;
+    margin-right: 2px;
+}
+
+.dcp-form-label__info {
+    color: #e6a23c;
+    display: inline-flex;
+    align-items: center;
+}
+
+.dcp-form-input,
+.dcp-form-textarea {
+    width: 100%;
+    border: 1px solid #dcdfe6;
+    border-radius: 4px;
+    padding: 0 12px;
+    font-size: 13px;
+    color: var(--text);
+    font-family: inherit;
+    background: #fff;
+}
+
+.dcp-form-input {
+    height: 34px;
+}
+
+.dcp-form-input.is-readonly {
+    background: #f5f7fa;
+    color: var(--text-muted);
+}
+
+.dcp-form-select {
+    width: 100%;
+    min-width: 0;
+}
+
+.dcp-input-with-suffix {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.dcp-input-with-suffix .dcp-form-input {
+    flex: 1;
+    min-width: 0;
+}
+
+.dcp-input-suffix {
+    font-size: 13px;
+    color: var(--text-secondary);
+    flex-shrink: 0;
+}
+
+.dcp-geo-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 20px;
+}
+
+.dcp-geo-panel {
+    border: 1px solid #ebeef5;
+    border-radius: 4px;
+    padding: 16px;
+    background: #fafbfd;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    min-height: 160px;
+}
+
+.dcp-geo-panel__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.dcp-geo-panel__title {
+    margin: 0;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    gap: 2px;
+}
+
+.dcp-geo-panel__title em {
+    color: #f56c6c;
+    font-style: normal;
+}
+
+.dcp-geo-panel__actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.dcp-geo-panel__actions .pm-btn {
+    height: 28px;
+    padding: 0 12px;
+    font-size: 12px;
+}
+
+.dcp-geo-panel__fields {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.dcp-geo-field {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    color: var(--text-secondary);
+}
+
+.dcp-geo-field span:first-child {
+    color: var(--text-muted);
+    min-width: 64px;
+}
+
+.dcp-geo-field strong {
+    font-weight: 400;
+    color: var(--text-secondary);
+}
+
+.dcp-enable-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-height: 32px;
+}
+
+.dcp-enable-label {
+    font-size: 13px;
+    color: var(--text-secondary);
+}
+
+.dcp-enable-switch {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    color: var(--text-secondary);
+}
+
+.dcp-enable-switch input {
+    appearance: none;
+    width: 40px;
+    height: 22px;
+    border-radius: 11px;
+    background: #dcdfe6;
+    position: relative;
+    cursor: pointer;
+    transition: background 0.2s ease;
+}
+
+.dcp-enable-switch input::after {
+    content: "";
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: #fff;
+    transition: transform 0.2s ease;
+}
+
+.dcp-enable-switch input:checked {
+    background: var(--blue);
+}
+
+.dcp-enable-switch input:checked::after {
+    transform: translateX(18px);
+}
+
+.dcp-group-panel {
+    border: 1px solid #ebeef5;
+    border-radius: 4px;
+    padding: 16px 18px;
+    background: #fff;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.dcp-group-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+}
+
+.dcp-group-row__label {
+    min-width: 72px;
+    font-size: 13px;
+    color: var(--text-secondary);
+    line-height: 28px;
+    flex-shrink: 0;
+}
+
+.dcp-group-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.dcp-group-tag {
+    height: 28px;
+    padding: 0 14px;
+    border: 1px solid #dcdfe6;
+    border-radius: 4px;
+    background: #fff;
+    color: var(--text-secondary);
+    font-size: 13px;
+    font-family: inherit;
+    cursor: pointer;
+    transition: border-color 0.2s, color 0.2s, background 0.2s;
+}
+
+.dcp-group-tag:hover {
+    border-color: var(--blue);
+    color: var(--blue);
+}
+
+.dcp-group-tag.is-selected {
+    border-color: var(--blue);
+    background: #ecf5ff;
+    color: var(--blue);
+}
+
+.dcp-group-dialog-mask {
+    overflow: hidden;
+}
+
+.dcp-group-dialog {
+    --blue: #1890ff;
+    --text: #1f2d3d;
+    --text-secondary: #5c6b7a;
+    --text-muted: #8c9bab;
+    --placeholder: #b2b2b2;
+    --font: "Helvetica Neue", Helvetica, Arial, "PingFang SC", "Microsoft YaHei", sans-serif;
+    width: min(480px, 100vw);
+    max-width: 100vw;
+    overflow: hidden;
+    font-family: var(--font);
+    color: var(--text);
+}
+
+.dcp-group-dialog .pcp-drawer__head h3 {
+    color: #1f2d3d;
+}
+
+.dcp-group-dialog .pcp-form-label {
+    color: #606266;
+}
+
+.dcp-group-dialog .pcp-drawer__foot {
+    flex-shrink: 0;
+    background: #fff;
+    box-shadow: 0 -1px 0 #ebeef5;
+}
+
+.dcp-group-dialog .pcp-drawer__foot .pm-btn {
+    min-width: 88px;
+    height: 36px;
+    justify-content: center;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.dcp-group-dialog .pcp-drawer__foot .pm-btn-primary {
+    border: 1px solid #1890ff;
+    background: #1890ff;
+    color: #fff;
+}
+
+.dcp-group-dialog .pcp-drawer__foot .pm-btn-primary:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+}
+
+.dcp-group-dialog .pcp-drawer__foot .pm-btn-ghost {
+    border: 1px solid #dcdfe6;
+    background: #fff;
+    color: #303133;
+}
+
+.dcp-group-dialog .pcp-drawer__body {
+    overflow-x: hidden;
+    overflow-y: auto;
+}
+
+.dcp-group-dialog .pcp-drawer-field {
+    width: 100%;
+    min-width: 0;
+}
+
+.dcp-group-dialog .pcp-drawer-field .pcp-form-input,
+.dcp-group-dialog .pcp-drawer-field .el-select,
+.dcp-group-dialog .pcp-drawer-field .pcp-form-select,
+.dcp-group-dialog .pcp-drawer-field .pcp-form-textarea,
+.dcp-group-dialog .pcp-drawer-field .dai-textarea-wrap,
+.dcp-group-dialog .pcp-drawer-field .dai-assignee-field {
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+    box-sizing: border-box;
+}
+
+.dcp-group-dialog.wom-create-drawer {
+    width: min(580px, 100vw);
+    max-width: 100vw;
+}
+
+.dcp-group-dialog.wom-detail-drawer {
+    width: min(720px, 100vw);
+    max-width: 100vw;
+}
+
+.dcp-footer {
+    display: flex;
+    justify-content: center;
+    padding-top: 8px;
+    border-top: 1px solid #f0f2f5;
+    margin-top: auto;
+}
+
+.dcp-save-btn {
+    min-width: 120px;
+    height: 36px;
+    justify-content: center;
+}
+
+.dcp-map-dialog {
+    --blue: #1890ff;
+    --text: #1f2d3d;
+    --text-secondary: #5c6b7a;
+    --font: "Helvetica Neue", Helvetica, Arial, "PingFang SC", "Microsoft YaHei", sans-serif;
+    font-family: var(--font);
+    color: var(--text);
+}
+
+.dcp-map-dialog .iot-dialog__head,
+.dcp-map-dialog .iot-dialog__foot {
+    flex-shrink: 0;
+    position: relative;
+    z-index: 4;
+    background: #fff;
+}
+
+.dcp-map-dialog .iot-dialog__foot {
+    box-shadow: 0 -1px 0 #ebeef5, 0 -4px 12px rgba(15, 35, 65, 0.06);
+}
+
+.dcp-map-dialog .iot-dialog__foot .pm-btn {
+    min-width: 96px;
+    height: 36px;
+    justify-content: center;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.dcp-map-dialog .iot-dialog__foot .pm-btn-primary {
+    border: 1px solid #1890ff;
+    background: #1890ff;
+    color: #fff;
+}
+
+.dcp-map-dialog .iot-dialog__foot .pm-btn-primary:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+}
+
+.dcp-map-dialog .iot-dialog__foot .pm-btn-ghost {
+    border: 1px solid #dcdfe6;
+    background: #fff;
+    color: #303133;
+}
+
+.dcp-map-dialog__body {
+    padding: 16px 20px;
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    overflow: hidden;
+}
+
+.dcp-map-dialog__map-wrap {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    flex: 1;
+    min-height: 0;
+    border: 1px solid #ebeef5;
+    border-radius: 4px;
+    overflow: hidden;
+    background: #dfe6ee;
+}
+
+.dcp-map-dialog__toolbar {
+    position: absolute;
+    top: 16px;
+    left: 16px;
+    right: 16px;
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 8px;
+    background: rgba(255, 255, 255, 0.96);
+    border-radius: 4px;
+    box-shadow: 0 2px 8px rgba(15, 35, 65, 0.12);
+}
+
+.dcp-map-dialog__input--address {
+    width: min(240px, 100%);
+    flex: 1 1 200px;
+}
+
+.dcp-map-dialog__field {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 13px;
+    color: #606266;
+    white-space: nowrap;
+}
+
+.dcp-map-dialog__input--coord {
+    width: 108px;
+}
+
+.dcp-map-dialog__search-error {
+    flex: 1 1 100%;
+    margin: 0;
+    font-size: 12px;
+    color: #f56c6c;
+    line-height: 1.4;
+}
+
+.dcp-map-dialog__input {
+    width: 140px;
+    height: 34px;
+    border: 1px solid #dcdfe6;
+    border-radius: 4px;
+    padding: 0 12px;
+    font-size: 13px;
+    color: var(--text);
+    font-family: inherit;
+    background: #fff;
+}
+
+.dcp-map-dialog__toolbar-btn {
+    height: 32px;
+    padding: 0 16px;
+    flex-shrink: 0;
+    border: 1px solid #1890ff;
+    background: #1890ff;
+    color: #fff;
+}
+
+.dcp-map-dialog__toolbar-btn:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+}
+
+.dcp-map-dialog__map {
+    position: relative;
+    flex: 1;
+    min-height: 320px;
+    width: 100%;
+    overflow: hidden;
+    background: #dfe6ee;
+}
+
+.dcp-map-dialog__bmap {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+}
+
+.dcp-map-dialog__status {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    background: rgba(255, 255, 255, 0.92);
+    color: var(--text-secondary);
+    font-size: 14px;
+    z-index: 3;
+    text-align: center;
+    padding: 24px;
+}
+
+.dcp-map-dialog__status--error {
+    color: #f56c6c;
+}
+
+.dcp-map-dialog__status-tip {
+    margin: 0;
+    font-size: 12px;
+    color: var(--text-muted);
+}
+
+.dcp-map-dialog__tile-warning {
+    position: absolute;
+    top: 72px;
+    left: 16px;
+    right: 16px;
+    z-index: 4;
+    padding: 10px 12px;
+    border-radius: 4px;
+    background: rgba(255, 251, 230, 0.96);
+    border: 1px solid #f5d061;
+    color: #8a6d1d;
+    font-size: 12px;
+    line-height: 1.5;
+    box-shadow: 0 2px 8px rgba(15, 35, 65, 0.12);
+}
+
+.dcp-space-dialog {
+    --blue: #1890ff;
+    --text: #1f2d3d;
+    --text-secondary: #5c6b7a;
+    --font: "Helvetica Neue", Helvetica, Arial, "PingFang SC", "Microsoft YaHei", sans-serif;
+    font-family: var(--font);
+    color: var(--text);
+}
+
+.dcp-space-dialog .iot-dialog__head,
+.dcp-space-dialog .iot-dialog__foot {
+    flex-shrink: 0;
+    position: relative;
+    z-index: 4;
+    background: #fff;
+}
+
+.dcp-space-dialog .iot-dialog__foot {
+    box-shadow: 0 -1px 0 #ebeef5, 0 -4px 12px rgba(15, 35, 65, 0.06);
+}
+
+.dcp-space-dialog .iot-dialog__foot .pm-btn {
+    min-width: 96px;
+    height: 36px;
+    justify-content: center;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.dcp-space-dialog .iot-dialog__foot .pm-btn-primary {
+    border: 1px solid #1890ff;
+    background: #1890ff;
+    color: #fff;
+}
+
+.dcp-space-dialog .iot-dialog__foot .pm-btn-primary:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+}
+
+.dcp-space-dialog .iot-dialog__foot .pm-btn-ghost {
+    border: 1px solid #dcdfe6;
+    background: #fff;
+    color: #303133;
+}
+
+.dcp-space-dialog__toolbar {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+    padding: 12px 20px;
+    border-bottom: 1px solid #ebeef5;
+    background: #fff;
+}
+
+.dcp-space-dialog__coord {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    color: #606266;
+    white-space: nowrap;
+}
+
+.dcp-space-dialog__coord-input {
+    width: 88px;
+    height: 34px;
+    border: 1px solid #dcdfe6;
+    border-radius: 4px;
+    padding: 0 10px;
+    font-size: 13px;
+    color: var(--text);
+    font-family: inherit;
+    background: #fff;
+}
+
+.dcp-space-dialog__edit-btn {
+    margin-left: auto;
+    height: 32px;
+    padding: 0 16px;
+    flex-shrink: 0;
+}
+
+.dcp-space-dialog__body {
+    flex: 1;
+    min-height: 0;
+    padding: 0;
+    overflow: hidden;
+    background: #dfe6ee;
+}
+
+.dcp-space-cascade {
+    position: relative;
+    min-width: 220px;
+}
+
+.dcp-space-cascade__trigger {
+    display: flex;
+    align-items: center;
+    min-width: 220px;
+    max-width: 360px;
+    height: 34px;
+    padding: 0 12px;
+    border: 1px solid #dcdfe6;
+    border-radius: 4px;
+    background: #fff;
+    font-size: 13px;
+    color: var(--text);
+    text-align: left;
+    cursor: pointer;
+}
+
+.dcp-space-cascade__panel {
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0;
+    z-index: 20;
+    display: flex;
+    max-width: min(720px, 90vw);
+    border: 1px solid #e4e7ed;
+    border-radius: 4px;
+    background: #fff;
+    box-shadow: 0 4px 16px rgba(15, 35, 65, 0.14);
+    overflow: hidden;
+}
+
+.dcp-space-cascade__column {
+    list-style: none;
+    margin: 0;
+    padding: 6px 0;
+    min-width: 140px;
+    max-height: 280px;
+    overflow-y: auto;
+    border-right: 1px solid #f0f2f5;
+}
+
+.dcp-space-cascade__column:last-child {
+    border-right: none;
+}
+
+.dcp-space-cascade__option {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    width: 100%;
+    padding: 8px 14px;
+    border: none;
+    background: transparent;
+    font-size: 13px;
+    color: #303133;
+    text-align: left;
+    cursor: pointer;
+}
+
+.dcp-space-cascade__option:hover,
+.dcp-space-cascade__option.is-selected {
+    background: #ecf5ff;
+    color: #1890ff;
+}
+
+.dcp-space-map {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    min-height: 420px;
+    background-color: #c8d4dc;
+    background-size: cover;
+    background-position: center;
+    cursor: crosshair;
+    overflow: hidden;
+}
+
+.dcp-space-map__pin {
+    position: absolute;
+    transform: translate(-50%, -100%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    padding: 0;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    z-index: 2;
+}
+
+.dcp-space-map__pin-label {
+    padding: 2px 8px;
+    border-radius: 2px;
+    background: rgba(255, 255, 255, 0.92);
+    color: #1890ff;
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 1.4;
+    white-space: nowrap;
+    box-shadow: 0 1px 4px rgba(15, 35, 65, 0.15);
+}
+
+.dcp-space-map__pin-icon {
+    color: #1890ff;
+    filter: drop-shadow(0 1px 2px rgba(255, 255, 255, 0.8));
+}
+
+.dcp-space-map__pin.is-active .dcp-space-map__pin-label {
+    background: #1890ff;
+    color: #fff;
+}
+
+.dcp-space-map__pin.is-active .dcp-space-map__pin-icon {
+    color: #096dd9;
+}
+
+@media (max-width: 1200px) {
+    .dcp-form-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .dcp-form-field--span-2 {
+        grid-column: span 2;
+    }
+
+    .dcp-geo-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 860px) {
+    .dcp-form-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .dcp-form-field--span-2 {
+        grid-column: span 1;
+    }
+}

@@ -1,0 +1,144 @@
+.da-sidebar-shell {
+    flex: 1;
+    background: #fff;
+    padding: 4px 8px;
+    min-height: 0;
+}
+
+.da-sidebar-nav {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.da-sidebar-top-item {
+    width: 100%;
+    border: 0;
+    background: transparent;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    height: 40px;
+    padding: 0 12px;
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text);
+    cursor: pointer;
+    border-radius: 4px;
+    text-align: left;
+    line-height: 1;
+}
+
+.da-sidebar-top-item:hover {
+    color: var(--blue);
+    background: #fafcff;
+}
+
+.da-sidebar-top-item:hover .da-sidebar-icon {
+    color: var(--blue);
+}
+
+.da-sidebar-top-item.is-active {
+    background: var(--blue-light);
+    color: var(--blue);
+}
+
+.da-sidebar-top-item.is-active .da-sidebar-icon {
+    color: var(--blue);
+}
+
+.da-sidebar-block {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    background: transparent;
+    border: 0;
+    border-radius: 0;
+    overflow: visible;
+}
+
+.da-sidebar-icon {
+    width: 16px;
+    height: 16px;
+    flex-shrink: 0;
+    display: block;
+    color: #5c6b7a;
+}
+
+.da-sidebar-group__head {
+    width: 100%;
+    border: 0;
+    background: transparent;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    height: 40px;
+    padding: 0 12px;
+    font-family: inherit;
+    cursor: pointer;
+    border-radius: 4px;
+}
+
+.da-sidebar-group__head:hover {
+    background: #fafcff;
+}
+
+.da-sidebar-group__head:hover .da-sidebar-group__label {
+    color: var(--blue);
+}
+
+.da-sidebar-group__head:hover .da-sidebar-icon {
+    color: var(--blue);
+}
+
+.da-sidebar-group__label {
+    flex: 1;
+    text-align: left;
+    font-size: 14px;
+    color: var(--text);
+    font-weight: 500;
+    line-height: 1.2;
+}
+
+.da-sidebar-group__arrow {
+    color: #c0c4cc;
+    flex-shrink: 0;
+}
+
+.da-sidebar-children {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.da-sidebar-link {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    border: 0;
+    background: transparent;
+    height: 40px;
+    padding: 0 12px 0 36px;
+    border-radius: 4px;
+    color: var(--text-secondary);
+    font-size: 14px;
+    font-family: inherit;
+    text-align: left;
+    cursor: pointer;
+    line-height: 1;
+}
+
+.da-sidebar-link:hover {
+    color: var(--blue);
+    background: #fafcff;
+}
+
+.da-sidebar-link.is-active {
+    background: var(--blue-light);
+    color: var(--blue);
+    font-weight: 500;
+}
