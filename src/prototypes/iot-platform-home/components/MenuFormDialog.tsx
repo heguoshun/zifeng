@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { Settings } from 'lucide-react';
 import ElTreeSelect from './ElTreeSelect';
 import {
@@ -12,6 +13,16 @@ import {
     type SystemMenuType,
 } from '../data/systemMenus';
 import '../menu-management.css';
+import '../product-create.css';
+import ClearableInput from './ClearableInput';
+
+function handleMaskMouseDown(onClose: () => void) {
+    return (event: React.MouseEvent<HTMLDivElement>) => {
+        if (event.target === event.currentTarget) {
+            onClose();
+        }
+    };
+}
 
 type MenuFormDialogProps = {
     open: boolean;
@@ -57,7 +68,16 @@ export default function MenuFormDialog({
     const [touched, setTouched] = useState(false);
 
     const parentTree = useMemo(() => buildMenuParentSelectTree(menus), [menus]);
-    const title = mode === 'edit' ? '编辑' : '新增';
+    const title = mode === 'edit' ? '编辑菜单' : mode === 'add-child' ? '添加下级菜单' : '新增菜单';
+
+    useEffect(() => {
+        if (!open) return undefined;
+        const previousOverflow = document.body.style.overflow;
+        document.body.style.overflow = 'hidden';
+        return () => {
+            document.body.style.overflow = previousOverflow;
+        };
+    }, [open]);
 
     useEffect(() => {
         if (!open) return;
@@ -116,19 +136,19 @@ export default function MenuFormDialog({
         });
     };
 
-    return (
-        <div className="iot-dialog-mask" role="presentation" onClick={onClose}>
-            <div
-                className="iot-dialog mm-form-dialog"
+    return createPortal(
+        <div className="pcp-drawer-mask" role="presentation" onMouseDown={handleMaskMouseDown(onClose)}>
+            <aside
+                className="pcp-drawer pcp-drawer--form mm-form-drawer"
                 role="dialog"
                 aria-modal="true"
-                onClick={(event) => event.stopPropagation()}
+                onMouseDown={(event) => event.stopPropagation()}
             >
-                <div className="iot-dialog__head">
+                <div className="pcp-drawer__head">
                     <h3>{title}</h3>
-                    <button type="button" className="iot-dialog__close" onClick={onClose} aria-label="关闭">×</button>
+                    <button type="button" className="pcp-drawer__close" onClick={onClose} aria-label="关闭">×</button>
                 </div>
-                <div className="iot-dialog__body mm-form-body">
+                <div className="pcp-drawer__body pcp-drawer__body--form mm-form-body">
                     <div className="mm-form-row">
                         <span className="mm-form-label">菜单类型：</span>
                         <div className="mm-form-control">
@@ -168,7 +188,7 @@ export default function MenuFormDialog({
                     <div className="mm-form-row">
                         <span className="mm-form-label"><em className="mm-required">*</em>菜单名称：</span>
                         <div className="mm-form-control">
-                            <input
+                            <ClearableInput
                                 type="text"
                                 className="mm-form-input"
                                 placeholder="请输入菜单名称"
@@ -184,7 +204,7 @@ export default function MenuFormDialog({
                     <div className="mm-form-row">
                         <span className="mm-form-label"><em className="mm-required">*</em>菜单路径：</span>
                         <div className="mm-form-control">
-                            <input
+                            <ClearableInput
                                 type="text"
                                 className="mm-form-input"
                                 placeholder="请输入菜单路径"
@@ -201,7 +221,7 @@ export default function MenuFormDialog({
                         <div className="mm-form-row">
                             <span className="mm-form-label"><em className="mm-required">*</em>前端组件：</span>
                             <div className="mm-form-control">
-                                <input
+                                <ClearableInput
                                     type="text"
                                     className="mm-form-input"
                                     placeholder="请输入前端组件路径"
@@ -218,7 +238,7 @@ export default function MenuFormDialog({
                     <div className="mm-form-row">
                         <span className="mm-form-label">默认跳转地址：</span>
                         <div className="mm-form-control">
-                            <input
+                            <ClearableInput
                                 type="text"
                                 className="mm-form-input"
                                 placeholder="请输入路由参数 redirect"
@@ -232,7 +252,7 @@ export default function MenuFormDialog({
                         <span className="mm-form-label">菜单图标：</span>
                         <div className="mm-form-control">
                             <div className="mm-icon-field">
-                                <input
+                                <ClearableInput
                                     type="text"
                                     className="mm-form-input"
                                     placeholder="点击选择图标"
@@ -249,7 +269,7 @@ export default function MenuFormDialog({
                     <div className="mm-form-row">
                         <span className="mm-form-label">排序：</span>
                         <div className="mm-form-control">
-                            <input
+                            <ClearableInput
                                 type="number"
                                 className="mm-form-input mm-form-input--sort"
                                 min={1}
@@ -325,11 +345,12 @@ export default function MenuFormDialog({
                         </div>
                     </div>
                 </div>
-                <div className="iot-dialog__foot">
+                <div className="pcp-drawer__foot">
                     <button type="button" className="pm-btn pm-btn-ghost" onClick={onClose}>取消</button>
                     <button type="button" className="pm-btn pm-btn-primary" onClick={handleConfirm}>确定</button>
                 </div>
-            </div>
-        </div>
+            </aside>
+        </div>,
+        document.body,
     );
 }

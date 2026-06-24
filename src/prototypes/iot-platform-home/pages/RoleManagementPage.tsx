@@ -8,17 +8,19 @@ import IotToast, { type IotToastData, type IotToastType, triggerIotToast } from 
 import RoleFormDrawer, { type RoleFormValue } from '../components/RoleFormDrawer';
 import {
     createInitialRoles,
+    formatAlarmRuleScopeSummary,
     generateRoleCode,
     generateRoleId,
     formatRoleNow,
     type SystemRoleRecord,
 } from '../data/systemRoles';
 import { type TenantRecord } from '../data/tenants';
-import { paginateItems } from '../utils/listPagination';
+import { paginateItems, DEFAULT_LIST_PAGE_SIZE } from '../utils/listPagination';
 import '../device-access.css';
 import '../product-management.css';
 import '../tenant-management.css';
 import '../role-management.css';
+import ClearableInput from '../components/ClearableInput';
 
 type RoleFormMode = 'add' | 'edit' | null;
 
@@ -31,7 +33,6 @@ export type RoleManagementPageProps = {
     onNavigateHome: () => void;
     onNavigateDeviceAccess: () => void;
     onNavigateMessageCenter: () => void;
-    onNavigateOmManagement: () => void;
     onNavigate: (pageId: SystemManagementPageId) => void;
 };
 
@@ -42,12 +43,11 @@ export default function RoleManagementPage({
     onNavigateHome,
     onNavigateDeviceAccess,
     onNavigateMessageCenter,
-    onNavigateOmManagement,
     onNavigate,
 }: RoleManagementPageProps) {
     const [draftKeyword, setDraftKeyword] = useState('');
     const [keyword, setKeyword] = useState('');
-    const [pageSize, setPageSize] = useState('10');
+    const [pageSize, setPageSize] = useState('20');
     const [currentPage, setCurrentPage] = useState(1);
     const [jumpPage, setJumpPage] = useState('1');
     const [formMode, setFormMode] = useState<RoleFormMode>(null);
@@ -124,6 +124,9 @@ export default function RoleManagementPage({
                 roleCode: generateRoleCode(),
                 createdAt: formatRoleNow(),
                 authorizedPermissionIds: value.permissionIds,
+                alarmRuleCategoryScopes: value.alarmRuleCategoryScopes.length
+                    ? value.alarmRuleCategoryScopes
+                    : undefined,
             };
             onUpdateRoles((prev) => [next, ...prev]);
             showToast('角色新增成功', 'success');
@@ -140,6 +143,11 @@ export default function RoleManagementPage({
                             name: value.name,
                             tenantId: value.tenantId,
                             authorizedPermissionIds: value.permissionIds,
+                            alarmRuleCategoryScopes: r.isTenantAdmin
+                                ? undefined
+                                : (value.alarmRuleCategoryScopes.length
+                                    ? value.alarmRuleCategoryScopes
+                                    : undefined),
                         }
                         : r,
                 ),
@@ -171,12 +179,10 @@ export default function RoleManagementPage({
             activeTopTab="系统管理"
             sidebar={sidebar}
             onNavigateMessageCenter={onNavigateMessageCenter}
-            onNavigateOmManagement={onNavigateOmManagement}
             onNavigateSystemManagement={() => onNavigate('role-mgmt')}
             onTopTabChange={(tab) => {
                 if (tab === '设备接入') onNavigateDeviceAccess();
                 if (tab === '消息中心') onNavigateMessageCenter();
-                if (tab === '运维管理') onNavigateOmManagement();
             }}
         >
             <div className="rm-page">
@@ -185,9 +191,9 @@ export default function RoleManagementPage({
                 {/* ── Filter ── */}
                 <section className="panel rm-filter-panel">
                     <div className="rm-filter-row">
-                        <label className="pm-filter-field">
+                        <div className="pm-filter-field">
                             <span className="pm-filter-label">角色名称</span>
-                            <input
+                            <ClearableInput
                                 type="text"
                                 className="pm-filter-input"
                                 placeholder="请输入角色名称"
@@ -197,7 +203,7 @@ export default function RoleManagementPage({
                                     if (e.key === 'Enter') handleSearch();
                                 }}
                             />
-                        </label>
+                        </div>
                         <div className="pm-filter-actions">
                             <button type="button" className="pm-btn pm-btn-primary" onClick={handleSearch}>
                                 <Search size={14} />
@@ -228,6 +234,8 @@ export default function RoleManagementPage({
                                     <th>所属租户</th>
                                     <th>角色编号</th>
                                     <th>角色名称</th>
+                                    <th>数据域</th>
+                                    <th>角色说明</th>
                                     <th>创建时间</th>
                                     <th style={{ width: 140 }}>操作</th>
                                 </tr>
@@ -235,7 +243,7 @@ export default function RoleManagementPage({
                             <tbody>
                                 {pagination.items.length === 0 ? (
                                     <tr>
-                                        <td colSpan={6} style={{ textAlign: 'center', color: 'var(--text-muted)', padding: '32px 12px' }}>
+                                        <td colSpan={8} style={{ textAlign: 'center', color: 'var(--text-muted)', padding: '32px 12px' }}>
                                             暂无数据
                                         </td>
                                     </tr>
@@ -249,6 +257,8 @@ export default function RoleManagementPage({
                                                 <td>{tenantName}</td>
                                                 <td>{role.roleCode}</td>
                                                 <td>{role.name}</td>
+                                                <td>{formatAlarmRuleScopeSummary(role.alarmRuleCategoryScopes, { isTenantAdmin: role.isTenantAdmin })}</td>
+                                                <td title={role.remark}>{role.remark ?? '—'}</td>
                                                 <td>{role.createdAt}</td>
                                                 <td>
                                                     <div className="rm-table-actions">

@@ -6,25 +6,35 @@ import ElTreeSelect from './ElTreeSelect';
 import type { AlarmTriggerMethod } from '../data/deviceAlarms';
 import type { AlarmLevelRecord } from '../data/alarmLevels';
 import type { DeviceRecord } from '../data/devices';
-import { DEFAULT_TREE_EXPANDED, matchesTreeSelection, SPACE_TREE } from '../data/orgHierarchy';
 import {
     buildProductPickerTree,
     DEFAULT_PRODUCT_TREE_EXPANDED,
 } from '../data/productCategories';
 import type { ProductRecord } from '../data/products';
+import ClearableInput from './ClearableInput';
 import {
     ALARM_CONDITION_LIMIT_OPTIONS,
+    ALARM_PROPERTY_REPORT_CHECK_TYPE_OPTIONS,
+    ALARM_PROPERTY_REPORT_TIME_SOURCE_OPTIONS,
+    ALARM_PROPERTY_REPORT_TOLERANCE_UNIT_OPTIONS,
     ALARM_RULE_DELAY_UNIT_OPTIONS,
     ALARM_REPEAT_SUPPRESSION_OPTIONS,
     ALARM_RULE_JUDGE_OPERATOR_OPTIONS,
     ALARM_RULE_SAMPLE_PERIOD_OPTIONS,
     ALARM_RULE_VALUE_METHOD_OPTIONS,
+    DEFAULT_OFF_HOUR_REPORT_TOLERANCE_UNIT,
+    DEFAULT_OFF_HOUR_REPORT_TOLERANCE_VALUE,
     getAlarmRuleTriggerConditionOptions,
     isDynamicValueMethod,
+    isOffHourReportCheck,
     needsSamplePeriodValueMethod,
     createDefaultLevelConditionConfig,
     createEmptyAlarmRuleCondition,
+    resolveDataTimePropertyId,
     type AlarmConditionLimitMode,
+    type AlarmPropertyReportCheckType,
+    type AlarmPropertyReportTimeSource,
+    type AlarmPropertyReportToleranceUnit,
     type AlarmRepeatSuppressionMode,
     type AlarmRuleConditionItem,
     type AlarmRuleConditionSettings,
@@ -65,6 +75,26 @@ const JUDGE_OPERATOR_OPTIONS = ALARM_RULE_JUDGE_OPERATOR_OPTIONS.map((item) => (
     label: item,
     value: item,
 }));
+
+const REPORT_CHECK_TYPE_OPTIONS = ALARM_PROPERTY_REPORT_CHECK_TYPE_OPTIONS.map((item) => ({
+    label: item,
+    value: item,
+}));
+
+const REPORT_TIME_PROPERTY_OPTIONS = ALARM_PROPERTY_REPORT_TIME_SOURCE_OPTIONS.map((item) => ({
+    label: item,
+    value: item,
+}));
+
+const REPORT_TOLERANCE_UNIT_OPTIONS = ALARM_PROPERTY_REPORT_TOLERANCE_UNIT_OPTIONS.map((item) => ({
+    label: item,
+    value: item,
+}));
+
+function resolveOffHourPropertyId(product: ProductRecord | undefined): string {
+    if (!product) return '';
+    return resolveDataTimePropertyId(product.properties);
+}
 
 function updateLevelConfig(
     settings: AlarmRuleConditionSettings,
@@ -167,8 +197,6 @@ export default function AlarmRuleConditionSection({
         if (!condition.productId) return [];
         return devices
             .filter((device) => device.productId === condition.productId)
-            .filter((device) => !condition.spaceId
-                || matchesTreeSelection(condition.spaceId, device.spaceId, SPACE_TREE))
             .slice(0, 50)
             .map((device) => ({ label: device.name, value: device.id }));
     };
@@ -278,7 +306,7 @@ export default function AlarmRuleConditionSection({
                                 </div>
                             </div>
                             <div className="arc-condition-grid">
-                                <label className="arc-condition-field">
+                                <div className="arc-condition-field">
                                     <span className="pcp-form-label"><em>*</em>产品名称：</span>
                                     <ElTreeSelect
                                         className="el-select--medium pcp-form-select arc-tree-select"
@@ -288,34 +316,26 @@ export default function AlarmRuleConditionSection({
                                         placeholder="请选择产品"
                                         showAllOption={false}
                                         defaultExpanded={DEFAULT_PRODUCT_TREE_EXPANDED}
+                                        filterable
                                         onChange={(productId) => {
                                             if (!productIds.has(productId)) return;
+                                            const product = products.find((item) => item.id === productId);
+                                            const dataTimePropertyId = resolveOffHourPropertyId(product);
+                                            const isOffHour = isOffHourReportCheck(condition.reportCheckType);
+                                            const usesDataTime = (condition.reportTimeSource || '数据时间') !== '收到时间';
                                             updateCondition(index, {
                                                 productId,
                                                 deviceIds: [],
-                                                propertyId: '',
+                                                propertyId: isOffHour && usesDataTime && dataTimePropertyId
+                                                    ? dataTimePropertyId
+                                                    : '',
                                                 eventIds: [],
                                                 functionId: '',
                                             });
                                         }}
                                     />
-                                </label>
-                                <label className="arc-condition-field">
-                                    <span className="pcp-form-label">所属空间：</span>
-                                    <ElTreeSelect
-                                        className="el-select--medium pcp-form-select arc-tree-select"
-                                        size="medium"
-                                        value={condition.spaceId || 'all'}
-                                        tree={SPACE_TREE}
-                                        placeholder="请选择空间"
-                                        defaultExpanded={DEFAULT_TREE_EXPANDED}
-                                        onChange={(spaceId) => updateCondition(index, {
-                                            spaceId: spaceId === 'all' ? '' : spaceId,
-                                            deviceIds: [],
-                                        })}
-                                    />
-                                </label>
-                                <label className="arc-condition-field">
+                                </div>
+                                <div className="arc-condition-field">
                                     <span className="pcp-form-label"><em>*</em>设备名称：</span>
                                     <ElMultiSelect
                                         className="el-select--medium pcp-form-select"
@@ -326,10 +346,10 @@ export default function AlarmRuleConditionSection({
                                         options={getDeviceOptions(condition)}
                                         onChange={(deviceIds) => updateCondition(index, { deviceIds })}
                                     />
-                                </label>
+                                </div>
                                 {isDataTrigger && (
                                     <>
-                                        <label className="arc-condition-field">
+                                        <div className="arc-condition-field">
                                             <span className="pcp-form-label"><em>*</em>属性数据：</span>
                                             <ElSelect
                                                 className="el-select--medium pcp-form-select"
@@ -341,8 +361,8 @@ export default function AlarmRuleConditionSection({
                                                 ]}
                                                 onChange={(propertyId) => updateCondition(index, { propertyId })}
                                             />
-                                        </label>
-                                        <label className="arc-condition-field">
+                                        </div>
+                                        <div className="arc-condition-field">
                                             <span className="pcp-form-label"><em>*</em>取值方式：</span>
                                             <ElSelect
                                                 className="el-select--medium pcp-form-select"
@@ -372,12 +392,12 @@ export default function AlarmRuleConditionSection({
                                                     updateCondition(index, patch);
                                                 }}
                                             />
-                                        </label>
-                                        <label className="arc-condition-field">
+                                        </div>
+                                        <div className="arc-condition-field">
                                             <span className="pcp-form-label"><em>*</em>判断条件：</span>
                                             {isDynamicValueMethod(condition.valueMethod) ? (
                                                 <div className="arc-judge-range-group">
-                                                    <input
+                                                    <ClearableInput
                                                         type="text"
                                                         className="pcp-form-input"
                                                         placeholder="请输入最小数值"
@@ -387,7 +407,7 @@ export default function AlarmRuleConditionSection({
                                                         })}
                                                     />
                                                     <span className="arc-judge-range-separator">-</span>
-                                                    <input
+                                                    <ClearableInput
                                                         type="text"
                                                         className="pcp-form-input"
                                                         placeholder="请输入最大数值"
@@ -408,7 +428,7 @@ export default function AlarmRuleConditionSection({
                                                             judgeOperator: judgeOperator as AlarmRuleConditionItem['judgeOperator'],
                                                         })}
                                                     />
-                                                    <input
+                                                    <ClearableInput
                                                         type="text"
                                                         className="pcp-form-input"
                                                         placeholder="请输入数值"
@@ -419,9 +439,9 @@ export default function AlarmRuleConditionSection({
                                                     />
                                                 </div>
                                             )}
-                                        </label>
+                                        </div>
                                         {needsSamplePeriodValueMethod(condition.valueMethod) && (
-                                            <label className="arc-condition-field arc-condition-field--period">
+                                            <div className="arc-condition-field arc-condition-field--period">
                                                 <span className="pcp-form-label"><em>*</em>取值周期：</span>
                                                 <ElSelect
                                                     className="el-select--medium pcp-form-select"
@@ -435,12 +455,12 @@ export default function AlarmRuleConditionSection({
                                                         samplePeriod,
                                                     })}
                                                 />
-                                            </label>
+                                            </div>
                                         )}
                                     </>
                                 )}
                                 {isEventTrigger && (
-                                    <label className="arc-condition-field">
+                                    <div className="arc-condition-field">
                                         <span className="pcp-form-label"><em>*</em>事件名称：</span>
                                         <ElMultiSelect
                                             className="el-select--medium pcp-form-select"
@@ -451,25 +471,124 @@ export default function AlarmRuleConditionSection({
                                             options={getEventOptions(condition.productId)}
                                             onChange={(eventIds) => updateCondition(index, { eventIds })}
                                         />
-                                    </label>
+                                    </div>
                                 )}
                                 {isPropertyReportTrigger && (
-                                    <label className="arc-condition-field">
-                                        <span className="pcp-form-label"><em>*</em>属性名称：</span>
-                                        <ElSelect
-                                            className="el-select--medium pcp-form-select"
-                                            size="medium"
-                                            value={condition.propertyId}
-                                            options={[
-                                                { label: '请选择', value: '' },
-                                                ...getPropertyOptions(condition.productId),
-                                            ]}
-                                            onChange={(propertyId) => updateCondition(index, { propertyId })}
-                                        />
-                                    </label>
+                                    <>
+                                        <div className="arc-condition-field">
+                                            <span className="pcp-form-label"><em>*</em>校验类型：</span>
+                                            <ElSelect
+                                                className="el-select--medium pcp-form-select"
+                                                size="medium"
+                                                value={condition.reportCheckType}
+                                                options={[
+                                                    { label: '请选择', value: '' },
+                                                    ...REPORT_CHECK_TYPE_OPTIONS,
+                                                ]}
+                                                onChange={(value) => {
+                                                    if (!value) {
+                                                        updateCondition(index, {
+                                                            reportCheckType: '',
+                                                            propertyId: '',
+                                                            reportTimeSource: '',
+                                                            reportToleranceValue: '',
+                                                            reportToleranceUnit: '',
+                                                        });
+                                                        return;
+                                                    }
+                                                    const reportCheckType = value as AlarmPropertyReportCheckType;
+                                                    const product = products.find((item) => item.id === condition.productId);
+                                                    const dataTimePropertyId = resolveOffHourPropertyId(product);
+                                                    if (isOffHourReportCheck(reportCheckType)) {
+                                                        updateCondition(index, {
+                                                            reportCheckType,
+                                                            reportTimeSource: condition.reportTimeSource || '数据时间',
+                                                            reportToleranceValue: condition.reportToleranceValue
+                                                                || DEFAULT_OFF_HOUR_REPORT_TOLERANCE_VALUE,
+                                                            reportToleranceUnit: condition.reportToleranceUnit
+                                                                || DEFAULT_OFF_HOUR_REPORT_TOLERANCE_UNIT,
+                                                            propertyId: dataTimePropertyId,
+                                                        });
+                                                        return;
+                                                    }
+                                                    updateCondition(index, {
+                                                        reportCheckType,
+                                                        propertyId: '',
+                                                        reportTimeSource: '',
+                                                        reportToleranceValue: '',
+                                                        reportToleranceUnit: '',
+                                                    });
+                                                }}
+                                            />
+                                        </div>
+                                        {isOffHourReportCheck(condition.reportCheckType) ? (
+                                            <>
+                                                <div className="arc-condition-field">
+                                                    <span className="pcp-form-label"><em>*</em>时间属性：</span>
+                                                    <ElSelect
+                                                        className="el-select--medium pcp-form-select"
+                                                        size="medium"
+                                                        value={condition.reportTimeSource || '数据时间'}
+                                                        options={REPORT_TIME_PROPERTY_OPTIONS}
+                                                        onChange={(value) => {
+                                                            const reportTimeSource = value as AlarmPropertyReportTimeSource;
+                                                            const product = products.find((item) => item.id === condition.productId);
+                                                            const dataTimePropertyId = resolveOffHourPropertyId(product);
+                                                            updateCondition(index, {
+                                                                reportTimeSource,
+                                                                propertyId: reportTimeSource === '数据时间'
+                                                                    ? dataTimePropertyId
+                                                                    : '',
+                                                            });
+                                                        }}
+                                                    />
+                                                </div>
+                                                <div className="arc-condition-field">
+                                                    <span className="pcp-form-label"><em>*</em>容差：</span>
+                                                    <div className="arc-delay-input-group">
+                                                        <ClearableInput
+                                                            type="text"
+                                                            className="pcp-form-input"
+                                                            placeholder="请输入"
+                                                            value={condition.reportToleranceValue}
+                                                            onChange={(event) => updateCondition(index, {
+                                                                reportToleranceValue: event.target.value.replace(/[^\d]/g, ''),
+                                                            })}
+                                                        />
+                                                        <ElSelect
+                                                            className="el-select--medium arc-delay-unit-select"
+                                                            size="medium"
+                                                            value={condition.reportToleranceUnit || DEFAULT_OFF_HOUR_REPORT_TOLERANCE_UNIT}
+                                                            options={REPORT_TOLERANCE_UNIT_OPTIONS}
+                                                            onChange={(unit) => updateCondition(index, {
+                                                                reportToleranceUnit: unit as AlarmPropertyReportToleranceUnit,
+                                                            })}
+                                                        />
+                                                    </div>
+                                                </div>
+                                                <p className="arc-condition-field-tip arc-condition-field-tip--full">
+                                                    当上报时间偏离最近整点超过容差范围时触发告警，例如容差 5 分钟表示允许在整点前后 5 分钟内上报，容差 30 秒同理。
+                                                </p>
+                                            </>
+                                        ) : condition.reportCheckType === '属性变更' ? (
+                                            <div className="arc-condition-field">
+                                                <span className="pcp-form-label"><em>*</em>属性名称：</span>
+                                                <ElSelect
+                                                    className="el-select--medium pcp-form-select"
+                                                    size="medium"
+                                                    value={condition.propertyId}
+                                                    options={[
+                                                        { label: '请选择', value: '' },
+                                                        ...getPropertyOptions(condition.productId),
+                                                    ]}
+                                                    onChange={(propertyId) => updateCondition(index, { propertyId })}
+                                                />
+                                            </div>
+                                        ) : null}
+                                    </>
                                 )}
                                 {isFunctionTrigger && (
-                                    <label className="arc-condition-field">
+                                    <div className="arc-condition-field">
                                         <span className="pcp-form-label"><em>*</em>功能名称：</span>
                                         <ElSelect
                                             className="el-select--medium pcp-form-select"
@@ -481,11 +600,11 @@ export default function AlarmRuleConditionSection({
                                             ]}
                                             onChange={(functionId) => updateCondition(index, { functionId })}
                                         />
-                                    </label>
+                                    </div>
                                 )}
                                 {isStatusTrigger && (
                                     <>
-                                        <label className="arc-condition-field">
+                                        <div className="arc-condition-field">
                                             <span className="pcp-form-label"><em>*</em>触发条件：</span>
                                             <ElSelect
                                                 className="el-select--medium pcp-form-select"
@@ -495,14 +614,18 @@ export default function AlarmRuleConditionSection({
                                                     { label: '请选择触发条件', value: '' },
                                                     { label: '设备下线', value: '设备下线' },
                                                     { label: '设备上线', value: '设备上线' },
+                                                    { label: '连续未上报', value: '连续未上报' },
                                                 ]}
                                                 onChange={(triggerCondition) => updateCondition(index, { triggerCondition })}
                                             />
-                                        </label>
-                                        <label className="arc-condition-field">
-                                            <span className="pcp-form-label"><em>*</em>延迟时间：</span>
+                                        </div>
+                                        <div className="arc-condition-field">
+                                            <span className="pcp-form-label">
+                                                <em>*</em>
+                                                {condition.triggerCondition === '连续未上报' ? '持续时间' : '延迟时间'}：
+                                            </span>
                                             <div className="arc-delay-input-group">
-                                                <input
+                                                <ClearableInput
                                                     type="text"
                                                     className="pcp-form-input"
                                                     placeholder="请输入"
@@ -521,12 +644,12 @@ export default function AlarmRuleConditionSection({
                                                     })}
                                                 />
                                             </div>
-                                        </label>
+                                        </div>
                                     </>
                                 )}
                                 {!isDataTrigger && !isStatusTrigger && !isEventTrigger && !isPropertyReportTrigger && !isFunctionTrigger && (
                                     <>
-                                        <label className="arc-condition-field">
+                                        <div className="arc-condition-field">
                                             <span className="pcp-form-label"><em>*</em>触发条件：</span>
                                             <ElSelect
                                                 className="el-select--medium pcp-form-select"
@@ -541,11 +664,11 @@ export default function AlarmRuleConditionSection({
                                                 ]}
                                                 onChange={(triggerCondition) => updateCondition(index, { triggerCondition })}
                                             />
-                                        </label>
-                                        <label className="arc-condition-field">
+                                        </div>
+                                        <div className="arc-condition-field">
                                             <span className="pcp-form-label"><em>*</em>延迟时间：</span>
                                             <div className="arc-delay-input-group">
-                                                <input
+                                                <ClearableInput
                                                     type="text"
                                                     className="pcp-form-input"
                                                     placeholder="请输入"
@@ -564,7 +687,7 @@ export default function AlarmRuleConditionSection({
                                                     })}
                                                 />
                                             </div>
-                                        </label>
+                                        </div>
                                     </>
                                 )}
                             </div>
@@ -575,7 +698,7 @@ export default function AlarmRuleConditionSection({
                 <div className="arc-repeat-limit">
                     <span className="arc-condition-card__title">重报限制</span>
                     <div className="arc-repeat-limit-grid">
-                        <label className="arc-condition-field">
+                        <div className="arc-condition-field">
                             <span className="pcp-form-label"><em>*</em>重报抑制：</span>
                             <ElSelect
                                 className="el-select--medium pcp-form-select"
@@ -586,12 +709,12 @@ export default function AlarmRuleConditionSection({
                                     repeatSuppression as AlarmRepeatSuppressionMode,
                                 )}
                             />
-                        </label>
+                        </div>
                         {activeConfig.repeatSuppression === '规定时间内抑制' && (
-                            <label className="arc-condition-field">
+                            <div className="arc-condition-field">
                                 <span className="pcp-form-label"><em>*</em>静默时间：</span>
                                 <div className="arc-delay-input-group">
-                                    <input
+                                    <ClearableInput
                                         type="text"
                                         className="pcp-form-input"
                                         placeholder="请输入"
@@ -610,7 +733,7 @@ export default function AlarmRuleConditionSection({
                                         })}
                                     />
                                 </div>
-                            </label>
+                            </div>
                         )}
                     </div>
                 </div>

@@ -2,9 +2,10 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 import ElSelect from './ElSelect';
 import ElDatePicker from './ElDatePicker';
-import SpaceImageUpload from './SpaceImageUpload';
+import UserAvatarUpload from './UserAvatarUpload';
 import { DEFAULT_USER_AVATAR } from '../data/userAvatars';
 import { getDepartmentsByTenant } from '../data/systemDepartments';
+import { getActivePositions, type SystemPositionRecord } from '../data/systemPositions';
 import { getRolesByTenant, type SystemRoleRecord } from '../data/systemRoles';
 import {
     SYSTEM_USER_GENDER_OPTIONS,
@@ -17,6 +18,7 @@ import '../product-create.css';
 import '../device-create.css';
 import '../tenant-management.css';
 import '../user-management.css';
+import ClearableInput from './ClearableInput';
 
 export type UserFormValue = {
     tenantId: string;
@@ -26,6 +28,7 @@ export type UserFormValue = {
     phone: string;
     roleId: string;
     departmentId: string;
+    positionId: string;
     avatar: string;
     gender: SystemUserGender;
     birthday: string;
@@ -37,6 +40,7 @@ type UserFormDrawerProps = {
     mode: 'add' | 'edit';
     tenants: TenantRecord[];
     roles: SystemRoleRecord[];
+    positions: SystemPositionRecord[];
     initialValue?: UserFormValue;
     onClose: () => void;
     onSubmit: (value: UserFormValue) => void;
@@ -50,6 +54,7 @@ const EMPTY_FORM: UserFormValue = {
     phone: '',
     roleId: '',
     departmentId: '',
+    positionId: '',
     avatar: '',
     gender: '男',
     birthday: '',
@@ -70,6 +75,7 @@ export function toUserFormValue(user: SystemUserRecord): UserFormValue {
         phone: user.phone,
         roleId: user.roleId,
         departmentId: user.departmentId,
+        positionId: user.positionId ?? '',
         avatar: user.avatar ?? '',
         gender: user.gender,
         birthday: user.birthday,
@@ -82,6 +88,7 @@ export default function UserFormDrawer({
     mode,
     tenants,
     roles,
+    positions,
     initialValue,
     onClose,
     onSubmit,
@@ -107,6 +114,11 @@ export default function UserFormDrawer({
     const departmentOptions = useMemo(
         () => getDepartmentsByTenant(form.tenantId).map((item) => ({ label: item.name, value: item.id })),
         [form.tenantId],
+    );
+
+    const positionOptions = useMemo(
+        () => getActivePositions(positions).map((item) => ({ label: item.name, value: item.id })),
+        [positions],
     );
 
     useEffect(() => {
@@ -136,6 +148,14 @@ export default function UserFormDrawer({
         }
     }, [open, form.tenantId, form.roleId, roles]);
 
+    useEffect(() => {
+        if (!open) return;
+        const activePositionIds = new Set(getActivePositions(positions).map((item) => item.id));
+        if (form.positionId && !activePositionIds.has(form.positionId)) {
+            setForm((prev) => ({ ...prev, positionId: '' }));
+        }
+    }, [open, form.positionId, positions]);
+
     if (!open) return null;
 
     const canSubmit = form.tenantId
@@ -157,6 +177,7 @@ export default function UserFormDrawer({
             phone: form.phone.trim(),
             roleId: form.roleId,
             departmentId: form.departmentId,
+            positionId: form.positionId,
             avatar: form.avatar,
             gender: form.gender,
             birthday: form.birthday,
@@ -194,7 +215,7 @@ export default function UserFormDrawer({
                 </div>
 
                 <div className="pcp-drawer__body pcp-drawer__body--form">
-                    <label className="pcp-drawer-field">
+                    <div className="pcp-drawer-field">
                         <span className="pcp-form-label"><em>*</em>所属租户：</span>
                         <ElSelect
                             className="el-select--medium"
@@ -204,10 +225,10 @@ export default function UserFormDrawer({
                             options={tenantOptions}
                             onChange={handleTenantChange}
                         />
-                    </label>
+                    </div>
                     <label className="pcp-drawer-field">
                         <span className="pcp-form-label"><em>*</em>用户名称：</span>
-                        <input
+                        <ClearableInput
                             type="text"
                             className="pcp-form-input"
                             placeholder="请输入"
@@ -217,7 +238,7 @@ export default function UserFormDrawer({
                     </label>
                     <label className="pcp-drawer-field">
                         <span className="pcp-form-label"><em>*</em>用户账号：</span>
-                        <input
+                        <ClearableInput
                             type="text"
                             className="pcp-form-input"
                             placeholder="请输入字母、数字"
@@ -251,7 +272,7 @@ export default function UserFormDrawer({
                     ) : null}
                     <label className="pcp-drawer-field">
                         <span className="pcp-form-label"><em>*</em>手机号码：</span>
-                        <input
+                        <ClearableInput
                             type="text"
                             className="pcp-form-input"
                             placeholder="请输入手机号码"
@@ -259,7 +280,7 @@ export default function UserFormDrawer({
                             onChange={(event) => setForm((prev) => ({ ...prev, phone: event.target.value }))}
                         />
                     </label>
-                    <label className="pcp-drawer-field">
+                    <div className="pcp-drawer-field">
                         <span className="pcp-form-label"><em>*</em>所属角色：</span>
                         <ElSelect
                             className="el-select--medium"
@@ -274,8 +295,8 @@ export default function UserFormDrawer({
                             disabled={!form.tenantId || !getRolesByTenant(roles, form.tenantId).length}
                             onChange={(value) => setForm((prev) => ({ ...prev, roleId: value }))}
                         />
-                    </label>
-                    <label className="pcp-drawer-field">
+                    </div>
+                    <div className="pcp-drawer-field">
                         <span className="pcp-form-label"><em>*</em>所属部门：</span>
                         <ElSelect
                             className="el-select--medium"
@@ -286,15 +307,27 @@ export default function UserFormDrawer({
                             disabled={!form.tenantId}
                             onChange={(value) => setForm((prev) => ({ ...prev, departmentId: value }))}
                         />
-                    </label>
+                    </div>
                     <div className="pcp-drawer-field">
+                        <span className="pcp-form-label">所属岗位：</span>
+                        <ElSelect
+                            className="el-select--medium"
+                            size="medium"
+                            value={form.positionId}
+                            placeholder={positionOptions.length ? '请选择' : '暂无可用岗位'}
+                            options={positionOptions}
+                            disabled={!positionOptions.length}
+                            onChange={(value) => setForm((prev) => ({ ...prev, positionId: value }))}
+                        />
+                    </div>
+                    <div className="pcp-drawer-field um-avatar-field">
                         <span className="pcp-form-label">头像：</span>
-                        <SpaceImageUpload
+                        <UserAvatarUpload
                             value={form.avatar}
                             onChange={(avatar) => setForm((prev) => ({ ...prev, avatar }))}
                         />
                     </div>
-                    <label className="pcp-drawer-field">
+                    <div className="pcp-drawer-field">
                         <span className="pcp-form-label">性别：</span>
                         <ElSelect
                             className="el-select--medium"
@@ -306,8 +339,8 @@ export default function UserFormDrawer({
                                 gender: value as SystemUserGender,
                             }))}
                         />
-                    </label>
-                    <label className="pcp-drawer-field">
+                    </div>
+                    <div className="pcp-drawer-field">
                         <span className="pcp-form-label">生日：</span>
                         <ElDatePicker
                             className="el-select--medium"
@@ -316,10 +349,10 @@ export default function UserFormDrawer({
                             placeholder="请选择日期"
                             onChange={(value) => setForm((prev) => ({ ...prev, birthday: value }))}
                         />
-                    </label>
+                    </div>
                     <label className="pcp-drawer-field">
                         <span className="pcp-form-label">邮箱：</span>
-                        <input
+                        <ClearableInput
                             type="email"
                             className="pcp-form-input"
                             placeholder="请输入邮箱"

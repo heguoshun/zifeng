@@ -4,6 +4,7 @@ import { DEFAULT_ALARM_LEVEL_COLORS } from '../data/alarmLevels';
 import '../product-create.css';
 import '../device-create.css';
 import '../alarm-level-management.css';
+import ClearableInput from './ClearableInput';
 
 export type AlarmLevelFormValue = {
     name: string;
@@ -81,7 +82,7 @@ export default function AlarmLevelFormDrawer({
                 <div className="pcp-drawer__body pcp-drawer__body--form">
                     <label className="pcp-drawer-field">
                         <span className="pcp-form-label"><em>*</em>级别名称：</span>
-                        <input
+                        <ClearableInput
                             type="text"
                             className="pcp-form-input"
                             placeholder="请输入级别名称"

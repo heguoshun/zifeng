@@ -6,9 +6,21 @@ export type NetworkServiceType =
     | 'MQTT服务'
     | 'CoAP服务';
 
+export type NetworkServicePacketRule =
+    | '不处理'
+    | '分隔符'
+    | '固定长度'
+    | '长度字段';
+
+export type NetworkServiceDiscardDelimiter = '是' | '否';
+
+export type NetworkServiceLengthFieldEndian = '大端' | '小端';
+
 export type NetworkServiceComponentSource = '系统内置' | '自定义服务';
 
 export type NetworkServiceNetworkScope = '本地网络' | '公共网络';
+
+export type NetworkServiceDtlsEnabled = '是' | '否';
 
 export type NetworkServiceRecord = {
     id: string;
@@ -16,11 +28,51 @@ export type NetworkServiceRecord = {
     componentSource: NetworkServiceComponentSource;
     serviceType?: NetworkServiceType;
     sdkFileName?: string;
+    packetRule?: NetworkServicePacketRule;
+    delimiter?: string;
+    discardDelimiter?: NetworkServiceDiscardDelimiter;
+    fixedLength?: string;
+    byteCount?: string;
+    endOffset?: string;
+    subsequentLength?: string;
+    firstByteCount?: string;
+    lengthFieldValue?: NetworkServiceLengthFieldEndian;
+    clusterAddress?: string;
+    mqttUsername?: string;
+    mqttPassword?: string;
+    messageQuality?: string;
+    timeout?: string;
+    keepAlive?: string;
     networkScope: NetworkServiceNetworkScope;
     ipAddress: string;
     port: string;
+    enableDtls?: NetworkServiceDtlsEnabled;
+    certificateId?: string;
+    privateKeyAlias?: string;
     createdAt: string;
 };
+
+export const NETWORK_SERVICE_PACKET_RULE_OPTIONS = [
+    { label: '不处理', value: '不处理' },
+    { label: '分隔符', value: '分隔符' },
+    { label: '固定长度', value: '固定长度' },
+    { label: '长度字段', value: '长度字段' },
+] as const;
+
+export const NETWORK_SERVICE_DISCARD_DELIMITER_OPTIONS = [
+    { label: '是', value: '是' },
+    { label: '否', value: '否' },
+] as const;
+
+export const NETWORK_SERVICE_LENGTH_FIELD_VALUE_OPTIONS = [
+    { label: '大端', value: '大端' },
+    { label: '小端', value: '小端' },
+] as const;
+
+export const NETWORK_SERVICE_DTLS_ENABLED_OPTIONS = [
+    { label: '是', value: '是' },
+    { label: '否', value: '否' },
+] as const;
 
 export const NETWORK_SERVICE_TYPE_OPTIONS = [
     '全部',
@@ -57,6 +109,9 @@ export function createInitialNetworkServices(): NetworkServiceRecord[] {
             networkScope: '本地网络',
             ipAddress: '192.168.1.100',
             port: '5683',
+            enableDtls: '是',
+            certificateId: 'cert-0003',
+            privateKeyAlias: 'coap-dtls',
             createdAt: '2024-09-10 10:15:34',
         },
         {
@@ -94,6 +149,9 @@ export function createInitialNetworkServices(): NetworkServiceRecord[] {
             name: 'TCP转发服务',
             componentSource: '系统内置',
             serviceType: 'TCP服务',
+            packetRule: '分隔符',
+            delimiter: '\\r\\n',
+            discardDelimiter: '否',
             networkScope: '公共网络',
             ipAddress: '10.20.30.41',
             port: '502',
@@ -104,6 +162,12 @@ export function createInitialNetworkServices(): NetworkServiceRecord[] {
             name: 'MQTT代理服务',
             componentSource: '系统内置',
             serviceType: 'MQTT服务',
+            clusterAddress: 'mqtt://192.168.1.103:1883',
+            mqttUsername: 'admin',
+            mqttPassword: '******',
+            messageQuality: '1',
+            timeout: '30',
+            keepAlive: '60',
             networkScope: '本地网络',
             ipAddress: '192.168.1.103',
             port: '1883',

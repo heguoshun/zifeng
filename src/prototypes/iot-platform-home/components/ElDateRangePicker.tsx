@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { Calendar, ChevronDown, ChevronLeft, ChevronRight, X } from 'lucide-react';
+import { Calendar, ChevronLeft, ChevronRight, X } from 'lucide-react';
 import { formatDateValue } from './ElDatePicker';
+import { useDismissOnOutsideMouseDown } from './useDismissOnOutsideMouseDown';
 
 type ElDateRangePickerProps = {
     start: string;
@@ -167,18 +168,7 @@ export default function ElDateRangePicker({
         setEndMonth(baseEnd.getMonth());
     }, [endDate, open, startDate]);
 
-    useEffect(() => {
-        if (!open) return undefined;
-
-        const handleClickOutside = (event: MouseEvent) => {
-            if (wrapRef.current && !wrapRef.current.contains(event.target as Node)) {
-                setOpen(false);
-            }
-        };
-
-        document.addEventListener('mousedown', handleClickOutside);
-        return () => document.removeEventListener('mousedown', handleClickOutside);
-    }, [open]);
+    useDismissOnOutsideMouseDown(open, wrapRef, () => setOpen(false));
 
     const displayText = start && end ? `${start} ~ ${end}` : '';
 
@@ -221,9 +211,13 @@ export default function ElDateRangePicker({
             <button
                 type="button"
                 className="el-select__wrapper el-date-picker__wrapper"
-                onClick={() => setOpen((prev) => !prev)}
+                onMouseDown={(event) => {
+                    event.stopPropagation();
+                    const target = event.target as HTMLElement;
+                    if (target.closest('.el-date-picker__clear')) return;
+                    if (!open) setOpen(true);
+                }}
             >
-                <Calendar size={14} className="el-date-picker__icon" />
                 <span className={`el-select__selected ${displayText ? '' : 'is-placeholder'}`.trim()}>
                     {displayText || placeholder}
                 </span>
@@ -244,10 +238,16 @@ export default function ElDateRangePicker({
                         <X size={12} />
                     </span>
                 )}
-                <ChevronDown size={12} className="el-select__caret" />
+                <Calendar size={14} className="el-date-picker__icon" />
             </button>
             {open && (
-                <div className="el-select-dropdown el-date-range-picker-dropdown el-select-dropdown--left">
+                <div
+                    className="el-select-dropdown el-date-range-picker-dropdown el-select-dropdown--left"
+                    onMouseDown={(event) => {
+                        event.preventDefault();
+                        event.stopPropagation();
+                    }}
+                >
                     <div className="el-date-range-picker-panels">
                         <DatePanel
                             year={startYear}

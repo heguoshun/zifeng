@@ -16,6 +16,7 @@ import {
     buildAlarmRuleCategorySelectTree,
     createDefaultAlarmRuleConditionSettings,
     createDefaultAlarmRuleSqlSettings,
+    resolveAlarmRuleEditFormSettings,
     syncAlarmRuleConditionSettings,
     syncAlarmRuleSqlSettings,
     DEFAULT_ALARM_CATEGORY_TREE_EXPANDED,
@@ -25,12 +26,14 @@ import {
     type AlarmRuleCategory,
     type AlarmRuleConditionSettings,
     type AlarmRuleEditMode,
+    type AlarmRuleRecord,
     type AlarmRuleSqlSettings,
 } from '../data/alarmRules';
 import '../product-create.css';
 import '../device-create.css';
 import '../device-alarm-info.css';
 import '../alarm-rule-config.css';
+import ClearableInput from './ClearableInput';
 
 const TRIGGER_OPTIONS = ALARM_RULE_TRIGGER_FILTER_OPTIONS
     .filter((item) => item !== '全部') as AlarmTriggerMethod[];
@@ -55,6 +58,7 @@ type AlarmRuleFormDrawerProps = {
     alarmLevels: AlarmLevelRecord[];
     products: ProductRecord[];
     devices: DeviceRecord[];
+    editingRule?: AlarmRuleRecord | null;
     initialValue?: AlarmRuleFormValue;
     onClose: () => void;
     onSubmit: (value: AlarmRuleFormValue) => void;
@@ -80,6 +84,7 @@ export default function AlarmRuleFormDrawer({
     alarmLevels,
     products,
     devices,
+    editingRule,
     initialValue,
     onClose,
     onSubmit,
@@ -96,33 +101,40 @@ export default function AlarmRuleFormDrawer({
         setPickerOpen(false);
         const defaultConditionSettings = createDefaultAlarmRuleConditionSettings(alarmLevels);
         const defaultSqlSettings = createDefaultAlarmRuleSqlSettings(alarmLevels);
+
+        if (mode === 'edit' && editingRule) {
+            const resolved = resolveAlarmRuleEditFormSettings(editingRule, alarmLevels);
+            const triggerMethods = editingRule.triggerMethods?.length
+                ? [editingRule.triggerMethods[0]]
+                : EMPTY_FORM.triggerMethods;
+
+            setForm({
+                name: editingRule.name,
+                categoryId: editingRule.categoryId,
+                description: editingRule.description,
+                editMode: editingRule.editMode ?? '触发条件设置',
+                triggerMethods,
+                notifyAlarm: editingRule.notifyAlarm ?? true,
+                createWorkOrder: editingRule.createWorkOrder ?? false,
+                workOrderAssignees: editingRule.workOrderAssignees ?? [],
+                conditionSettings: resolved.conditionSettings ?? defaultConditionSettings,
+                sqlSettings: resolved.sqlSettings ?? defaultSqlSettings,
+            });
+            return;
+        }
+
         const triggerMethods = initialValue?.triggerMethods?.length
             ? [initialValue.triggerMethods[0]]
             : EMPTY_FORM.triggerMethods;
 
-        if (mode === 'edit' && initialValue) {
-            setForm({
-                ...initialValue,
-                triggerMethods,
-                conditionSettings: syncAlarmRuleConditionSettings(
-                    initialValue.conditionSettings,
-                    alarmLevels,
-                ),
-                sqlSettings: syncAlarmRuleSqlSettings(
-                    initialValue.sqlSettings,
-                    alarmLevels,
-                ),
-            });
-            return;
-        }
         setForm({
             ...EMPTY_FORM,
             categoryId: initialValue?.categoryId ?? '',
             triggerMethods,
-            conditionSettings: defaultConditionSettings,
-            sqlSettings: defaultSqlSettings,
+            conditionSettings: initialValue?.conditionSettings ?? defaultConditionSettings,
+            sqlSettings: initialValue?.sqlSettings ?? defaultSqlSettings,
         });
-    }, [open, mode, initialValue, alarmLevels]);
+    }, [open, mode, editingRule, alarmLevels, initialValue?.categoryId]);
 
     if (!open) return null;
 
@@ -202,7 +214,7 @@ export default function AlarmRuleFormDrawer({
                         <h4 className="arc-form-section-title">基础信息</h4>
                         <label className="pcp-drawer-field">
                             <span className="pcp-form-label"><em>*</em>规则名称：</span>
-                            <input
+                            <ClearableInput
                                 type="text"
                                 className="pcp-form-input"
                                 placeholder="请输入规则名称"
@@ -210,7 +222,7 @@ export default function AlarmRuleFormDrawer({
                                 onChange={(event) => setForm((prev) => ({ ...prev, name: event.target.value }))}
                             />
                         </label>
-                        <label className="pcp-drawer-field">
+                        <div className="pcp-drawer-field">
                             <span className="pcp-form-label"><em>*</em>规则分类：</span>
                             <ElTreeSelect
                                 className="el-select--medium pcp-form-select arc-tree-select"
@@ -222,7 +234,7 @@ export default function AlarmRuleFormDrawer({
                                 defaultExpanded={DEFAULT_ALARM_CATEGORY_TREE_EXPANDED}
                                 onChange={(value) => setForm((prev) => ({ ...prev, categoryId: value }))}
                             />
-                        </label>
+                        </div>
                         <label className="pcp-drawer-field">
                             <span className="pcp-form-label">规则描述：</span>
                             <div className="dai-textarea-wrap">

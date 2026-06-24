@@ -5,6 +5,7 @@ import MessageCenterSidebar, { type MessageCenterPageId } from '../components/Me
 import PushTimeDialog from '../components/PushTimeDialog';
 import IotToast, { type IotToastData, type IotToastType, triggerIotToast } from '../components/IotToast';
 import type { MessagePushSettings, MessageSubscriptionItem } from '../data/messageSubscriptions';
+import { handleSelectableRowClick } from '../../../common/selectableRow';
 import '../device-access.css';
 import '../product-management.css';
 import '../message-subscribe.css';
@@ -85,7 +86,14 @@ export default function MessageSubscribePage({
                             </thead>
                             <tbody>
                                 {subscriptions.map((item) => (
-                                    <tr key={item.id}>
+                                    <tr
+                                        key={item.id}
+                                        className="iot-selectable-row"
+                                        onClick={(event) => handleSelectableRowClick(
+                                            event,
+                                            () => handleToggle(item.id, !item.enabled),
+                                        )}
+                                    >
                                         <td>{item.name}</td>
                                         <td className="ms-desc-cell">{item.description}</td>
                                         <td>

@@ -8,6 +8,7 @@ import {
 import '../product-create.css';
 import '../device-create.css';
 import '../device-group.css';
+import ClearableInput from './ClearableInput';
 
 type EditableGroupType = DeviceGroupTypeItem & {
     isNew?: boolean;
@@ -127,7 +128,7 @@ export default function DeviceGroupTypeDialog({
                                     类型名称
                                     <em>*</em>
                                 </span>
-                                <input
+                                <ClearableInput
                                     type="text"
                                     className="pcp-form-input"
                                     placeholder="请输入类型名称"

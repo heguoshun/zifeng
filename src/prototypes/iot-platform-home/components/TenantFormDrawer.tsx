@@ -14,6 +14,7 @@ import {
 import '../product-create.css';
 import '../device-create.css';
 import '../tenant-management.css';
+import ClearableInput from './ClearableInput';
 
 export type TenantFormValue = {
     parentId: string;
@@ -75,6 +76,7 @@ export default function TenantFormDrawer({
     onSubmit,
 }: TenantFormDrawerProps) {
     const [form, setForm] = useState<TenantFormValue>(EMPTY_FORM);
+    const [touched, setTouched] = useState(false);
 
     const parentTree = useMemo(() => buildTenantParentSelectTree(tenants), [tenants]);
     const parentTreeExpanded = useMemo(() => buildTenantTreeExpanded(tenants), [tenants]);
@@ -97,13 +99,25 @@ export default function TenantFormDrawer({
             return;
         }
         setForm(EMPTY_FORM);
+        setTouched(false);
     }, [open, mode, initialValue]);
 
     if (!open) return null;
 
+    const requiresAdminFields = mode === 'add' && !isSecondaryTenant;
+
     const canSubmit = form.name.trim()
         && form.region
-        && form.address.trim();
+        && form.address.trim()
+        && (!requiresAdminFields || (
+            form.adminName.trim()
+            && form.phone.trim()
+            && form.password.trim()
+        ));
+
+    const showAdminNameError = touched && requiresAdminFields && !form.adminName.trim();
+    const showPhoneError = touched && requiresAdminFields && !form.phone.trim();
+    const showPasswordError = touched && requiresAdminFields && !form.password.trim();
 
     const handleParentChange = (parentId: string) => {
         const parent = parentId ? getTenantById(tenants, parentId) : undefined;
@@ -117,6 +131,7 @@ export default function TenantFormDrawer({
     };
 
     const handleConfirm = () => {
+        setTouched(true);
         if (!canSubmit) return;
         onSubmit({
             parentId: form.parentId,
@@ -151,7 +166,7 @@ export default function TenantFormDrawer({
                 </div>
 
                 <div className="pcp-drawer__body pcp-drawer__body--form">
-                    <label className="pcp-drawer-field">
+                    <div className="pcp-drawer-field">
                         <span className="pcp-form-label"><em>*</em>上级租户：</span>
                         {mode === 'add' ? (
                             <ElTreeSelect
@@ -175,10 +190,10 @@ export default function TenantFormDrawer({
                                 disabled
                             />
                         )}
-                    </label>
+                    </div>
                     <label className="pcp-drawer-field">
                         <span className="pcp-form-label"><em>*</em>租户名称：</span>
-                        <input
+                        <ClearableInput
                             type="text"
                             className="pcp-form-input"
                             placeholder="请输入租户名称"
@@ -186,7 +201,7 @@ export default function TenantFormDrawer({
                             onChange={(event) => setForm((prev) => ({ ...prev, name: event.target.value }))}
                         />
                     </label>
-                    <label className="pcp-drawer-field">
+                    <div className="pcp-drawer-field">
                         <span className="pcp-form-label"><em>*</em>所在地区：</span>
                         <ElSelect
                             className="el-select--medium"
@@ -196,10 +211,10 @@ export default function TenantFormDrawer({
                             options={REGION_OPTIONS}
                             onChange={(value) => setForm((prev) => ({ ...prev, region: value }))}
                         />
-                    </label>
+                    </div>
                     <label className="pcp-drawer-field">
                         <span className="pcp-form-label"><em>*</em>详细地址：</span>
-                        <input
+                        <ClearableInput
                             type="text"
                             className="pcp-form-input"
                             placeholder="请输入详细地址"
@@ -209,9 +224,9 @@ export default function TenantFormDrawer({
                     </label>
                     <label className="pcp-drawer-field">
                         <span className="pcp-form-label">
-                            {isSecondaryTenant ? '管理员：' : '管理员（选填）：'}
+                            {isSecondaryTenant ? '管理员：' : <><em>*</em>管理员：</>}
                         </span>
-                        <input
+                        <ClearableInput
                             type="text"
                             className={`pcp-form-input ${isSecondaryTenant ? 'is-readonly' : ''}`.trim()}
                             placeholder={isSecondaryTenant ? '继承上级租户管理员' : '请输入管理员名称'}
@@ -220,12 +235,15 @@ export default function TenantFormDrawer({
                             disabled={isSecondaryTenant}
                             onChange={(event) => setForm((prev) => ({ ...prev, adminName: event.target.value }))}
                         />
+                        {showAdminNameError ? (
+                            <p className="tm-form-error">请输入管理员名称</p>
+                        ) : null}
                     </label>
                     <label className="pcp-drawer-field">
                         <span className="pcp-form-label">
-                            {isSecondaryTenant ? '手机号码：' : '手机号码（选填）：'}
+                            {isSecondaryTenant ? '手机号码：' : <><em>*</em>手机号码：</>}
                         </span>
-                        <input
+                        <ClearableInput
                             type="text"
                             className={`pcp-form-input ${isSecondaryTenant ? 'is-readonly' : ''}`.trim()}
                             placeholder={isSecondaryTenant ? '继承上级租户管理员手机' : '请输入手机号码'}
@@ -234,15 +252,18 @@ export default function TenantFormDrawer({
                             disabled={isSecondaryTenant}
                             onChange={(event) => setForm((prev) => ({ ...prev, phone: event.target.value }))}
                         />
+                        {showPhoneError ? (
+                            <p className="tm-form-error">请输入手机号码</p>
+                        ) : null}
                     </label>
                     {mode === 'add' && !isSecondaryTenant ? (
                         <label className="pcp-drawer-field">
-                            <span className="pcp-form-label">登录密码（选填）：</span>
+                            <span className="pcp-form-label"><em>*</em>登录密码：</span>
                             <div className="tm-password-field">
                                 <input
                                     type="text"
                                     className="pcp-form-input"
-                                    placeholder="请随机生成"
+                                    placeholder="请点击随机生成"
                                     value={form.password}
                                     readOnly
                                 />
@@ -257,6 +278,9 @@ export default function TenantFormDrawer({
                                     随机生成
                                 </button>
                             </div>
+                            {showPasswordError ? (
+                                <p className="tm-form-error">请随机生成登录密码</p>
+                            ) : null}
                         </label>
                     ) : null}
                     <label className="pcp-drawer-field">

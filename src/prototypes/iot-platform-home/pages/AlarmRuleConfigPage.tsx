@@ -1,7 +1,10 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Search, Trash2 } from 'lucide-react';
 import AppShell from '../components/AppShell';
-import MessageCenterSidebar, { type MessageCenterPageId } from '../components/MessageCenterSidebar';
+import type { MessageCenterPageId } from '../components/MessageCenterSidebar';
+import type { AlarmWorkOrderPageId } from '../components/AlarmWorkOrderSidebar';
+import type { AlarmPageModule } from '../utils/alarmModuleShell';
+import { buildAlarmModuleShellConfig } from '../utils/alarmModuleShell';
 import ElSelect from '../components/ElSelect';
 import ElMultiSelect from '../components/ElMultiSelect';
 import ListPagination from '../components/ListPagination';
@@ -10,16 +13,19 @@ import AlarmRuleCategoryDialog, { type AlarmRuleCategoryFormValue } from '../com
 import AlarmRuleFormDrawer, { type AlarmRuleFormValue } from '../components/AlarmRuleFormDrawer';
 import { ConfirmDialog } from '../components/IotDialogs';
 import IotToast, { type IotToastData, type IotToastType, triggerIotToast } from '../components/IotToast';
-import { paginateItems } from '../utils/listPagination';
+import { paginateItems, DEFAULT_LIST_PAGE_SIZE } from '../utils/listPagination';
+import { handleSelectableRowClick } from '../../../common/selectableRow';
 import {
     ALARM_RULE_STATUS_OPTIONS,
     ALARM_RULE_TRIGGER_FILTER_OPTIONS,
     buildCategoryOptions,
+    DEFAULT_ALARM_CATEGORY_TREE_EXPANDED,
     formatAlarmRuleNow,
     generateAlarmRuleCategoryId,
     generateAlarmRuleId,
     categoryContainsAlarmRules,
     getCategoryDescendantIds,
+    getCategoryScopeIds,
     getCategoryInvalidParentIds,
     isDuplicateCategoryName,
     CATEGORY_DELETE_BLOCKED_BY_RULES,
@@ -28,6 +34,7 @@ import {
     truncateRuleDescription,
     createDefaultAlarmRuleConditionSettings,
     createDefaultAlarmRuleSqlSettings,
+    ensureAlarmRuleMockSettings,
     syncAlarmRuleConditionSettings,
     syncAlarmRuleSqlSettings,
     isAlarmRuleConditionSettingsValid,
@@ -42,6 +49,7 @@ import type { ProductRecord } from '../data/products';
 import '../device-access.css';
 import '../product-management.css';
 import '../alarm-rule-config.css';
+import ClearableInput from '../components/ClearableInput';
 
 const STATUS_OPTIONS = ALARM_RULE_STATUS_OPTIONS.map((item) => ({ label: item, value: item }));
 const TRIGGER_FILTER_OPTIONS = ALARM_RULE_TRIGGER_FILTER_OPTIONS
@@ -76,9 +84,11 @@ type AlarmRuleConfigPageProps = {
     alarmLevels: AlarmLevelRecord[];
     onUpdateCategories: React.Dispatch<React.SetStateAction<AlarmRuleCategory[]>>;
     onUpdateRules: React.Dispatch<React.SetStateAction<AlarmRuleRecord[]>>;
+    module?: AlarmPageModule;
     onNavigateHome: () => void;
     onNavigateDeviceAccess: () => void;
     onNavigate: (pageId: MessageCenterPageId) => void;
+    onNavigateAlarmWorkOrder?: (pageId: AlarmWorkOrderPageId) => void;
 };
 
 export default function AlarmRuleConfigPage({
@@ -89,16 +99,14 @@ export default function AlarmRuleConfigPage({
     alarmLevels,
     onUpdateCategories,
     onUpdateRules,
+    module = 'alarm-work-order',
     onNavigateHome,
     onNavigateDeviceAccess,
     onNavigate,
+    onNavigateAlarmWorkOrder,
 }: AlarmRuleConfigPageProps) {
     const [activeCategoryId, setActiveCategoryId] = useState('all');
-    const [expanded, setExpanded] = useState<Record<string, boolean>>({
-        'cat-pressure': true,
-        'cat-meter': true,
-        'cat-water': true,
-    });
+    const [expanded, setExpanded] = useState<Record<string, boolean>>(DEFAULT_ALARM_CATEGORY_TREE_EXPANDED);
     const [contextMenu, setContextMenu] = useState<ContextMenuState>(null);
     const [categoryDialogMode, setCategoryDialogMode] = useState<'add' | 'edit' | null>(null);
     const [editingCategory, setEditingCategory] = useState<AlarmRuleCategory | null>(null);
@@ -107,7 +115,7 @@ export default function AlarmRuleConfigPage({
     const [draftFilters, setDraftFilters] = useState<FilterState>(DEFAULT_FILTERS);
     const [appliedFilters, setAppliedFilters] = useState<FilterState>(DEFAULT_FILTERS);
     const [selectedRuleIds, setSelectedRuleIds] = useState<string[]>([]);
-    const [pageSize, setPageSize] = useState('10');
+    const [pageSize, setPageSize] = useState('20');
     const [currentPage, setCurrentPage] = useState(1);
     const [jumpPage, setJumpPage] = useState('1');
 
@@ -131,6 +139,20 @@ export default function AlarmRuleConfigPage({
     );
 
     useEffect(() => {
+        onUpdateRules((prev) => {
+            let changed = false;
+            const next = prev.map((rule) => {
+                const enriched = ensureAlarmRuleMockSettings(rule, alarmLevels);
+                if (enriched !== rule) {
+                    changed = true;
+                }
+                return enriched;
+            });
+            return changed ? next : prev;
+        });
+    }, [alarmLevels, onUpdateRules]);
+
+    useEffect(() => {
         onUpdateRules((prev) => prev.map((rule) => {
             if (!rule.conditionSettings) return rule;
             return {
@@ -142,7 +164,7 @@ export default function AlarmRuleConfigPage({
 
     const filteredRules = useMemo(() => rules.filter((rule) => {
         const matchCategory = activeCategoryId === 'all'
-            || getCategoryDescendantIds(categories, activeCategoryId).includes(rule.categoryId);
+            || getCategoryScopeIds(categories, activeCategoryId).includes(rule.categoryId);
         const matchStatus = appliedFilters.status === '全部'
             || (appliedFilters.status === '启用' ? rule.enabled : !rule.enabled);
         const matchTrigger = ruleMatchesTriggerFilter(rule, appliedFilters.triggerMethods);
@@ -159,7 +181,7 @@ export default function AlarmRuleConfigPage({
     useEffect(() => {
         setCurrentPage(1);
         setJumpPage('1');
-    }, [activeCategoryId, appliedFilters, pageSize]);
+    }, [appliedFilters, pageSize]);
 
     useEffect(() => {
         setJumpPage(String(pagination.currentPage));
@@ -337,7 +359,7 @@ export default function AlarmRuleConfigPage({
     };
 
     const openEditRuleDrawer = (rule: AlarmRuleRecord) => {
-        setEditingRule(rule);
+        setEditingRule(rules.find((item) => item.id === rule.id) ?? rule);
         setRuleDrawerMode('edit');
     };
 
@@ -390,10 +412,10 @@ export default function AlarmRuleConfigPage({
                         workOrderAssignees: value.createWorkOrder ? value.workOrderAssignees : [],
                         conditionSettings: value.editMode === '触发条件设置'
                             ? value.conditionSettings
-                            : undefined,
+                            : item.conditionSettings,
                         sqlSettings: value.editMode === 'SQL语句编辑'
                             ? value.sqlSettings
-                            : undefined,
+                            : item.sqlSettings,
                     }
                     : item
             )));
@@ -447,41 +469,33 @@ export default function AlarmRuleConfigPage({
         showToast(enabled ? '规则已启用' : '规则已禁用', 'success');
     };
 
-    const sidebar = <MessageCenterSidebar pageId="alarm-rule-config" onNavigate={onNavigate} />;
+    const shellConfig = buildAlarmModuleShellConfig({
+        module,
+        messagePageId: 'alarm-rule-config',
+        workOrderPageId: 'awo-alarm-rule-config',
+        crumbSuffix: '告警规则配置',
+        onNavigateMessageCenter: onNavigate,
+        onNavigateAlarmWorkOrder: onNavigateAlarmWorkOrder ?? (() => {}),
+    });
 
     const editingCategoryForm: AlarmRuleCategoryFormValue | undefined = editingCategory
         ? { name: editingCategory.name, parentId: editingCategory.parentId ?? '' }
         : undefined;
 
-    const editingRuleForm: AlarmRuleFormValue | undefined = editingRule
-        ? {
-            name: editingRule.name,
-            categoryId: editingRule.categoryId,
-            description: editingRule.description,
-            editMode: editingRule.editMode ?? '触发条件设置',
-            triggerMethods: editingRule.triggerMethods,
-            notifyAlarm: editingRule.notifyAlarm ?? true,
-            createWorkOrder: editingRule.createWorkOrder ?? false,
-            workOrderAssignees: editingRule.workOrderAssignees ?? [],
-            conditionSettings: editingRule.conditionSettings
-                ? syncAlarmRuleConditionSettings(editingRule.conditionSettings, alarmLevels)
-                : createDefaultAlarmRuleConditionSettings(alarmLevels),
-            sqlSettings: editingRule.sqlSettings
-                ? syncAlarmRuleSqlSettings(editingRule.sqlSettings, alarmLevels)
-                : createDefaultAlarmRuleSqlSettings(alarmLevels),
-        }
-        : undefined;
-
     return (
         <AppShell
-            activeTopTab="消息中心"
-            sidebar={sidebar}
+            activeTopTab={shellConfig.activeTopTab}
+            sidebar={shellConfig.sidebar}
+            onNavigateMessageCenter={() => onNavigate('msg-subscribe')}
+            onNavigateAlarmWorkOrder={() => onNavigateAlarmWorkOrder?.('awo-device-alarm-info')}
             onTopTabChange={(tab) => {
                 if (tab === '设备接入') onNavigateDeviceAccess();
+                if (tab === '消息中心') onNavigate('msg-subscribe');
+                if (tab === '告警工单') onNavigateAlarmWorkOrder?.('awo-device-alarm-info');
             }}
         >
             <div className="arc-page">
-                <div className="crumb">消息中心 / 告警消息 / 告警规则配置</div>
+                <div className="crumb">{shellConfig.crumb}</div>
 
                 <div className="arc-layout">
                     <aside className="arc-category-panel panel">
@@ -496,7 +510,14 @@ export default function AlarmRuleConfigPage({
                             expanded={expanded}
                             activeId={activeCategoryId}
                             onToggle={(id) => setExpanded((prev) => ({ ...prev, [id]: !(prev[id] ?? true) }))}
-                            onSelect={setActiveCategoryId}
+                            onSelect={(id) => {
+                                setActiveCategoryId(id);
+                                setCurrentPage(1);
+                                setJumpPage('1');
+                                if (id !== 'all') {
+                                    setExpanded((prev) => ({ ...prev, [id]: true }));
+                                }
+                            }}
                             onOpenMenu={(categoryId, event) => {
                                 const rect = event.currentTarget.getBoundingClientRect();
                                 setContextMenu({
@@ -508,51 +529,56 @@ export default function AlarmRuleConfigPage({
                         />
                     </aside>
 
-                    <section className="arc-list-panel panel">
-                        <div className="arc-filter-row">
-                            <label className="pm-filter-field">
-                                <span className="pm-filter-label">规则状态</span>
-                                <ElSelect
-                                    className="el-select--medium"
-                                    size="medium"
-                                    value={draftFilters.status}
-                                    options={STATUS_OPTIONS}
-                                    onChange={(value) => setDraftFilters((prev) => ({ ...prev, status: value }))}
-                                />
-                            </label>
-                            <label className="pm-filter-field">
-                                <span className="pm-filter-label">触发方式</span>
-                                <ElMultiSelect
-                                    className="el-select--medium"
-                                    size="medium"
-                                    placeholder="全部"
-                                    value={draftFilters.triggerMethods}
-                                    options={TRIGGER_FILTER_OPTIONS}
-                                    onChange={(value) => setDraftFilters((prev) => ({
-                                        ...prev,
-                                        triggerMethods: value as AlarmTriggerMethod[],
-                                    }))}
-                                />
-                            </label>
-                            <label className="pm-filter-field">
-                                <span className="pm-filter-label">规则名称</span>
-                                <input
-                                    type="text"
-                                    className="pm-filter-input"
-                                    placeholder="请输入规则名称"
-                                    value={draftFilters.keyword}
-                                    onChange={(event) => setDraftFilters((prev) => ({ ...prev, keyword: event.target.value }))}
-                                />
-                            </label>
-                            <button type="button" className="pm-btn pm-btn-primary" onClick={handleSearch}>
-                                <Search size={14} />
-                                查询
-                            </button>
-                            <button type="button" className="pm-btn pm-btn-ghost" onClick={handleReset}>
-                                重置
-                            </button>
-                        </div>
+                    <div className="arc-main">
+                        <section className="panel pm-filter-panel arc-filter-panel">
+                            <div className="arc-filter-row">
+                                <div className="pm-filter-field">
+                                    <span className="pm-filter-label">规则状态</span>
+                                    <ElSelect
+                                        className="el-select--medium"
+                                        size="medium"
+                                        value={draftFilters.status}
+                                        options={STATUS_OPTIONS}
+                                        onChange={(value) => setDraftFilters((prev) => ({ ...prev, status: value }))}
+                                    />
+                                </div>
+                                <div className="pm-filter-field">
+                                    <span className="pm-filter-label">触发方式</span>
+                                    <ElMultiSelect
+                                        className="el-select--medium"
+                                        size="medium"
+                                        placeholder="全部"
+                                        value={draftFilters.triggerMethods}
+                                        options={TRIGGER_FILTER_OPTIONS}
+                                        onChange={(value) => setDraftFilters((prev) => ({
+                                            ...prev,
+                                            triggerMethods: value as AlarmTriggerMethod[],
+                                        }))}
+                                    />
+                                </div>
+                                <div className="pm-filter-field">
+                                    <span className="pm-filter-label">规则名称</span>
+                                    <ClearableInput
+                                        type="text"
+                                        className="pm-filter-input"
+                                        placeholder="请输入规则名称"
+                                        value={draftFilters.keyword}
+                                        onChange={(event) => setDraftFilters((prev) => ({ ...prev, keyword: event.target.value }))}
+                                    />
+                                </div>
+                                <div className="pm-filter-actions">
+                                    <button type="button" className="pm-btn pm-btn-primary" onClick={handleSearch}>
+                                        <Search size={14} />
+                                        查询
+                                    </button>
+                                    <button type="button" className="pm-btn pm-btn-ghost" onClick={handleReset}>
+                                        重置
+                                    </button>
+                                </div>
+                            </div>
+                        </section>
 
+                        <section className="panel pm-list-panel arc-list-panel">
                         <div className="arc-table-head">
                             <div className="arc-table-title">
                                 <h3>规则列表</h3>
@@ -573,7 +599,7 @@ export default function AlarmRuleConfigPage({
                             </div>
                         </div>
 
-                        <div className="arc-table-wrap pm-table-wrap">
+                        <div className="pm-table-wrap">
                             <table className="pm-table">
                                 <thead>
                                     <tr>
@@ -595,7 +621,14 @@ export default function AlarmRuleConfigPage({
                                 </thead>
                                 <tbody>
                                     {pagination.items.map((rule) => (
-                                        <tr key={rule.id}>
+                                        <tr
+                                            key={rule.id}
+                                            className="iot-selectable-row"
+                                            onClick={(event) => handleSelectableRowClick(
+                                                event,
+                                                () => toggleSelectRule(rule.id),
+                                            )}
+                                        >
                                             <td>
                                                 <input
                                                     type="checkbox"
@@ -651,7 +684,8 @@ export default function AlarmRuleConfigPage({
                             onPageSizeChange={setPageSize}
                             onJumpPageChange={setJumpPage}
                         />
-                    </section>
+                        </section>
+                    </div>
                 </div>
             </div>
 
@@ -698,25 +732,19 @@ export default function AlarmRuleConfigPage({
             />
 
             <AlarmRuleFormDrawer
+                key={editingRule?.id ?? 'new-rule'}
                 open={ruleDrawerMode !== null}
                 mode={ruleDrawerMode ?? 'add'}
                 categories={categories}
                 alarmLevels={alarmLevels}
                 products={products}
                 devices={devices}
-                initialValue={ruleDrawerMode === 'edit'
-                    ? editingRuleForm
-                    : {
-                        name: '',
-                        categoryId: activeCategoryId !== 'all' ? activeCategoryId : '',
-                        description: '',
-                        editMode: '触发条件设置',
-                        triggerMethods: ['设备状态触发'],
-                        notifyAlarm: true,
-                        createWorkOrder: false,
-                        workOrderAssignees: [],
-                        conditionSettings: createDefaultAlarmRuleConditionSettings(alarmLevels),
-                    }}
+                editingRule={ruleDrawerMode === 'edit' ? editingRule : null}
+                initialValue={{
+                    categoryId: activeCategoryId !== 'all' ? activeCategoryId : '',
+                    conditionSettings: createDefaultAlarmRuleConditionSettings(alarmLevels),
+                    sqlSettings: createDefaultAlarmRuleSqlSettings(alarmLevels),
+                }}
                 onClose={closeRuleDrawer}
                 onSubmit={handleRuleSubmit}
             />

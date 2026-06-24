@@ -46,10 +46,13 @@ import {
     resolveDeviceOnlineDuration,
 } from '../utils/deviceTime';
 import type { ProductRecord } from '../data/products';
+import DeviceRemoteControlDrawer from '../components/DeviceRemoteControlDrawer';
+import { canControlDevice } from '../data/deviceRemoteControl';
 import { navigateDeviceForm } from '../utils/deviceRoute';
 import '../device-access.css';
 import '../product-management.css';
 import '../device-management.css';
+import ClearableInput from '../components/ClearableInput';
 
 const NODE_TYPE_OPTIONS = ['全部', '直连设备', '网关设备', '网关子设备'].map((type) => ({
     label: type,
@@ -82,6 +85,7 @@ type DeviceManagementPageProps = {
     deviceGroups: DeviceGroupRecord[];
     groupTypes: DeviceGroupTypeItem[];
     onUpdateDevices: React.Dispatch<React.SetStateAction<DeviceRecord[]>>;
+    onDeviceChanged?: (before: DeviceRecord, after: DeviceRecord) => void;
     initialProductId?: string | null;
     initialGroupId?: string | null;
     onNavigateHome: () => void;
@@ -226,7 +230,6 @@ function DeviceCard({
             </div>
             <div className="dm-device-card__overlay">
                 <div className="dm-device-card__actions">
-                    <button type="button" onClick={() => onView(device)}>查看</button>
                     <button type="button" onClick={() => onEdit(device)}>编辑</button>
                     <button type="button" onClick={() => onControl(device)}>远程控制</button>
                     <button type="button" onClick={() => onData(device)}>数据</button>
@@ -285,7 +288,6 @@ function DeviceTable({
                             </td>
                             <td>
                                 <div className="pm-table-actions">
-                                    <button type="button" onClick={() => onView(device)}>查看</button>
                                     <button type="button" onClick={() => onEdit(device)}>编辑</button>
                                     <button type="button" onClick={() => onControl(device)}>控制</button>
                                     <button type="button" onClick={() => onData(device)}>数据</button>
@@ -306,6 +308,7 @@ export default function DeviceManagementPage({
     deviceGroups,
     groupTypes,
     onUpdateDevices,
+    onDeviceChanged,
     initialProductId = null,
     initialGroupId = null,
     onNavigateHome,
@@ -320,13 +323,14 @@ export default function DeviceManagementPage({
     const [draftDepartment, setDraftDepartment] = useState('all');
     const [draftKeyword, setDraftKeyword] = useState('');
     const [viewMode, setViewMode] = useState<'card' | 'list'>('card');
-    const [pageSize, setPageSize] = useState('10');
+    const [pageSize, setPageSize] = useState('20');
     const [currentPage, setCurrentPage] = useState(1);
     const [jumpPage, setJumpPage] = useState('1');
     const [activeProduct, setActiveProduct] = useState(initialProductId ?? 'all');
     const [productKeyword, setProductKeyword] = useState('');
     const [expanded, setExpanded] = useState(DEFAULT_PRODUCT_TREE_EXPANDED);
     const [deleteDevice, setDeleteDevice] = useState<DeviceRecord | null>(null);
+    const [controlDevice, setControlDevice] = useState<DeviceRecord | null>(null);
     const [toast, setToast] = useState<IotToastData | null>(null);
     const [now, setNow] = useState(() => new Date());
 
@@ -430,13 +434,34 @@ export default function DeviceManagementPage({
     const handleToggleEnabled = (device: DeviceRecord) => {
         const nextEnabled = !device.enabled;
         const toggledAt = new Date();
+        const nextDevice = applyDeviceEnableToggle(device, nextEnabled, toggledAt);
 
         onUpdateDevices((prev) => prev.map((item) => (
-            item.id === device.id ? applyDeviceEnableToggle(item, nextEnabled, toggledAt) : item
+            item.id === device.id ? nextDevice : item
         )));
+        onDeviceChanged?.(device, nextDevice);
         setNow(toggledAt);
         showToast(nextEnabled ? '设备已启用' : '设备已禁用', 'success');
     };
+
+    const handleOpenControl = (device: DeviceRecord) => {
+        const check = canControlDevice(device);
+        if (!check.allowed) {
+            showToast(check.message ?? '当前设备不可控制');
+            return;
+        }
+        setControlDevice(device);
+    };
+
+    const controlProduct = useMemo(() => {
+        if (!controlDevice) return null;
+        return products.find((item) => item.id === controlDevice.productId) ?? null;
+    }, [controlDevice, products]);
+
+    const controlProductName = useMemo(() => {
+        if (!controlDevice) return '—';
+        return resolveDeviceProduct(controlDevice, products).productName;
+    }, [controlDevice, products]);
 
     const sidebar = <DeviceAccessSidebar pageId="device-management" onNavigate={onNavigate} />;
 
@@ -456,7 +481,7 @@ export default function DeviceManagementPage({
 
                 <section className="panel pm-filter-panel">
                     <div className="pm-filter-row dm-filter-row--device">
-                        <label className="pm-filter-field">
+                        <div className="pm-filter-field">
                             <span className="pm-filter-label">节点类型</span>
                             <ElSelect
                                 className="el-select--medium"
@@ -465,8 +490,8 @@ export default function DeviceManagementPage({
                                 options={NODE_TYPE_OPTIONS}
                                 onChange={setDraftNodeType}
                             />
-                        </label>
-                        <label className="pm-filter-field">
+                        </div>
+                        <div className="pm-filter-field">
                             <span className="pm-filter-label">设备状态</span>
                             <ElSelect
                                 className="el-select--medium"
@@ -475,8 +500,8 @@ export default function DeviceManagementPage({
                                 options={STATUS_OPTIONS}
                                 onChange={setDraftDeviceStatus}
                             />
-                        </label>
-                        <label className="pm-filter-field">
+                        </div>
+                        <div className="pm-filter-field">
                             <span className="pm-filter-label">所属部门</span>
                             <ElTreeSelect
                                 className="el-select--medium dm-tree-select"
@@ -485,18 +510,18 @@ export default function DeviceManagementPage({
                                 tree={DEPARTMENT_TREE}
                                 onChange={setDraftDepartment}
                             />
-                        </label>
+                        </div>
                         <div className="pm-filter-inline-group">
-                            <label className="pm-filter-field">
+                            <div className="pm-filter-field">
                                 <span className="pm-filter-label">设备搜索</span>
-                                <input
+                                <ClearableInput
                                     type="text"
                                     className="pm-filter-input"
                                     placeholder="请输入设备名称/编号/分组名称"
                                     value={draftKeyword}
                                     onChange={(event) => setDraftKeyword(event.target.value)}
                                 />
-                            </label>
+                            </div>
                             <div className="pm-filter-actions">
                                 <button
                                     type="button"
@@ -538,7 +563,7 @@ export default function DeviceManagementPage({
                             <h3>所属产品</h3>
                         </div>
                         <div className="dm-product-search">
-                            <input
+                            <ClearableInput
                                 type="text"
                                 placeholder="请输入产品名称"
                                 value={productKeyword}
@@ -616,8 +641,8 @@ export default function DeviceManagementPage({
                                         onToggleEnabled={handleToggleEnabled}
                                         onView={(item) => navigateDeviceForm('view', { deviceId: item.id })}
                                         onEdit={(item) => navigateDeviceForm('edit', { deviceId: item.id })}
-                                        onControl={() => showToast('远程控制（原型）')}
-                                        onData={() => showToast('查看设备数据（原型）')}
+                                        onControl={handleOpenControl}
+                                        onData={(item) => navigateDeviceForm('view', { deviceId: item.id, tab: '属性数据' })}
                                         onDelete={setDeleteDevice}
                                     />
                                 ))}
@@ -627,8 +652,8 @@ export default function DeviceManagementPage({
                                 rows={displayDevices}
                                 onView={(item) => navigateDeviceForm('view', { deviceId: item.id })}
                                 onEdit={(item) => navigateDeviceForm('edit', { deviceId: item.id })}
-                                onControl={() => showToast('设备控制（原型）')}
-                                onData={() => showToast('查看设备数据（原型）')}
+                                onControl={handleOpenControl}
+                                onData={(item) => navigateDeviceForm('view', { deviceId: item.id, tab: '属性数据' })}
                                 onDelete={setDeleteDevice}
                             />
                         )}
@@ -661,6 +686,15 @@ export default function DeviceManagementPage({
                     }}
                 />
             )}
+
+            <DeviceRemoteControlDrawer
+                open={Boolean(controlDevice)}
+                device={controlDevice}
+                product={controlProduct}
+                productName={controlProductName}
+                onClose={() => setControlDevice(null)}
+                onShowToast={showToast}
+            />
         </AppShell>
     );
 }

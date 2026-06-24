@@ -10,10 +10,11 @@ import {
     type UpgradeDeviceDetailRecord,
     type UpgradeTaskBatchRecord,
 } from '../data/remoteUpgrade';
-import { paginateItems } from '../utils/listPagination';
+import { paginateItems, DEFAULT_LIST_PAGE_SIZE } from '../utils/listPagination';
 import '../device-create.css';
 import '../product-create.css';
 import '../remote-upgrade.css';
+import ClearableInput from './ClearableInput';
 
 type UpgradeDeviceDetailDrawerProps = {
     open: boolean;
@@ -32,7 +33,7 @@ export default function UpgradeDeviceDetailDrawer({
     const [searchField, setSearchField] = useState('name');
     const [draftKeyword, setDraftKeyword] = useState('');
     const [keyword, setKeyword] = useState('');
-    const [pageSize, setPageSize] = useState('10');
+    const [pageSize, setPageSize] = useState('20');
     const [currentPage, setCurrentPage] = useState(1);
     const [jumpPage, setJumpPage] = useState('1');
 
@@ -128,7 +129,7 @@ export default function UpgradeDeviceDetailDrawer({
                                 options={UPGRADE_DEVICE_SEARCH_FIELD_OPTIONS}
                                 onChange={setSearchField}
                             />
-                            <input
+                            <ClearableInput
                                 type="text"
                                 className="pm-filter-input ru-search-keyword-input"
                                 placeholder="请输入搜索内容"

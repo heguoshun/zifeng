@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Search, Upload } from 'lucide-react';
 import AppShell from '../components/AppShell';
-import OmManagementSidebar, { type OmManagementPageId } from '../components/OmManagementSidebar';
+import SystemManagementSidebar, { type SystemManagementPageId } from '../components/SystemManagementSidebar';
 import ElSelect from '../components/ElSelect';
 import ElDateRangePicker from '../components/ElDateRangePicker';
 import ListPagination from '../components/ListPagination';
@@ -13,11 +13,13 @@ import {
     type OperationLogRecord,
     type OperationLogStatus,
 } from '../data/operationLogs';
-import { paginateItems } from '../utils/listPagination';
+import { paginateItems, DEFAULT_LIST_PAGE_SIZE } from '../utils/listPagination';
+import { handleSelectableRowClick } from '../../../common/selectableRow';
 import '../device-access.css';
 import '../product-management.css';
 import '../work-order-management.css';
 import '../log-management.css';
+import ClearableInput from '../components/ClearableInput';
 
 type FilterState = {
     module: string;
@@ -57,7 +59,8 @@ type OperationLogPageProps = {
     onNavigateHome: () => void;
     onNavigateDeviceAccess: () => void;
     onNavigateMessageCenter: () => void;
-    onNavigate: (pageId: OmManagementPageId) => void;
+    onNavigateSystemManagement: () => void;
+    onNavigate: (pageId: SystemManagementPageId) => void;
 };
 
 export default function OperationLogPage({
@@ -65,11 +68,12 @@ export default function OperationLogPage({
     onNavigateHome,
     onNavigateDeviceAccess,
     onNavigateMessageCenter,
+    onNavigateSystemManagement,
     onNavigate,
 }: OperationLogPageProps) {
     const [draftFilters, setDraftFilters] = useState<FilterState>(DEFAULT_FILTERS);
     const [appliedFilters, setAppliedFilters] = useState<FilterState>(DEFAULT_FILTERS);
-    const [pageSize, setPageSize] = useState('10');
+    const [pageSize, setPageSize] = useState('20');
     const [currentPage, setCurrentPage] = useState(1);
     const [jumpPage, setJumpPage] = useState('1');
     const [selectedIds, setSelectedIds] = useState<string[]>([]);
@@ -154,44 +158,44 @@ export default function OperationLogPage({
         showToast(`已提交 ${count} 条操作日志导出任务`);
     };
 
-    const sidebar = <OmManagementSidebar pageId="operation-log" onNavigate={onNavigate} />;
+    const sidebar = <SystemManagementSidebar pageId="operation-log" onNavigate={onNavigate} />;
 
     return (
         <AppShell
-            activeTopTab="运维管理"
+            activeTopTab="系统管理"
             sidebar={sidebar}
-            onNavigateOmManagement={() => onNavigate('work-order-management')}
             onNavigateMessageCenter={onNavigateMessageCenter}
+            onNavigateSystemManagement={onNavigateSystemManagement}
             onTopTabChange={(tab) => {
                 if (tab === '设备接入') onNavigateDeviceAccess();
             }}
         >
             <div className="pm-page log-page">
-                <div className="crumb">运维管理 / 日志管理 / 操作日志</div>
+                <div className="crumb">系统管理 / 日志管理 / 操作日志</div>
 
                 <section className="panel pm-filter-panel">
                     <div className="log-filter-row">
-                        <label className="pm-filter-field">
+                        <div className="pm-filter-field">
                             <span className="pm-filter-label">系统模块</span>
-                            <input
+                            <ClearableInput
                                 type="text"
                                 className="pm-filter-input"
                                 placeholder="请输入系统模块"
                                 value={draftFilters.module}
                                 onChange={(event) => updateDraft({ module: event.target.value })}
                             />
-                        </label>
-                        <label className="pm-filter-field">
+                        </div>
+                        <div className="pm-filter-field">
                             <span className="pm-filter-label">操作人员</span>
-                            <input
+                            <ClearableInput
                                 type="text"
                                 className="pm-filter-input"
                                 placeholder="请输入操作人员"
                                 value={draftFilters.operator}
                                 onChange={(event) => updateDraft({ operator: event.target.value })}
                             />
-                        </label>
-                        <label className="pm-filter-field">
+                        </div>
+                        <div className="pm-filter-field">
                             <span className="pm-filter-label">操作类型</span>
                             <ElSelect
                                 className="el-select--medium"
@@ -200,8 +204,8 @@ export default function OperationLogPage({
                                 options={TYPE_OPTIONS}
                                 onChange={(value) => updateDraft({ operationType: value })}
                             />
-                        </label>
-                        <label className="pm-filter-field">
+                        </div>
+                        <div className="pm-filter-field">
                             <span className="pm-filter-label">状态</span>
                             <ElSelect
                                 className="el-select--medium"
@@ -210,8 +214,8 @@ export default function OperationLogPage({
                                 options={STATUS_OPTIONS}
                                 onChange={(value) => updateDraft({ status: value })}
                             />
-                        </label>
-                        <label className="pm-filter-field">
+                        </div>
+                        <div className="pm-filter-field">
                             <span className="pm-filter-label">操作时间</span>
                             <ElDateRangePicker
                                 size="medium"
@@ -222,7 +226,7 @@ export default function OperationLogPage({
                                     endTime: range.end,
                                 })}
                             />
-                        </label>
+                        </div>
                         <div className="pm-filter-actions">
                             <button type="button" className="pm-btn pm-btn-primary" onClick={handleSearch}>
                                 <Search size={14} />
@@ -270,7 +274,11 @@ export default function OperationLogPage({
                             </thead>
                             <tbody>
                                 {pagination.items.map((item, index) => (
-                                    <tr key={item.id}>
+                                    <tr
+                                        key={item.id}
+                                        className="iot-selectable-row"
+                                        onClick={(event) => handleSelectableRowClick(event, () => toggleSelect(item.id))}
+                                    >
                                         <td>
                                             <input
                                                 type="checkbox"

@@ -1,7 +1,7 @@
 import React from 'react';
 import { X } from 'lucide-react';
 import type { DeviceRecord } from '../data/devices';
-import { resolveDeviceOrg, resolveDeviceProduct } from '../data/devices';
+import { STATUS_LABEL, resolveDeviceProduct, type DeviceStatus } from '../data/devices';
 import type { ProductRecord } from '../data/products';
 
 type DeviceMapInfoPanelProps = {
@@ -33,13 +33,12 @@ export default function DeviceMapInfoPanel({
     onViewDetail,
 }: DeviceMapInfoPanelProps) {
     const { productName } = resolveDeviceProduct(device, products);
-    const { space } = resolveDeviceOrg(device);
 
     const fields = [
         { label: '设备名称', value: device.name },
         { label: '设备编号', value: device.code },
         { label: '所属产品', value: productName },
-        { label: '所属空间', value: space },
+        { label: '当前状态', value: STATUS_LABEL[device.status as DeviceStatus] ?? device.status },
         { label: '采集频率', value: device.collectFrequency },
         { label: '经度', value: String(device.longitude) },
         { label: '注册码', value: device.registrationCode },

@@ -13,6 +13,7 @@ export type SystemUserRecord = {
     phone: string;
     roleId: string;
     departmentId: string;
+    positionId?: string;
     avatar?: string;
     gender: SystemUserGender;
     birthday: string;
@@ -49,6 +50,7 @@ export function createInitialSystemUsers(): SystemUserRecord[] {
             phone: '19242499281',
             roleId: 'role-jiahuan-iot',
             departmentId: 'dept-jiahuan-root',
+            positionId: '1926170001000000005',
             gender: '女',
             birthday: '1995-06-18',
             email: 'test@example.com',
@@ -63,6 +65,7 @@ export function createInitialSystemUsers(): SystemUserRecord[] {
             phone: '19242499281',
             roleId: 'role-jiahuan-iot',
             departmentId: 'dept-jiahuan-root',
+            positionId: '1926170001000000001',
             gender: '男',
             birthday: '1990-03-08',
             email: 'zhanghe@jiahuan.com',
@@ -77,6 +80,7 @@ export function createInitialSystemUsers(): SystemUserRecord[] {
             phone: '18947728990',
             roleId: 'role-jiahuan-admin',
             departmentId: 'dept-jiahuan-root',
+            positionId: '1926167699869745154',
             gender: '男',
             birthday: '1988-01-01',
             status: '正常',
@@ -250,6 +254,47 @@ export function createInitialSystemUsers(): SystemUserRecord[] {
             birthday: '1990-08-19',
             status: '冻结',
             createdAt: '2025-06-28 16:19:07',
+        },
+        {
+            id: 'user-zhangming',
+            tenantId: 'tenant-jiahuan',
+            displayName: '张明',
+            account: 'zhangming',
+            phone: '19242499301',
+            roleId: 'role-jiahuan-large-meter',
+            departmentId: 'dept-jiahuan-1',
+            gender: '男',
+            birthday: '1988-05-12',
+            email: 'zhangming@jiahuan.com',
+            status: '正常',
+            createdAt: '2025-06-20 09:30:00',
+        },
+        {
+            id: 'user-lifang',
+            tenantId: 'tenant-jiahuan',
+            displayName: '李芳',
+            account: 'lifang',
+            phone: '19242499302',
+            roleId: 'role-jiahuan-household-meter',
+            departmentId: 'dept-jiahuan-2',
+            gender: '女',
+            birthday: '1991-11-03',
+            email: 'lifang@jiahuan.com',
+            status: '正常',
+            createdAt: '2025-09-01 10:45:00',
+        },
+        {
+            id: 'user-gaoyang',
+            tenantId: 'tenant-jiahuan',
+            displayName: '高阳',
+            account: 'gaoyang',
+            phone: '19242499303',
+            roleId: 'role-jiahuan-alarm-specialist',
+            departmentId: 'dept-jiahuan-root',
+            gender: '男',
+            birthday: '1987-02-18',
+            status: '正常',
+            createdAt: '2025-10-12 15:30:00',
         },
     ];
 

@@ -1,4 +1,14 @@
 import type { ProductRecord } from './products';
+import { productMatchesCategory } from './productCategories';
+import type { LargeMeterArea } from './largeMeters';
+import { getAreaScopeIds, METER_MANUFACTURERS, REMOTE_MANUFACTURERS } from './largeMeters';
+import {
+    createInitialDeviceGroups,
+    createInitialGroupTypes,
+    deviceMatchesGroup,
+    type DeviceGroupRecord,
+    type DeviceGroupTypeItem,
+} from './deviceGroups';
 import { findTreeNode, getTreeNodeLabel, DEPARTMENT_TREE, SPACE_TREE } from './orgHierarchy';
 import { BAIDU_MAP_DEFAULT_CENTER } from '../config/baiduMap';
 import { formatDeviceDateTime, formatOnlineDuration } from '../utils/deviceTime';
@@ -7,6 +17,7 @@ export type DeviceStatus = 'online' | 'offline' | 'fault' | 'disabled';
 
 export type DeviceRecord = {
     id: string;
+    gatewayId?: string;
     code: string;
     name: string;
     productId: string;
@@ -22,9 +33,48 @@ export type DeviceRecord = {
     latitude: number;
     collectFrequency: string;
     registrationCode: string;
+    /** 大表中心片区绑定 ID，空表示未绑定 */
+    largeMeterAreaId?: string;
+    /** 用户号 */
+    userNo?: string;
+    /** 用户名称 */
+    userName?: string;
+    /** 表身号 */
+    bodyNo?: string;
+    /** 安装时间 */
+    installTime?: string;
+    /** 安装地址 */
+    installAddress?: string;
+    /** 设备管理地图选点生成的位置描述 */
+    mapAddress?: string;
+    /** 安装阶段补充的表具厂家 */
+    manufacturer?: string;
+    /** 安装阶段补充的远传厂家 */
+    remoteManufacturer?: string;
+    /** 安装阶段补充的设备功能 */
+    deviceFunction?: string;
+    /** 设备口径 */
+    caliber?: string;
+    /** 通讯码 */
+    communicationNo?: string;
 };
 
 const LOCATIONS = ['主管网', '配水站', '泵站', '小区一号', '小区二号', '工业园区', '商业区', '供水厂', '二供泵房', '监测点'];
+
+const MOCK_USER_NAMES = ['张伟', '李秀英', '王建国', '南京水务集团', '华润燃气江北站', '龙江花园', '玄武湖公园', '南京大学', '鼓楼医院', '紫峰大厦'];
+
+const MOCK_INSTALL_ADDRESSES = [
+    '南京市鼓楼区中山北路200号',
+    '南京市江宁区秣周东路9号',
+    '南京市浦口区浦滨路88号',
+    '南京市栖霞区仙林大道163号',
+    '南京市建山区河西大街66号',
+    '南京市玄武区北京东路1号',
+    '南京市秦淮区中华路50号',
+    '南京市雨花台区软件大道18号',
+    '南京市六合区雄州南路99号',
+    '南京市高淳区淳溪镇宝塔路33号',
+];
 
 const STATUSES: DeviceStatus[] = ['online', 'offline', 'online', 'online', 'fault', 'online', 'disabled', 'online', 'offline', 'online'];
 
@@ -159,7 +209,8 @@ export function deviceRecordToFormState(device: DeviceRecord) {
         statusChangedAt: device.enabledAt || '',
         mapLongitude: hasCoords ? String(device.longitude) : '',
         mapLatitude: hasCoords ? String(device.latitude) : '',
-        mapLocation: hasCoords ? `${device.longitude.toFixed(6)}, ${device.latitude.toFixed(6)}` : '',
+        mapLocation: device.mapAddress?.trim()
+            || (hasCoords ? `${device.longitude.toFixed(6)}, ${device.latitude.toFixed(6)}` : ''),
         spaceX: '',
         spaceY: '',
         spaceName: resolveDeviceOrg(device).spacePath,
@@ -174,8 +225,11 @@ export function createInitialDevices(products: ProductRecord[], now = new Date()
 
     const typeCounters: Record<string, number> = {};
 
-    return Array.from({ length: MOCK_DEVICE_TOTAL }, (_, index) => {
-        const product = products[index % products.length];
+    const assignableProducts = products.filter((product) => product.nodeType !== '网关子设备');
+    if (!assignableProducts.length) return [];
+
+    const baseDevices = Array.from({ length: MOCK_DEVICE_TOTAL }, (_, index) => {
+        const product = assignableProducts[index % assignableProducts.length];
         const seq = (typeCounters[product.categoryId] ?? 0) + 1;
         typeCounters[product.categoryId] = seq;
 
@@ -203,8 +257,112 @@ export function createInitialDevices(products: ProductRecord[], now = new Date()
             latitude,
             collectFrequency: '1440',
             registrationCode: `reg${String(index + 1).padStart(3, '0')}`,
+            userNo: `YH2026${String(index + 1).padStart(5, '0')}`,
+            userName: MOCK_USER_NAMES[index % MOCK_USER_NAMES.length],
+            bodyNo: `BS${String(100000000000 + index * 137).slice(0, 12)}`,
+            installTime: formatDeviceDateTime(new Date(enabledAtDate.getTime() - 7 * 24 * 60 * 60 * 1000)),
+            installAddress: MOCK_INSTALL_ADDRESSES[index % MOCK_INSTALL_ADDRESSES.length],
+            mapAddress: MOCK_INSTALL_ADDRESSES[index % MOCK_INSTALL_ADDRESSES.length],
+            ...(product.categoryId === 'dabiao' ? {
+                manufacturer: product.vendor || METER_MANUFACTURERS[index % METER_MANUFACTURERS.length],
+                remoteManufacturer: REMOTE_MANUFACTURERS[index % REMOTE_MANUFACTURERS.length],
+                deviceFunction: '大用户表',
+                caliber: `DN${[80, 100, 150, 200][index % 4]}`,
+                communicationNo: `TX${String(index + 1).padStart(8, '0')}`,
+            } : {}),
         };
     });
+
+    return [...baseDevices, ...createGatewaySubDevices(baseDevices, products, now)];
+}
+
+const SUB_DEVICE_STATUSES: DeviceStatus[] = ['online', 'online', 'offline', 'online', 'fault', 'online'];
+
+const SUB_DEVICE_CODE_PREFIX: Record<string, string> = {
+    dabiao: 'DBS',
+    hubiao: 'HBS',
+    yaliji: 'YLS',
+    shuizhiyi: 'SZYS',
+};
+
+function createGatewaySubDevices(
+    baseDevices: DeviceRecord[],
+    products: ProductRecord[],
+    now: Date,
+): DeviceRecord[] {
+    const gatewayProductIds = new Set(
+        products.filter((product) => product.nodeType === '网关设备').map((product) => product.id),
+    );
+    const subProducts = products.filter((product) => product.nodeType === '网关子设备');
+    if (!gatewayProductIds.size || !subProducts.length) return [];
+
+    const gateways = baseDevices
+        .filter((device) => gatewayProductIds.has(device.productId))
+        .slice(0, 3);
+
+    const subDevices: DeviceRecord[] = [];
+    let subIndex = 1;
+
+    gateways.forEach((gateway, gatewayIndex) => {
+        subProducts.forEach((product, productIndex) => {
+            const slot = subIndex - 1;
+            const enabled = slot % 5 !== 2;
+            const enabledAtDate = buildDeviceEnabledAt(1000 + slot, now);
+            const { longitude, latitude } = buildDeviceCoordinates(500 + slot);
+            const tags = buildDeviceTags(product, slot);
+            const groups = buildDeviceGroups(tags);
+            const prefix = SUB_DEVICE_CODE_PREFIX[product.categoryId] ?? 'SUB';
+            const seq = gatewayIndex * subProducts.length + productIndex + 1;
+
+            subDevices.push({
+                id: `demo-sub-${String(subIndex).padStart(3, '0')}`,
+                gatewayId: gateway.id,
+                code: `${prefix}${String(seq).padStart(4, '0')}`,
+                name: `${gateway.name}-子设备-${product.category}${String(productIndex + 1).padStart(2, '0')}`,
+                productId: product.id,
+                status: SUB_DEVICE_STATUSES[slot % SUB_DEVICE_STATUSES.length] ?? 'online',
+                departmentId: gateway.departmentId,
+                spaceId: gateway.spaceId,
+                groups: groups.length ? groups : [product.category, '网关子设备'],
+                tags: [...tags, '接入:网关子设备'],
+                enabled,
+                enabledAt: formatDeviceDateTime(enabledAtDate),
+                onlineDuration: buildDeviceOnlineDuration(slot, enabledAtDate, enabled, now),
+                longitude,
+                latitude,
+                collectFrequency: '60',
+                registrationCode: `sub-reg${String(subIndex).padStart(3, '0')}`,
+                userNo: `YH2026${String(1000 + subIndex).padStart(5, '0')}`,
+                userName: MOCK_USER_NAMES[subIndex % MOCK_USER_NAMES.length],
+                bodyNo: `BS${String(200000000000 + subIndex * 137).slice(0, 12)}`,
+                installTime: formatDeviceDateTime(new Date(enabledAtDate.getTime() - 3 * 24 * 60 * 60 * 1000)),
+                installAddress: MOCK_INSTALL_ADDRESSES[subIndex % MOCK_INSTALL_ADDRESSES.length],
+                mapAddress: MOCK_INSTALL_ADDRESSES[subIndex % MOCK_INSTALL_ADDRESSES.length],
+                ...(product.categoryId === 'dabiao' ? {
+                    manufacturer: product.vendor || METER_MANUFACTURERS[slot % METER_MANUFACTURERS.length],
+                    remoteManufacturer: REMOTE_MANUFACTURERS[slot % REMOTE_MANUFACTURERS.length],
+                    deviceFunction: '大用户表',
+                    caliber: `DN${[80, 100, 150, 200][slot % 4]}`,
+                    communicationNo: `TX${String(1000 + subIndex).padStart(8, '0')}`,
+                } : {}),
+            });
+            subIndex += 1;
+        });
+    });
+
+    return subDevices;
+}
+
+export function getGatewaySubDevices(
+    gatewayDeviceId: string,
+    devices: DeviceRecord[],
+): DeviceRecord[] {
+    return devices.filter((device) => device.gatewayId === gatewayDeviceId);
+}
+
+export function isGatewaySubDevice(device: DeviceRecord, products: ProductRecord[]): boolean {
+    const product = products.find((item) => item.id === device.productId);
+    return product?.nodeType === '网关子设备';
 }
 
 export const STATUS_LABEL: Record<DeviceStatus, string> = {
@@ -233,6 +391,109 @@ export function ensureDeviceCoordinates(device: DeviceRecord, index = 0): Device
         collectFrequency: withCoords.collectFrequency ?? '1440',
         registrationCode: withCoords.registrationCode ?? `reg${device.code.slice(-4).toLowerCase()}`,
     };
+}
+
+export function isLargeMeterDevice(device: DeviceRecord, products: ProductRecord[]): boolean {
+    const product = products.find((entry) => entry.id === device.productId);
+    if (!product) return false;
+    return productMatchesCategory('dabiao', product);
+}
+
+type GroupAreaSeedRule = {
+    groupId: string;
+    areaId: string;
+    every: number;
+    offset?: number;
+};
+
+/** 预置片区绑定，演示分组内「大表设备」与「可绑定大表」数量差异 */
+const LARGE_METER_AREA_SEED_RULES: GroupAreaSeedRule[] = [
+    { groupId: 'group-area-east', areaId: 'area-jb-camera', every: 2 },
+    { groupId: 'group-area-east', areaId: 'area-gaochun', every: 5, offset: 1 },
+    { groupId: 'group-area-west', areaId: 'area-banqiao', every: 2, offset: 1 },
+    { groupId: 'group-area-south', areaId: 'area-tangshan', every: 3 },
+    { groupId: 'group-area-north', areaId: 'area-jb-ultrasonic', every: 2 },
+    { groupId: 'group-pipeline-main', areaId: 'area-jb-em', every: 3, offset: 1 },
+    { groupId: 'group-pipeline-dist', areaId: 'area-jb-pressure', every: 4 },
+    { groupId: 'group-type-dabiao', areaId: 'area-csgls', every: 4, offset: 2 },
+];
+
+export function seedInitialLargeMeterAreaBindings(
+    devices: DeviceRecord[],
+    products: ProductRecord[],
+    areas: LargeMeterArea[],
+    deviceGroups: DeviceGroupRecord[] = createInitialDeviceGroups(),
+    groupTypes: DeviceGroupTypeItem[] = createInitialGroupTypes(),
+): DeviceRecord[] {
+    const areaIds = new Set(areas.map((area) => area.id));
+    const groupMap = new Map(deviceGroups.map((group) => [group.id, group]));
+    const ruleCounters = new Map<string, number>();
+
+    return devices.map((device) => {
+        if (!isLargeMeterDevice(device, products)) {
+            return device;
+        }
+
+        for (const rule of LARGE_METER_AREA_SEED_RULES) {
+            if (!areaIds.has(rule.areaId)) continue;
+
+            const group = groupMap.get(rule.groupId);
+            if (!group || !deviceMatchesGroup(device, groupTypes, group)) {
+                continue;
+            }
+
+            const counterKey = `${rule.groupId}:${rule.areaId}`;
+            const count = ruleCounters.get(counterKey) ?? 0;
+            ruleCounters.set(counterKey, count + 1);
+
+            const offset = rule.offset ?? 0;
+            if ((count + offset) % rule.every === 0) {
+                return { ...device, largeMeterAreaId: rule.areaId };
+            }
+            break;
+        }
+
+        return device;
+    });
+}
+
+export function countDirectDevicesInArea(
+    devices: DeviceRecord[],
+    areaId: string,
+    products?: ProductRecord[],
+): number {
+    return devices.filter((device) => {
+        if (device.largeMeterAreaId !== areaId) return false;
+        return products ? isLargeMeterDevice(device, products) : true;
+    }).length;
+}
+
+export function countDevicesInLargeMeterArea(
+    devices: DeviceRecord[],
+    areas: LargeMeterArea[],
+    areaId: string,
+    products?: ProductRecord[],
+): number {
+    const scopeIds = new Set(getAreaScopeIds(areas, areaId));
+    return devices.filter((device) => {
+        if (!device.largeMeterAreaId || !scopeIds.has(device.largeMeterAreaId)) return false;
+        return products ? isLargeMeterDevice(device, products) : true;
+    }).length;
+}
+
+export function getLargeMeterAreaDeleteBlockReason(
+    areas: LargeMeterArea[],
+    devices: DeviceRecord[],
+    areaId: string,
+    products?: ProductRecord[],
+): string | null {
+    if (areas.some((area) => area.parentId === areaId)) {
+        return '该区域下存在子片区，请先删除或移动子片区';
+    }
+    if (countDirectDevicesInArea(devices, areaId, products) > 0) {
+        return '该区域下仍有关联设备，请先解绑设备';
+    }
+    return null;
 }
 
 export function resolveDeviceProduct(device: DeviceRecord, products: ProductRecord[]) {

@@ -9,6 +9,7 @@ import {
 } from '../data/messageSubscriptions';
 import '../product-create.css';
 import '../message-subscribe.css';
+import ClearableInput from './ClearableInput';
 
 type PushTimeDialogProps = {
     open: boolean;
@@ -89,7 +90,7 @@ export default function PushTimeDialog({
                         <span className="pcp-form-label"><em>*</em>推送时间：</span>
                         <div className="ms-push-field">
                             <div className="ms-time-field">
-                                <input
+                                <ClearableInput
                                     type="text"
                                     className="pcp-form-input"
                                     placeholder="06:00:00"
@@ -105,7 +106,7 @@ export default function PushTimeDialog({
                             ) : null}
                         </div>
                     </label>
-                    <label className="pcp-drawer-field">
+                    <div className="pcp-drawer-field">
                         <span className="pcp-form-label"><em>*</em>推送周期：</span>
                         <div className="ms-push-field">
                             <ElSelect
@@ -118,7 +119,7 @@ export default function PushTimeDialog({
                                 <span className="ms-field-error">请选择推送周期</span>
                             ) : null}
                         </div>
-                    </label>
+                    </div>
                 </div>
                 <div className="pcp-drawer__foot">
                     <button type="button" className="pm-btn pm-btn-ghost" onClick={onClose}>取消</button>

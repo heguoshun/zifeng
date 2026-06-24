@@ -33,6 +33,7 @@ import {
 } from '../data/thingModels';
 import { navigateThingModelForm, type ThingModelFormMode } from '../utils/modelLibraryRoute';
 import '../model-library.css';
+import ClearableInput from '../components/ClearableInput';
 
 type TabKey = ThingModelTabKey;
 
@@ -564,7 +565,7 @@ export default function ModelLibraryPage({
                     <div className="ml-tab-spacer" />
                     <div className="ml-search-box">
                         <Search size={14} />
-                        <input
+                        <ClearableInput
                             type="text"
                             placeholder="请输入产品名称"
                             value={keyword}

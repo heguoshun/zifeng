@@ -153,29 +153,31 @@ export function buildTenantSubtreeRows(
 }
 
 export function createInitialTenants(): TenantRecord[] {
+    const zifengRootId = 'tenant-jiahuan';
+
     const roots = [
         {
-            id: 'tenant-jiahuan',
+            id: zifengRootId,
             parentId: null,
-            name: '嘉环科技',
+            name: '紫峰装备',
             region: '江苏南京',
-            address: '雨花台区软件大道190号',
-            adminName: '张三',
-            phone: '18947728990',
-            remark: '平台默认租户',
-            createdAt: '2025-07-01 10:07:48',
+            address: '江宁区秣周东路9号紫峰装备产业园',
+            adminName: '陈建国',
+            phone: '025-86881234',
+            remark: '紫峰装备智慧化管理平台默认租户',
+            createdAt: '2025-01-08 09:30:00',
             authorizedPermissionIds: flattenPermissionIds(),
         },
         {
             id: 'tenant-nanjing',
-            parentId: 'tenant-jiahuan',
-            name: '嘉环南京分公司',
+            parentId: zifengRootId,
+            name: '紫峰装备南京制造基地',
             region: '江苏南京',
-            address: '建邺区奥体大街68号',
-            adminName: '李四',
-            phone: '13812345678',
-            remark: '',
-            createdAt: '2025-07-02 09:15:22',
+            address: '江宁区将军大道88号',
+            adminName: '王磊',
+            phone: '13851881234',
+            remark: '智能装备总装与测试',
+            createdAt: '2025-03-12 10:15:22',
             authorizedPermissionIds: [
                 buildPermissionId('workbench-home', 'view'),
                 buildPermissionId('workbench-dashboard', 'view'),
@@ -195,62 +197,31 @@ export function createInitialTenants(): TenantRecord[] {
         },
         {
             id: 'tenant-suzhou',
-            parentId: 'tenant-jiahuan',
-            name: '嘉环苏州分公司',
+            parentId: zifengRootId,
+            name: '紫峰装备苏州研发中心',
             region: '江苏苏州',
-            address: '工业园区星湖街328号',
-            adminName: '王五',
-            phone: '13987654321',
-            remark: '',
-            createdAt: '2025-07-02 11:20:36',
+            address: '工业园区星湖街328号创意产业园A座',
+            adminName: '刘芳',
+            phone: '13912785678',
+            remark: '物模型与算法研发',
+            createdAt: '2025-04-06 11:20:36',
             authorizedPermissionIds: [...DEFAULT_TENANT_PERMISSION_IDS],
         },
         {
             id: 'tenant-wuxi',
-            parentId: 'tenant-jiahuan',
-            name: '嘉环无锡分公司',
+            parentId: zifengRootId,
+            name: '紫峰装备无锡装配中心',
             region: '江苏无锡',
             address: '滨湖区太湖大道1500号',
-            adminName: '赵六',
-            phone: '13700001111',
-            remark: '',
-            createdAt: '2025-07-03 14:08:15',
+            adminName: '赵强',
+            phone: '13706198888',
+            remark: '传感器与终端设备装配',
+            createdAt: '2025-05-18 14:08:15',
             authorizedPermissionIds: [...DEFAULT_TENANT_PERMISSION_IDS],
         },
     ];
 
-    const extraRoots = [
-        '云密城', '智慧园区运营中心', '城南水务公司', '城北电力公司',
-        '滨江制造基地', '空港物流园区', '高新区创新中心', '秦淮商业综合体',
-    ].map((name, index) => ({
-        id: `tenant-root-${index + 1}`,
-        parentId: null as string | null,
-        name,
-        region: TENANT_REGION_OPTIONS[index % TENANT_REGION_OPTIONS.length].value,
-        address: `示例地址 ${index + 1} 号`,
-        adminName: `管理员${index + 1}`,
-        phone: `1380000${String(1000 + index).slice(-4)}`,
-        remark: '',
-        createdAt: `2025-07-${String(4 + (index % 20)).padStart(2, '0')} 10:00:00`,
-        authorizedPermissionIds: [...DEFAULT_TENANT_PERMISSION_IDS],
-    }));
-
-    const branchTenants = extraRoots.slice(0, 4).flatMap((root, rootIndex) => (
-        [1, 2].map((branchIndex) => ({
-            id: `tenant-branch-${rootIndex + 1}-${branchIndex}`,
-            parentId: root.id,
-            name: `${root.name}分部${branchIndex}`,
-            region: root.region,
-            address: `${root.address} ${branchIndex} 栋`,
-            adminName: `分部管理员${rootIndex + 1}-${branchIndex}`,
-            phone: `1390000${String(rootIndex * 10 + branchIndex).padStart(4, '0').slice(-4)}`,
-            remark: '',
-            createdAt: `2025-07-${String(10 + rootIndex).padStart(2, '0')} 15:30:00`,
-            authorizedPermissionIds: [buildPermissionId('workbench-home', 'view')],
-        }))
-    ));
-
-    return [...roots, ...extraRoots, ...branchTenants];
+    return roots;
 }
 
 export function getTenantById(tenants: TenantRecord[], id: string): TenantRecord | undefined {

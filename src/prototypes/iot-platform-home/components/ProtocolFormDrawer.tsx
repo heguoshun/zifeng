@@ -5,6 +5,7 @@ import type { ProtocolRecord, ProtocolType } from '../data/protocols';
 import '../product-create.css';
 import '../device-create.css';
 import '../protocol-management.css';
+import ClearableInput from './ClearableInput';
 
 export type ProtocolFormValue = {
     name: string;
@@ -113,7 +114,7 @@ export default function ProtocolFormDrawer({
                 <div className="pcp-drawer__body pcp-drawer__body--form">
                     <label className="pcp-drawer-field">
                         <span className="pcp-form-label"><em>*</em>协议名称：</span>
-                        <input
+                        <ClearableInput
                             type="text"
                             className="pcp-form-input"
                             placeholder="请输入协议名称"
@@ -174,7 +175,7 @@ export default function ProtocolFormDrawer({
                     ) : (
                         <label className="pcp-drawer-field">
                             <span className="pcp-form-label"><em>*</em>本机地址：</span>
-                            <input
+                            <ClearableInput
                                 type="text"
                                 className="pcp-form-input"
                                 placeholder="请输入本机地址"

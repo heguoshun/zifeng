@@ -2,6 +2,7 @@ import React, { useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { UserRound } from 'lucide-react';
 import { getDepartmentLabel } from '../data/systemDepartments';
+import { getPositionLabel, type SystemPositionRecord } from '../data/systemPositions';
 import { getRoleLabel, type SystemRoleRecord } from '../data/systemRoles';
 import type { SystemUserRecord } from '../data/systemUsers';
 import type { TenantRecord } from '../data/tenants';
@@ -14,6 +15,7 @@ type UserDetailDrawerProps = {
     user: SystemUserRecord | null;
     tenants: TenantRecord[];
     roles: SystemRoleRecord[];
+    positions: SystemPositionRecord[];
     onClose: () => void;
 };
 
@@ -35,6 +37,7 @@ export default function UserDetailDrawer({
     user,
     tenants,
     roles,
+    positions,
     onClose,
 }: UserDetailDrawerProps) {
     useEffect(() => {
@@ -74,6 +77,7 @@ export default function UserDetailDrawer({
                         <DetailRow label="所属租户">{resolveTenantName(tenants, user.tenantId)}</DetailRow>
                         <DetailRow label="所属角色">{getRoleLabel(roles, user.roleId)}</DetailRow>
                         <DetailRow label="所属部门">{getDepartmentLabel(user.departmentId)}</DetailRow>
+                        <DetailRow label="所属岗位">{getPositionLabel(positions, user.positionId ?? '')}</DetailRow>
                         <DetailRow label="手机号码">{user.phone}</DetailRow>
                         <DetailRow label="性别">{user.gender}</DetailRow>
                         <DetailRow label="生日">{user.birthday || '—'}</DetailRow>

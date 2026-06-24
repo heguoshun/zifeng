@@ -4,15 +4,19 @@ import { UserRound, KeyRound, LogOut } from 'lucide-react';
 type ProfileDropdownProps = {
     open: boolean;
     onClose: () => void;
+    onLogout?: () => void;
 };
 
-export default function ProfileDropdown({ open, onClose }: ProfileDropdownProps) {
+export default function ProfileDropdown({ open, onClose, onLogout }: ProfileDropdownProps) {
     if (!open) return null;
 
     const items = [
-        { icon: <UserRound size={14} />, label: '个人中心' },
-        { icon: <KeyRound size={14} />, label: '修改密码' },
-        { icon: <LogOut size={14} />, label: '退出登录' },
+        { icon: <UserRound size={14} />, label: '个人中心', action: onClose },
+        { icon: <KeyRound size={14} />, label: '修改密码', action: onClose },
+        { icon: <LogOut size={14} />, label: '退出登录', action: () => {
+            onClose();
+            onLogout?.();
+        } },
     ];
 
     return (
@@ -22,7 +26,7 @@ export default function ProfileDropdown({ open, onClose }: ProfileDropdownProps)
                     key={item.label}
                     type="button"
                     className="profile-dropdown__item"
-                    onClick={onClose}
+                    onClick={item.action}
                 >
                     {item.icon}
                     <span>{item.label}</span>

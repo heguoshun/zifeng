@@ -22,6 +22,7 @@ import { paginateItems } from '../utils/listPagination';
 import '../device-access.css';
 import '../product-management.css';
 import '../tenant-management.css';
+import ClearableInput from '../components/ClearableInput';
 
 type DrawerMode = 'add' | 'edit' | null;
 
@@ -31,7 +32,6 @@ type TenantManagementPageProps = {
     onNavigateHome: () => void;
     onNavigateDeviceAccess: () => void;
     onNavigateMessageCenter: () => void;
-    onNavigateOmManagement: () => void;
     onNavigate: (pageId: SystemManagementPageId) => void;
 };
 
@@ -41,7 +41,6 @@ export default function TenantManagementPage({
     onNavigateHome,
     onNavigateDeviceAccess,
     onNavigateMessageCenter,
-    onNavigateOmManagement,
     onNavigate,
 }: TenantManagementPageProps) {
     const [draftKeyword, setDraftKeyword] = useState('');
@@ -49,7 +48,7 @@ export default function TenantManagementPage({
     const [expanded, setExpanded] = useState<Record<string, boolean>>({
         'tenant-jiahuan': true,
     });
-    const [pageSize, setPageSize] = useState('10');
+    const [pageSize, setPageSize] = useState('20');
     const [currentPage, setCurrentPage] = useState(1);
     const [jumpPage, setJumpPage] = useState('1');
     const [drawerMode, setDrawerMode] = useState<DrawerMode>(null);
@@ -204,12 +203,10 @@ export default function TenantManagementPage({
             activeTopTab="系统管理"
             sidebar={sidebar}
             onNavigateMessageCenter={onNavigateMessageCenter}
-            onNavigateOmManagement={onNavigateOmManagement}
             onNavigateSystemManagement={() => onNavigate('tenant-mgmt')}
             onTopTabChange={(tab) => {
                 if (tab === '设备接入') onNavigateDeviceAccess();
                 if (tab === '消息中心') onNavigateMessageCenter();
-                if (tab === '运维管理') onNavigateOmManagement();
             }}
         >
             <div className="tm-page">
@@ -217,16 +214,16 @@ export default function TenantManagementPage({
 
                 <section className="panel tm-filter-panel">
                     <div className="tm-filter-row">
-                        <label className="pm-filter-field">
+                        <div className="pm-filter-field">
                             <span className="pm-filter-label">租户名称</span>
-                            <input
+                            <ClearableInput
                                 type="text"
                                 className="pm-filter-input"
                                 placeholder="请输入租户名称"
                                 value={draftKeyword}
                                 onChange={(event) => setDraftKeyword(event.target.value)}
                             />
-                        </label>
+                        </div>
                         <div className="pm-filter-actions">
                             <button type="button" className="pm-btn pm-btn-primary" onClick={handleSearch}>
                                 <Search size={14} />

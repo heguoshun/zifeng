@@ -7,6 +7,7 @@ import {
 } from '../config/baiduMap';
 import { loadBaiduMap } from '../utils/loadBaiduMap';
 import '../device-create.css';
+import ClearableInput from './ClearableInput';
 
 const DEFAULT_COORDS = {
     longitude: String(BAIDU_MAP_DEFAULT_CENTER.longitude),
@@ -406,7 +407,7 @@ export default function MapPickerDialog({
                 <div className="dcp-map-dialog__body">
                     <div className="dcp-map-dialog__map-wrap">
                         <div className="dcp-map-dialog__toolbar">
-                            <input
+                            <ClearableInput
                                 type="text"
                                 className="dcp-map-dialog__input dcp-map-dialog__input--address"
                                 placeholder="请输入详细地址"
@@ -419,7 +420,7 @@ export default function MapPickerDialog({
                             />
                             <label className="dcp-map-dialog__field">
                                 <span>经度：</span>
-                                <input
+                                <ClearableInput
                                     type="text"
                                     className="dcp-map-dialog__input dcp-map-dialog__input--coord"
                                     value={draftLongitude}
@@ -429,7 +430,7 @@ export default function MapPickerDialog({
                             </label>
                             <label className="dcp-map-dialog__field">
                                 <span>纬度：</span>
-                                <input
+                                <ClearableInput
                                     type="text"
                                     className="dcp-map-dialog__input dcp-map-dialog__input--coord"
                                     value={draftLatitude}

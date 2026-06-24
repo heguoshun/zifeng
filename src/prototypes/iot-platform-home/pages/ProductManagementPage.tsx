@@ -25,6 +25,7 @@ import { navigateDeviceManagement } from '../utils/deviceRoute';
 import { paginateItems } from '../utils/listPagination';
 import '../device-access.css';
 import '../product-management.css';
+import ClearableInput from '../components/ClearableInput';
 
 const NODE_TYPE_OPTIONS = ['全部', '直连设备', '网关设备', '网关子设备'].map((type) => ({
     label: type,
@@ -226,7 +227,7 @@ export default function ProductManagementPage({
     const [draftNodeType, setDraftNodeType] = useState('全部');
     const [draftKeyword, setDraftKeyword] = useState('');
     const [viewMode, setViewMode] = useState<'card' | 'list'>('card');
-    const [pageSize, setPageSize] = useState('10');
+    const [pageSize, setPageSize] = useState('20');
     const [currentPage, setCurrentPage] = useState(1);
     const [jumpPage, setJumpPage] = useState('1');
     const [activeCategory, setActiveCategory] = useState('all');
@@ -291,7 +292,7 @@ export default function ProductManagementPage({
 
                 <section className="panel pm-filter-panel">
                     <div className="pm-filter-row">
-                        <label className="pm-filter-field">
+                        <div className="pm-filter-field">
                             <span className="pm-filter-label">节点类型</span>
                             <ElSelect
                                 className="el-select--medium"
@@ -300,18 +301,18 @@ export default function ProductManagementPage({
                                 options={NODE_TYPE_OPTIONS}
                                 onChange={setDraftNodeType}
                             />
-                        </label>
+                        </div>
                         <div className="pm-filter-inline-group">
-                            <label className="pm-filter-field">
+                            <div className="pm-filter-field">
                                 <span className="pm-filter-label">产品</span>
-                                <input
+                                <ClearableInput
                                     type="text"
                                     className="pm-filter-input"
                                     placeholder="请输入产品名称/编号"
                                     value={draftKeyword}
                                     onChange={(event) => setDraftKeyword(event.target.value)}
                                 />
-                            </label>
+                            </div>
                             <div className="pm-filter-actions">
                             <button
                                 type="button"

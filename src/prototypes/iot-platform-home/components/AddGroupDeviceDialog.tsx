@@ -175,6 +175,7 @@ export default function AddGroupDeviceDialog({
                                     value={productFilter}
                                     tree={productTree}
                                     placeholder="请选择产品"
+                                    filterable
                                     onChange={(value) => {
                                         setProductFilter(value);
                                         setLeftChecked([]);

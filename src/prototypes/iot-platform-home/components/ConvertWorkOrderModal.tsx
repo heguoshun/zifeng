@@ -10,6 +10,7 @@ import {
 import '../product-create.css';
 import '../device-create.css';
 import '../device-alarm-info.css';
+import ClearableInput from './ClearableInput';
 
 const CONTENT_MAX = 100;
 
@@ -105,7 +106,7 @@ export default function ConvertWorkOrderModal({
                     <div className="pcp-drawer__body pcp-drawer__body--form dai-convert-work-order-body">
                         <label className="pcp-drawer-field">
                             <span className="pcp-form-label"><em>*</em>工单名称：</span>
-                            <input
+                            <ClearableInput
                                 type="text"
                                 className="pcp-form-input"
                                 placeholder="请输入工单名称"
@@ -113,7 +114,7 @@ export default function ConvertWorkOrderModal({
                                 onChange={(event) => setForm((prev) => ({ ...prev, name: event.target.value }))}
                             />
                         </label>
-                        <label className="pcp-drawer-field">
+                        <div className="pcp-drawer-field">
                             <span className="pcp-form-label"><em>*</em>工单等级：</span>
                             <ElSelect
                                 className="el-select--medium pcp-form-select"
@@ -125,7 +126,7 @@ export default function ConvertWorkOrderModal({
                                     level: value as AlarmLevel,
                                 }))}
                             />
-                        </label>
+                        </div>
                         <label className="pcp-drawer-field">
                             <span className="pcp-form-label"><em>*</em>工单内容：</span>
                             <div className="dai-textarea-wrap">

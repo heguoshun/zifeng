@@ -38,8 +38,9 @@
 }
 
 .dg-table-wrap {
-    flex: 1;
-    min-height: 0;
+    flex: none;
+    min-width: 0;
+    overflow-x: auto;
 }
 
 .dg-code-tip {

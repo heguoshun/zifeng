@@ -11,11 +11,19 @@ import DeviceMapSearchResults from '../components/DeviceMapSearchResults';
 import IotToast, { type IotToastData, type IotToastType, triggerIotToast } from '../components/IotToast';
 import { STATUS_LABEL, ensureDeviceCoordinates, type DeviceRecord, type DeviceStatus } from '../data/devices';
 import { navigateDeviceForm } from '../utils/deviceRoute';
+import {
+    fitDevicesInView,
+    getSpiderfyPoint,
+    resolveDeviceMarkerGroups,
+    zoomIntoCluster,
+    type DeviceMapCluster,
+} from '../utils/deviceMapCluster';
 import type { ProductRecord } from '../data/products';
 import { loadBaiduMap } from '../utils/loadBaiduMap';
 import '../device-access.css';
 import '../product-management.css';
 import '../device-map.css';
+import ClearableInput from '../components/ClearableInput';
 
 type SearchType = 'product' | 'device' | 'group';
 
@@ -35,9 +43,9 @@ const STATUS_OPTIONS = [
 
 const STATUS_MARKER_COLOR: Record<DeviceStatus, string> = {
     online: '#1890ff',
-    offline: '#fa8c16',
+    offline: '#bfbfbf',
     fault: '#f5222d',
-    disabled: '#bfbfbf',
+    disabled: '#fa8c16',
 };
 
 const SEARCH_PLACEHOLDER: Record<SearchType, string> = {
@@ -54,34 +62,6 @@ type DeviceMapPageProps = {
     onNavigateHome: () => void;
     onNavigate: (pageId: DeviceAccessPageId) => void;
 };
-
-type MapCluster = {
-    lng: number;
-    lat: number;
-    devices: DeviceRecord[];
-};
-
-function getClusterCellSize(zoom: number): number {
-    const safeZoom = Number.isFinite(zoom) ? zoom : BAIDU_MAP_DEFAULT_ZOOM;
-    const zoomDelta = BAIDU_MAP_DEFAULT_ZOOM - safeZoom;
-    const size = 0.0018 * 2 ** zoomDelta;
-    return Math.min(0.0144, Math.max(0.00012, size));
-}
-
-function clusterDevices(devices: DeviceRecord[], cellSize = 0.0018): MapCluster[] {
-    const buckets = new Map<string, DeviceRecord[]>();
-    devices.forEach((device) => {
-        const key = `${Math.floor(device.longitude / cellSize)}_${Math.floor(device.latitude / cellSize)}`;
-        const list = buckets.get(key) ?? [];
-        list.push(device);
-        buckets.set(key, list);
-    });
-    return Array.from(buckets.values()).map((group) => ({
-        lng: group.reduce((sum, item) => sum + item.longitude, 0) / group.length,
-        lat: group.reduce((sum, item) => sum + item.latitude, 0) / group.length,
-        devices: group,
-    }));
-}
 
 function triggerMapResize(map: BMap.Map) {
     map.checkResize();
@@ -185,27 +165,45 @@ function createClusterLabel(
 ): BMap.Label {
     const label = new BMap.Label(
         `<div style="
-            width: 58px;
-            height: 58px;
-            border-radius: 999px;
-            border: 3px solid rgba(255,255,255,.92);
-            background: radial-gradient(circle at 34% 28%, rgba(255,255,255,.34), rgba(255,255,255,0) 28%), linear-gradient(135deg, #14b8a6 0%, #2563eb 100%);
-            box-shadow: 0 14px 28px rgba(37,99,235,.30), 0 4px 12px rgba(15,23,42,.20);
-            color: #fff;
+            width: 64px;
+            height: 64px;
+            position: relative;
             display: flex;
-            flex-direction: column;
             align-items: center;
             justify-content: center;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-            line-height: 1;
             user-select: none;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
         ">
-            <strong style="font-size: 18px; font-weight: 800; letter-spacing: 0;">${count}</strong>
-            <span style="margin-top: 4px; font-size: 11px; font-weight: 700; opacity: .92;">设备</span>
+            <svg width="64" height="64" viewBox="0 0 64 64" style="position:absolute;top:0;left:0;">
+                <defs>
+                    <radialGradient id="cg" cx="50%" cy="45%" r="50%">
+                        <stop offset="0%" stop-color="#60a5fa" stop-opacity="0.72"/>
+                        <stop offset="100%" stop-color="#2563eb" stop-opacity="0.55"/>
+                    </radialGradient>
+                    <filter id="cglow">
+                        <feGaussianBlur stdDeviation="2.5" result="b"/>
+                        <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+                    </filter>
+                </defs>
+                <circle cx="32" cy="32" r="30" fill="none" stroke="#60a5fa" stroke-width="0.8" stroke-dasharray="3.5 2.5" stroke-opacity="0.40"/>
+                <circle cx="32" cy="32" r="25" fill="url(#cg)" stroke="#60a5fa" stroke-width="1.5" stroke-opacity="0.72" filter="url(#cglow)"/>
+                <circle cx="32" cy="32" r="25" fill="none" stroke="#93c5fd" stroke-width="0.5" stroke-opacity="0.30"/>
+            </svg>
+            <div style="
+                position: relative;
+                z-index: 1;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                line-height: 1;
+            ">
+                <strong style="font-size: 18px; font-weight: 800; color: #fff; text-shadow: 0 1px 6px rgba(96,165,250,.55);">${count}</strong>
+                <span style="margin-top: 3px; font-size: 10px; font-weight: 600; color: rgba(191,219,254,.88); letter-spacing: 0.5px;">设备</span>
+            </div>
         </div>`,
         {
             position: point,
-            offset: new BMap.Size(-29, -29),
+            offset: new BMap.Size(-32, -32),
         },
     );
     label.setStyle({
@@ -213,9 +211,9 @@ function createClusterLabel(
         border: '0',
         boxShadow: 'none',
         cursor: 'pointer',
-        height: '58px',
+        height: '64px',
         padding: '0',
-        width: '58px',
+        width: '64px',
     });
     if (onClick) {
         label.addEventListener('click', onClick);
@@ -274,7 +272,8 @@ export default function DeviceMapPage({
     const mapRef = useRef<BMap.Map | null>(null);
     const overlaysRef = useRef<BMap.Overlay[]>([]);
     const renderMarkersRef = useRef<() => void>(() => {});
-    const skipNextViewportFitRef = useRef(false);
+    const viewportFitRequestRef = useRef(true);
+    const mapViewRefreshTimerRef = useRef<number | null>(null);
 
     const [mapReady, setMapReady] = useState(false);
     const [mapError, setMapError] = useState('');
@@ -349,13 +348,9 @@ export default function DeviceMapPage({
     const showSearchPanel = searchPanelOpen && Boolean(trimmedKeyword);
 
     const productCards = products;
-    const expandedClusterDeviceIdSet = useMemo(
-        () => new Set(expandedClusterDeviceIds),
-        [expandedClusterDeviceIds],
-    );
 
     useEffect(() => {
-        setExpandedClusterDeviceIds([]);
+        viewportFitRequestRef.current = true;
     }, [searchType, selectedProductId, statusFilter, trimmedKeyword]);
 
     onDeviceSelectRef.current = (device: DeviceRecord) => {
@@ -407,11 +402,36 @@ export default function DeviceMapPage({
         overlaysRef.current = [];
     }, []);
 
+    const handleClusterClickRef = useRef<(cluster: DeviceMapCluster) => void>(() => {});
+
+    const scheduleMarkerRefresh = useCallback(() => {
+        if (mapViewRefreshTimerRef.current) {
+            window.clearTimeout(mapViewRefreshTimerRef.current);
+        }
+        mapViewRefreshTimerRef.current = window.setTimeout(() => {
+            renderMarkersRef.current();
+        }, 120);
+    }, []);
+
+    handleClusterClickRef.current = (cluster: DeviceMapCluster) => {
+        const map = mapRef.current;
+        if (!map) return;
+
+        setSelectedDevice(null);
+        setInfoPanelAnchor(null);
+        setMoveModeDeviceId(null);
+        zoomIntoCluster(map, cluster);
+    };
+
     const renderMarkers = useCallback(() => {
         const map = mapRef.current;
         if (!map || !window.BMap) return;
         clearOverlays();
-        if (!filteredDevices.length) return;
+
+        if (!filteredDevices.length) {
+            triggerMapResize(map);
+            return;
+        }
 
         const movingDeviceId = moveModeDeviceId;
 
@@ -436,17 +456,16 @@ export default function DeviceMapPage({
             return;
         }
 
-        const clusters = clusterDevices(filteredDevices, getClusterCellSize(map.getZoom()));
-        const points: BMap.Point[] = [];
+        const currentZoom = map.getZoom();
+        const markerGroups = resolveDeviceMarkerGroups(map, filteredDevices);
 
-        clusters.forEach((cluster) => {
-            const point = new BMap.Point(cluster.lng, cluster.lat);
-            points.push(point);
+        markerGroups.forEach((group) => {
+            const point = new BMap.Point(group.lng, group.lat);
 
-            if (cluster.devices.length === 1) {
-                const device = cluster.devices[0];
+            if (group.displayMode === 'single') {
+                const device = group.devices[0];
                 const marker = createDevicePinMarker(
-                    point,
+                    new BMap.Point(device.longitude, device.latitude),
                     STATUS_MARKER_COLOR[device.status],
                     () => onDeviceSelectRef.current(device),
                 );
@@ -455,12 +474,11 @@ export default function DeviceMapPage({
                 return;
             }
 
-            const isExpandedCluster = cluster.devices.every((device) => expandedClusterDeviceIdSet.has(device.id));
-            if (isExpandedCluster) {
-                cluster.devices.forEach((device, index) => {
-                    const markerPoint = getExpandedClusterPoint(cluster, device, index);
+            if (group.displayMode === 'spiderfy') {
+                group.devices.forEach((device, index) => {
+                    const devicePoint = getSpiderfyPoint(group, device, index, currentZoom);
                     const marker = createDevicePinMarker(
-                        markerPoint,
+                        devicePoint,
                         STATUS_MARKER_COLOR[device.status],
                         () => onDeviceSelectRef.current(device),
                     );
@@ -470,30 +488,20 @@ export default function DeviceMapPage({
                 return;
             }
 
-            const label = createClusterLabel(point, cluster.devices.length, () => {
-                setSelectedDevice(null);
-                setInfoPanelAnchor(null);
-                setMoveModeDeviceId(null);
-                setExpandedClusterDeviceIds(cluster.devices.map((device) => device.id));
-                skipNextViewportFitRef.current = true;
-                map.centerAndZoom(point, Math.min(map.getZoom() + 3, 19));
-                window.setTimeout(() => {
-                    renderMarkersRef.current();
-                }, 260);
+            const label = createClusterLabel(point, group.devices.length, () => {
+                handleClusterClickRef.current(group);
             });
             map.addOverlay(label);
             overlaysRef.current.push(label);
         });
 
-        if (skipNextViewportFitRef.current) {
-            skipNextViewportFitRef.current = false;
-        } else if (points.length === 1) {
-            map.centerAndZoom(points[0], BAIDU_MAP_DEFAULT_ZOOM);
-        } else if (points.length > 1) {
-            map.setViewport(points, { margins: [80, 80, 80, 324] });
+        if (viewportFitRequestRef.current) {
+            viewportFitRequestRef.current = false;
+            fitDevicesInView(map, filteredDevices);
         }
+
         triggerMapResize(map);
-    }, [clearOverlays, expandedClusterDeviceIdSet, filteredDevices, moveModeDeviceId]);
+    }, [clearOverlays, filteredDevices, moveModeDeviceId]);
 
     renderMarkersRef.current = renderMarkers;
 
@@ -517,6 +525,7 @@ export default function DeviceMapPage({
                 );
                 map.enableScrollWheelZoom(true);
                 mapRef.current = map;
+                viewportFitRequestRef.current = true;
                 triggerMapResize(map);
                 setMapReady(true);
                 setMapError('');
@@ -538,11 +547,29 @@ export default function DeviceMapPage({
 
     useEffect(() => {
         if (!mapReady) return undefined;
-        const timer = window.setTimeout(() => {
-            renderMarkers();
-        }, 200);
-        return () => window.clearTimeout(timer);
+        renderMarkers();
+        return undefined;
     }, [mapReady, renderMarkers]);
+
+    useEffect(() => {
+        if (!mapReady) return undefined;
+        const map = mapRef.current;
+        if (!map) return undefined;
+
+        const handleMapViewChange = () => {
+            scheduleMarkerRefresh();
+        };
+
+        map.addEventListener('zoomend', handleMapViewChange);
+        map.addEventListener('moveend', handleMapViewChange);
+        return () => {
+            map.removeEventListener('zoomend', handleMapViewChange);
+            map.removeEventListener('moveend', handleMapViewChange);
+            if (mapViewRefreshTimerRef.current) {
+                window.clearTimeout(mapViewRefreshTimerRef.current);
+            }
+        };
+    }, [mapReady, scheduleMarkerRefresh]);
 
     useEffect(() => {
         if (!selectedDevice) return;
@@ -642,7 +669,7 @@ export default function DeviceMapPage({
                                     }}
                                 />
                                 <div className="dm-map-search-input">
-                                    <input
+                                    <ClearableInput
                                         key={searchType}
                                         type="text"
                                         value={keyword}

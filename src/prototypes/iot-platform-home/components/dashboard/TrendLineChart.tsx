@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { ChevronDown } from 'lucide-react';
 import type { DateRange } from './types';
+import { useDismissOnOutsideMouseDown } from '../useDismissOnOutsideMouseDown';
 import {
     chartMonths,
     formatChartValue,
@@ -76,18 +77,7 @@ export function ChartToolbar({
         setDraftEnd(range.end);
     }, [range.end, range.start]);
 
-    useEffect(() => {
-        if (!open) return undefined;
-
-        const handleClickOutside = (event: MouseEvent) => {
-            if (wrapRef.current && !wrapRef.current.contains(event.target as Node)) {
-                setOpen(false);
-            }
-        };
-
-        document.addEventListener('mousedown', handleClickOutside);
-        return () => document.removeEventListener('mousedown', handleClickOutside);
-    }, [open]);
+    useDismissOnOutsideMouseDown(open, wrapRef, () => setOpen(false));
 
     const handleMonthPick = (index: number, side: 'start' | 'end') => {
         if (side === 'start') {
@@ -115,7 +105,10 @@ export function ChartToolbar({
             <button
                 type="button"
                 className="el-select__wrapper"
-                onClick={() => setOpen((prev) => !prev)}
+                onMouseDown={(event) => {
+                    event.stopPropagation();
+                    if (!open) setOpen(true);
+                }}
             >
                 <span className="el-select__selected">
                     {chartMonths[range.start]}
@@ -125,7 +118,13 @@ export function ChartToolbar({
                 <ChevronDown size={12} className="el-select__caret" />
             </button>
             {open && (
-                <div className="el-select-dropdown el-select-dropdown--daterange">
+                <div
+                    className="el-select-dropdown el-select-dropdown--daterange"
+                    onMouseDown={(event) => {
+                        event.preventDefault();
+                        event.stopPropagation();
+                    }}
+                >
                     <div className="month-picker-header">
                         <div className="month-picker-year">
                             <button type="button" onClick={() => setStartYear((y) => y - 1)} aria-label="上一年">‹</button>

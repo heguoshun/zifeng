@@ -6,6 +6,7 @@ import {
 } from '../data/pushSources';
 import '../product-create.css';
 import '../push-source-config.css';
+import ClearableInput from './ClearableInput';
 
 export type PushSourceConfigItemFormValue = {
     name: string;
@@ -88,7 +89,7 @@ export default function PushSourceConfigItemDrawer({
                 <div className="pcp-drawer__body pcp-drawer__body--form">
                     <label className="pcp-drawer-field">
                         <span className="pcp-form-label">名称：</span>
-                        <input
+                        <ClearableInput
                             type="text"
                             className="pcp-form-input"
                             placeholder="请输入名称"
@@ -98,7 +99,7 @@ export default function PushSourceConfigItemDrawer({
                     </label>
                     <label className="pcp-drawer-field">
                         <span className="pcp-form-label"><em>*</em>键：</span>
-                        <input
+                        <ClearableInput
                             type="text"
                             className="pcp-form-input"
                             placeholder="请输入键"
@@ -111,7 +112,7 @@ export default function PushSourceConfigItemDrawer({
                     </label>
                     <label className="pcp-drawer-field">
                         <span className="pcp-form-label">值：</span>
-                        <input
+                        <ClearableInput
                             type="text"
                             className="pcp-form-input"
                             placeholder="请输入值"

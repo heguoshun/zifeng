@@ -1,0 +1,256 @@
+/* ── Sub Device Management Panel ── */
+
+.sdm-panel {
+    gap: 16px;
+}
+
+.sdm-panel .pm-table-wrap {
+    flex: none;
+    min-width: 0;
+    overflow-x: auto;
+}
+
+.sdm-filter-row {
+    flex-wrap: nowrap;
+}
+
+/* ── Status Tags ── */
+
+.sdm-status-tag {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 44px;
+    height: 22px;
+    padding: 0 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: 400;
+}
+
+.sdm-status-tag--online {
+    background: #e8f7ef;
+    color: #389e0d;
+}
+
+.sdm-status-tag--offline {
+    background: #f4f4f5;
+    color: #909399;
+}
+
+.sdm-status-tag--fault {
+    background: #fdf6ec;
+    color: #e6a23c;
+}
+
+.sdm-status-tag--disabled {
+    background: #fef0f0;
+    color: #f56c6c;
+}
+
+/* ── Sub Device Table ── */
+
+.pm-table--sub-device th,
+.pm-table--sub-device td {
+    text-align: center;
+    font-size: 13px;
+}
+
+.pm-table--sub-device th:nth-child(3),
+.pm-table--sub-device td:nth-child(3),
+.pm-table--sub-device th:nth-child(4),
+.pm-table--sub-device td:nth-child(4),
+.pm-table--sub-device th:nth-child(5),
+.pm-table--sub-device td:nth-child(5) {
+    text-align: left;
+}
+
+.pm-table--sub-device .pm-link-btn--danger {
+    color: #f56c6c;
+}
+
+.pm-table--sub-device .pm-link-btn--danger:hover {
+    color: #f04134;
+}
+
+/* 防止表格横向溢出 */
+.sdm-panel .pm-table--sub-device {
+    width: 100%;
+    min-width: 100%;
+    table-layout: fixed;
+}
+
+.sdm-panel .pm-table--sub-device th,
+.sdm-panel .pm-table--sub-device td {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.sdm-panel .pm-table--sub-device th:nth-child(1),
+.sdm-panel .pm-table--sub-device td:nth-child(1) {
+    width: 40px;
+}
+
+.sdm-panel .pm-table--sub-device th:nth-child(2),
+.sdm-panel .pm-table--sub-device td:nth-child(2) {
+    width: 48px;
+}
+
+.sdm-panel .pm-table--sub-device th:nth-child(3),
+.sdm-panel .pm-table--sub-device td:nth-child(3) {
+    width: 12%;
+}
+
+.sdm-panel .pm-table--sub-device th:nth-child(4),
+.sdm-panel .pm-table--sub-device td:nth-child(4) {
+    width: 17%;
+}
+
+.sdm-panel .pm-table--sub-device th:nth-child(5),
+.sdm-panel .pm-table--sub-device td:nth-child(5) {
+    width: 14%;
+}
+
+.sdm-panel .pm-table--sub-device th:nth-child(6),
+.sdm-panel .pm-table--sub-device td:nth-child(6) {
+    width: 10%;
+}
+
+.sdm-panel .pm-table--sub-device th:nth-child(7),
+.sdm-panel .pm-table--sub-device td:nth-child(7) {
+    width: 9%;
+}
+
+.sdm-panel .pm-table--sub-device th:nth-child(8),
+.sdm-panel .pm-table--sub-device td:nth-child(8) {
+    width: 12%;
+}
+
+.sdm-panel .pm-table--sub-device th:nth-child(9),
+.sdm-panel .pm-table--sub-device td:nth-child(9) {
+    width: 12%;
+}
+
+.sdm-panel .pm-table--sub-device th:nth-child(10),
+.sdm-panel .pm-table--sub-device td:nth-child(10) {
+    width: 64px;
+}
+
+/* ── 绑定抽屉 ── */
+
+.sdm-bind-drawer {
+    width: min(1100px, 96vw);
+    font-family: var(--font);
+    color: var(--text);
+}
+
+.sdm-bind-drawer__body {
+    gap: 16px;
+    overflow: hidden;
+}
+
+.sdm-bind-filter {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.sdm-bind-filter .sdm-filter-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    white-space: nowrap;
+}
+
+.sdm-bind-filter .sdm-filter-label {
+    font-size: 13px;
+    color: var(--text-secondary);
+}
+
+.sdm-bind-filter .sdm-filter-input {
+    width: 150px;
+    height: 32px;
+    border: 1px solid #dcdfe6;
+    border-radius: 4px;
+    padding: 0 10px;
+    font-size: 13px;
+    font-family: inherit;
+    color: var(--text);
+    outline: none;
+    transition: border-color 0.2s;
+}
+
+.sdm-bind-filter .sdm-filter-input:focus {
+    border-color: var(--blue);
+}
+
+.sdm-bind-filter .sdm-filter-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.sdm-bind-table-wrap {
+    flex: 1;
+    min-height: 0;
+    overflow: auto;
+}
+
+.sdm-bind-table-wrap .pm-table--sub-device {
+    width: 100%;
+    min-width: 100%;
+    table-layout: fixed;
+}
+
+.sdm-bind-table-wrap .pm-table--sub-device th,
+.sdm-bind-table-wrap .pm-table--sub-device td {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.sdm-bind-table-wrap .pm-table--sub-device th:nth-child(1),
+.sdm-bind-table-wrap .pm-table--sub-device td:nth-child(1) {
+    width: 40px;
+}
+
+.sdm-bind-table-wrap .pm-table--sub-device th:nth-child(2),
+.sdm-bind-table-wrap .pm-table--sub-device td:nth-child(2) {
+    width: 48px;
+}
+
+.sdm-bind-table-wrap .pm-table--sub-device th:nth-child(3),
+.sdm-bind-table-wrap .pm-table--sub-device td:nth-child(3) {
+    width: 15%;
+}
+
+.sdm-bind-table-wrap .pm-table--sub-device th:nth-child(4),
+.sdm-bind-table-wrap .pm-table--sub-device td:nth-child(4) {
+    width: 20%;
+}
+
+.sdm-bind-table-wrap .pm-table--sub-device th:nth-child(5),
+.sdm-bind-table-wrap .pm-table--sub-device td:nth-child(5) {
+    width: 17%;
+}
+
+.sdm-bind-table-wrap .pm-table--sub-device th:nth-child(6),
+.sdm-bind-table-wrap .pm-table--sub-device td:nth-child(6) {
+    width: 11%;
+}
+
+.sdm-bind-table-wrap .pm-table--sub-device th:nth-child(7),
+.sdm-bind-table-wrap .pm-table--sub-device td:nth-child(7) {
+    width: 11%;
+}
+
+.sdm-bind-table-wrap .pm-table--sub-device th:nth-child(8),
+.sdm-bind-table-wrap .pm-table--sub-device td:nth-child(8) {
+    width: 14%;
+}
+
+.sdm-bind-table-wrap .pm-table--sub-device {
+    min-width: 100%;
+}

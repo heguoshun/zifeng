@@ -17,10 +17,11 @@ import {
 import { type TenantRecord } from '../data/tenants';
 import { type SystemUserRecord } from '../data/systemUsers';
 import { getRoleLabel, SYSTEM_ROLES } from '../data/systemRoles';
-import { paginateItems } from '../utils/listPagination';
+import { paginateItems, DEFAULT_LIST_PAGE_SIZE } from '../utils/listPagination';
 import '../device-access.css';
 import '../product-management.css';
 import '../department-management.css';
+import ClearableInput from '../components/ClearableInput';
 
 // ── Tree Node type ──
 interface TreeNode {
@@ -39,7 +40,6 @@ export type DepartmentManagementPageProps = {
     onNavigateHome: () => void;
     onNavigateDeviceAccess: () => void;
     onNavigateMessageCenter: () => void;
-    onNavigateOmManagement: () => void;
     onNavigate: (pageId: SystemManagementPageId) => void;
 };
 
@@ -61,7 +61,6 @@ export default function DepartmentManagementPage({
     onNavigateHome,
     onNavigateDeviceAccess,
     onNavigateMessageCenter,
-    onNavigateOmManagement,
     onNavigate,
 }: DepartmentManagementPageProps) {
     // ── state ──
@@ -519,12 +518,10 @@ export default function DepartmentManagementPage({
             activeTopTab="系统管理"
             sidebar={sidebar}
             onNavigateMessageCenter={onNavigateMessageCenter}
-            onNavigateOmManagement={onNavigateOmManagement}
             onNavigateSystemManagement={() => onNavigate('dept-mgmt')}
             onTopTabChange={(tab) => {
                 if (tab === '设备接入') onNavigateDeviceAccess();
                 if (tab === '消息中心') onNavigateMessageCenter();
-                if (tab === '运维管理') onNavigateOmManagement();
             }}
         >
             <div className="dm-page">
@@ -534,7 +531,7 @@ export default function DepartmentManagementPage({
                     {/* ── Left: Tree ── */}
                     <section className="panel dm-tree-panel">
                         <div className="dm-tree-search">
-                            <input
+                            <ClearableInput
                                 type="text"
                                 placeholder="请输入部门名称"
                                 value={treeKeyword}
@@ -580,7 +577,7 @@ export default function DepartmentManagementPage({
                                 <div className="dm-form-fields">
                                     {renderField('机构名称', isEditing,
                                         isEditing ? (
-                                            <input
+                                            <ClearableInput
                                                 type="text"
                                                 placeholder="请输入机构名称"
                                                 value={form.name}
@@ -680,7 +677,7 @@ export default function DepartmentManagementPage({
 
                                     {renderField('手机号码', isEditing,
                                         isEditing ? (
-                                            <input
+                                            <ClearableInput
                                                 type="text"
                                                 placeholder="请输入手机号码"
                                                 value={form.phone}
@@ -693,7 +690,7 @@ export default function DepartmentManagementPage({
 
                                     {renderField('备注', false,  // not required in screenshot but has asterisk
                                         isEditing ? (
-                                            <input
+                                            <ClearableInput
                                                 type="text"
                                                 placeholder="请输入备注"
                                                 value={form.notes}
@@ -765,9 +762,9 @@ export default function DepartmentManagementPage({
                         </div>
                         <div className="iot-view-drawer__body">
                             <div className="dm-picker-search">
-                                <label className="pm-filter-field">
+                                <div className="pm-filter-field">
                                     <span className="pm-filter-label">用户名称：</span>
-                                    <input
+                                    <ClearableInput
                                         type="text"
                                         className="pm-filter-input"
                                         placeholder="请输入用户名称"
@@ -777,7 +774,7 @@ export default function DepartmentManagementPage({
                                             if (e.key === 'Enter') handlePickerSearch();
                                         }}
                                     />
-                                </label>
+                                </div>
                                 <button type="button" className="pm-btn pm-btn-primary" onClick={handlePickerSearch}>
                                     <Search size={14} />
                                     查询

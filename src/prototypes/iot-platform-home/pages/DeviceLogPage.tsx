@@ -14,7 +14,7 @@ import {
     DEVICE_LOG_STATUS_OPTIONS,
     type DeviceLogRecord,
 } from '../data/deviceLogs';
-import { paginateItems } from '../utils/listPagination';
+import { paginateItems, DEFAULT_LIST_PAGE_SIZE } from '../utils/listPagination';
 import '../device-access.css';
 import '../product-management.css';
 import '../work-order-management.css';
@@ -47,7 +47,6 @@ type DeviceLogPageProps = {
     onNavigateDeviceAccess: () => void;
     onNavigateMessageCenter: () => void;
     onNavigate: (pageId: DeviceAccessPageId) => void;
-    onNavigateOmManagement: () => void;
 };
 
 export default function DeviceLogPage({
@@ -56,11 +55,10 @@ export default function DeviceLogPage({
     onNavigateDeviceAccess,
     onNavigateMessageCenter,
     onNavigate,
-    onNavigateOmManagement,
 }: DeviceLogPageProps) {
     const [draftFilters, setDraftFilters] = useState<FilterState>(DEFAULT_FILTERS);
     const [appliedFilters, setAppliedFilters] = useState<FilterState>(DEFAULT_FILTERS);
-    const [pageSize, setPageSize] = useState('10');
+    const [pageSize, setPageSize] = useState('20');
     const [currentPage, setCurrentPage] = useState(1);
     const [jumpPage, setJumpPage] = useState('1');
     const [detailRecord, setDetailRecord] = useState<DeviceLogRecord | null>(null);
@@ -129,11 +127,9 @@ export default function DeviceLogPage({
         <AppShell
             activeTopTab="设备接入"
             sidebar={sidebar}
-            onNavigateOmManagement={onNavigateOmManagement}
             onNavigateMessageCenter={onNavigateMessageCenter}
             onTopTabChange={(tab) => {
                 if (tab === '设备接入') onNavigate('home');
-                if (tab === '运维管理') onNavigateOmManagement();
             }}
         >
             <div className="pm-page log-page">
@@ -141,7 +137,7 @@ export default function DeviceLogPage({
 
                 <section className="panel pm-filter-panel">
                     <div className="log-filter-row">
-                        <label className="pm-filter-field">
+                        <div className="pm-filter-field">
                             <span className="pm-filter-label">所属产品</span>
                             <ElSelect
                                 className="el-select--medium"
@@ -150,8 +146,8 @@ export default function DeviceLogPage({
                                 options={PRODUCT_OPTIONS}
                                 onChange={(value) => updateDraft({ productName: value })}
                             />
-                        </label>
-                        <label className="pm-filter-field">
+                        </div>
+                        <div className="pm-filter-field">
                             <span className="pm-filter-label">业务类型</span>
                             <ElSelect
                                 className="el-select--medium"
@@ -160,8 +156,8 @@ export default function DeviceLogPage({
                                 options={BIZ_TYPE_OPTIONS}
                                 onChange={(value) => updateDraft({ bizType: value })}
                             />
-                        </label>
-                        <label className="pm-filter-field">
+                        </div>
+                        <div className="pm-filter-field">
                             <span className="pm-filter-label">日志状态</span>
                             <ElSelect
                                 className="el-select--medium"
@@ -170,8 +166,8 @@ export default function DeviceLogPage({
                                 options={STATUS_OPTIONS}
                                 onChange={(value) => updateDraft({ status: value })}
                             />
-                        </label>
-                        <label className="pm-filter-field">
+                        </div>
+                        <div className="pm-filter-field">
                             <span className="pm-filter-label">日志时间</span>
                             <ElDateRangePicker
                                 size="medium"
@@ -182,7 +178,7 @@ export default function DeviceLogPage({
                                     endTime: range.end,
                                 })}
                             />
-                        </label>
+                        </div>
                         <div className="pm-filter-actions">
                             <button type="button" className="pm-btn pm-btn-primary" onClick={handleSearch}>
                                 <Search size={14} />

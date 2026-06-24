@@ -245,6 +245,27 @@ function getLiteralPropertyValue(objectLiteral, propertyName) {
     : null;
 }
 
+function getBooleanPropertyValue(objectLiteral, propertyName) {
+  const property = objectLiteral.properties.find((candidate) => (
+    ts.isPropertyAssignment(candidate)
+    && (
+      (ts.isIdentifier(candidate.name) && candidate.name.text === propertyName)
+      || (ts.isStringLiteral(candidate.name) && candidate.name.text === propertyName)
+    )
+  ));
+  if (!property || !ts.isPropertyAssignment(property)) {
+    return null;
+  }
+  const initializer = property.initializer;
+  if (initializer.kind === ts.SyntaxKind.TrueKeyword) {
+    return true;
+  }
+  if (initializer.kind === ts.SyntaxKind.FalseKeyword) {
+    return false;
+  }
+  return null;
+}
+
 function extractHashRouteFromCall(callExpression) {
   const expression = callExpression.expression;
   if (!ts.isIdentifier(expression) || expression.text !== 'defineHashPageRoute') {
@@ -263,8 +284,13 @@ function extractHashRouteFromCall(callExpression) {
     }
     const id = normalizePageId(getLiteralPropertyValue(element, 'id'));
     const title = stringValue(getLiteralPropertyValue(element, 'title'));
+    const showInMenu = getBooleanPropertyValue(element, 'showInMenu');
     if (id && title) {
-      pages.push({ id, title });
+      const pageEntry = { id, title };
+      if (showInMenu === false) {
+        pageEntry.showInMenu = false;
+      }
+      pages.push(pageEntry);
     }
   }
   if (!pages.length) {

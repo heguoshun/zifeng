@@ -1,0 +1,152 @@
+.cert-page {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    min-height: 100%;
+}
+
+.cert-list-panel {
+    padding: 14px 18px 18px;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.cert-table-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 12px;
+}
+
+.cert-table-head h3 {
+    margin: 0;
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.cert-table-head h3::before {
+    content: "";
+    width: 3px;
+    height: 14px;
+    border-radius: 2px;
+    background: var(--blue);
+}
+
+.cert-table-wrap {
+    flex: none;
+    min-width: 0;
+    overflow-x: auto;
+    overflow-y: auto;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+}
+
+.cert-table {
+    width: 100%;
+    margin: 0;
+    border-collapse: collapse;
+    font-size: 13px;
+}
+
+.cert-table th,
+.cert-table td {
+    padding: 11px 18px;
+    border-bottom: 1px solid var(--border);
+    text-align: left;
+    vertical-align: middle;
+}
+
+.cert-table th:first-child,
+.cert-table td:first-child {
+    width: 64px;
+    text-align: center;
+    padding-left: 24px;
+}
+
+.cert-table th:last-child,
+.cert-table td:last-child {
+    width: 140px;
+    padding-right: 24px;
+}
+
+.cert-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+.cert-table thead th {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    background-color: #fafbfd;
+    color: var(--text-secondary);
+    font-weight: 500;
+    white-space: nowrap;
+    border-bottom: none;
+    box-shadow: inset 0 -1px 0 var(--border);
+}
+
+.cert-table tbody tr:hover {
+    background: #f5f9ff;
+}
+
+.cert-desc-cell {
+    max-width: 320px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.cert-empty-cell {
+    text-align: center;
+    color: var(--text-muted);
+    padding: 48px 12px !important;
+}
+
+.cert-row-actions {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    white-space: nowrap;
+}
+
+.cert-row-actions button {
+    border: 0;
+    background: transparent;
+    color: var(--blue);
+    font-size: 13px;
+    font-family: inherit;
+    cursor: pointer;
+    padding: 0;
+}
+
+.cert-row-actions button:hover {
+    text-decoration: underline;
+}
+
+.cert-form-drawer {
+    width: min(480px, calc(100vw - 32px));
+}
+
+.cert-field-error {
+    font-size: 12px;
+    color: #f5222d;
+    line-height: 1.4;
+}
+
+.cert-upload-btn {
+    width: auto;
+    min-width: 88px;
+}
+
+.cert-upload-hint {
+    margin: 6px 0 0;
+    font-size: 12px;
+    color: #f5222d;
+    line-height: 1.4;
+}

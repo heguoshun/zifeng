@@ -491,7 +491,7 @@ export default function HistoryMessagePage({ onNavigateHome, onNavigate }: Histo
 
                 <section className="panel pm-filter-panel">
                     <div className="pm-filter-row hm-filter-row">
-                        <label className="pm-filter-field">
+                        <div className="pm-filter-field">
                             <span className="pm-filter-label">操作类型</span>
                             <ElSelect
                                 className="el-select--medium"
@@ -500,8 +500,8 @@ export default function HistoryMessagePage({ onNavigateHome, onNavigate }: Histo
                                 options={OPERATION_TYPE_OPTIONS}
                                 onChange={(v) => setFilter((prev) => ({ ...prev, operationType: v }))}
                             />
-                        </label>
-                        <label className="pm-filter-field">
+                        </div>
+                        <div className="pm-filter-field">
                             <span className="pm-filter-label">操作人</span>
                             <ElSelect
                                 className="el-select--medium"
@@ -510,8 +510,8 @@ export default function HistoryMessagePage({ onNavigateHome, onNavigate }: Histo
                                 options={OPERATOR_OPTIONS}
                                 onChange={(v) => setFilter((prev) => ({ ...prev, operator: v }))}
                             />
-                        </label>
-                        <label className="pm-filter-field">
+                        </div>
+                        <div className="pm-filter-field">
                             <span className="pm-filter-label">操作时间</span>
                             <ElDateRangePicker
                                 size="medium"
@@ -519,8 +519,8 @@ export default function HistoryMessagePage({ onNavigateHome, onNavigate }: Histo
                                 end={filter.endTime}
                                 onChange={(range) => setFilter((prev) => ({ ...prev, startTime: range.start, endTime: range.end }))}
                             />
-                        </label>
-                        <label className="pm-filter-field">
+                        </div>
+                        <div className="pm-filter-field">
                             <span className="pm-filter-label">操作结果</span>
                             <ElSelect
                                 className="el-select--medium"
@@ -529,8 +529,8 @@ export default function HistoryMessagePage({ onNavigateHome, onNavigate }: Histo
                                 options={RESULT_OPTIONS}
                                 onChange={(v) => setFilter((prev) => ({ ...prev, operationResult: v }))}
                             />
-                        </label>
-                        <label className="pm-filter-field">
+                        </div>
+                        <div className="pm-filter-field">
                             <span className="pm-filter-label">状态</span>
                             <ElSelect
                                 className="el-select--medium"
@@ -539,7 +539,7 @@ export default function HistoryMessagePage({ onNavigateHome, onNavigate }: Histo
                                 options={STATUS_OPTIONS}
                                 onChange={(v) => setFilter((prev) => ({ ...prev, status: v }))}
                             />
-                        </label>
+                        </div>
                         <div className="pm-filter-actions">
                             <button type="button" className="pm-btn pm-btn-primary" onClick={handleSearch}>
                                 <Search size={14} />

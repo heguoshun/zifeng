@@ -14,6 +14,7 @@ import IotToast, { type IotToastData, type IotToastType, triggerIotToast } from 
 import '../device-access.css';
 import '../product-management.css';
 import '../product-category.css';
+import ClearableInput from '../components/ClearableInput';
 
 export type CategoryRecord = {
     id: string;
@@ -143,7 +144,7 @@ function CategoryFormDialog({
                 <div className="pc-dialog__body">
                     <label className="pc-form-field">
                         <span className="pc-form-label"><em>*</em>产品分类名称</span>
-                        <input
+                        <ClearableInput
                             type="text"
                             className="pc-form-input"
                             placeholder="请输入产品分类名称"
@@ -151,7 +152,7 @@ function CategoryFormDialog({
                             onChange={(event) => onChange({ ...form, name: event.target.value })}
                         />
                     </label>
-                    <label className="pc-form-field">
+                    <div className="pc-form-field">
                         <span className="pc-form-label">上级分类</span>
                         <ElSelect
                             className="el-select--medium pc-form-select"
@@ -160,7 +161,7 @@ function CategoryFormDialog({
                             options={parentOptions}
                             onChange={(value) => onChange({ ...form, parentId: value })}
                         />
-                    </label>
+                    </div>
                     <label className="pc-form-field">
                         <span className="pc-form-label">备注</span>
                         <textarea
@@ -325,16 +326,16 @@ export default function ProductCategoryPage({ onNavigateHome, onNavigate }: Prod
 
                 <section className="panel pc-filter-panel">
                     <div className="pc-filter-row">
-                        <label className="pm-filter-field">
+                        <div className="pm-filter-field">
                             <span className="pm-filter-label">产品分类</span>
-                            <input
+                            <ClearableInput
                                 type="text"
                                 className="pm-filter-input"
                                 placeholder="请输入产品分类名称/编号"
                                 value={draftKeyword}
                                 onChange={(event) => setDraftKeyword(event.target.value)}
                             />
-                        </label>
+                        </div>
                         <button
                             type="button"
                             className="pm-btn pm-btn-primary"

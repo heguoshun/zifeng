@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { ChevronRight } from 'lucide-react';
 import type { SpaceMapNode } from '../data/spaceMapHierarchy';
+import { useDismissOnOutsideMouseDown } from './useDismissOnOutsideMouseDown';
 
 type SpaceCascadeSelectProps = {
     options: SpaceMapNode[];
@@ -33,19 +34,10 @@ export default function SpaceCascadeSelect({
         setActivePath(valuePath);
     }, [valuePath]);
 
-    useEffect(() => {
-        if (!open) return undefined;
-
-        const handleClickOutside = (event: MouseEvent) => {
-            if (wrapRef.current && !wrapRef.current.contains(event.target as Node)) {
-                setOpen(false);
-                setActivePath(valuePath);
-            }
-        };
-
-        document.addEventListener('mousedown', handleClickOutside);
-        return () => document.removeEventListener('mousedown', handleClickOutside);
-    }, [open, valuePath]);
+    useDismissOnOutsideMouseDown(open, wrapRef, () => {
+        setOpen(false);
+        setActivePath(valuePath);
+    });
 
     const columns = useMemo(() => getColumns(options, activePath), [options, activePath]);
 
@@ -69,16 +61,25 @@ export default function SpaceCascadeSelect({
                 type="button"
                 className="dcp-space-cascade__trigger"
                 disabled={disabled}
-                onClick={() => {
+                onMouseDown={(event) => {
+                    event.stopPropagation();
                     if (disabled) return;
-                    setOpen((prev) => !prev);
-                    setActivePath(valuePath);
+                    if (!open) {
+                        setOpen(true);
+                        setActivePath(valuePath);
+                    }
                 }}
             >
                 <span className={valuePath.length ? '' : 'is-placeholder'}>{displayLabel}</span>
             </button>
             {open && (
-                <div className="dcp-space-cascade__panel">
+                <div
+                    className="dcp-space-cascade__panel"
+                    onMouseDown={(event) => {
+                        event.preventDefault();
+                        event.stopPropagation();
+                    }}
+                >
                     {columns.map((column, columnIndex) => (
                         <ul key={`${columnIndex}-${column.map((item) => item.id).join('-')}`} className="dcp-space-cascade__column">
                             {column.map((node) => {

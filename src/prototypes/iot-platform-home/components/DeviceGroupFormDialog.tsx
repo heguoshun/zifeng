@@ -4,6 +4,7 @@ import ElSelect from './ElSelect';
 import type { DeviceGroupRecord } from '../data/deviceGroups';
 import '../product-create.css';
 import '../device-create.css';
+import ClearableInput from './ClearableInput';
 
 export type DeviceGroupFormValue = {
     name: string;
@@ -82,7 +83,7 @@ export default function DeviceGroupFormDialog({
                 <div className="pcp-drawer__body pcp-drawer__body--form">
                     <label className="pcp-drawer-field">
                         <span className="pcp-form-label"><em>*</em>分组名称：</span>
-                        <input
+                        <ClearableInput
                             type="text"
                             className="pcp-form-input"
                             placeholder="请输入分组名称"
@@ -90,7 +91,7 @@ export default function DeviceGroupFormDialog({
                             onChange={(event) => setForm((prev) => ({ ...prev, name: event.target.value }))}
                         />
                     </label>
-                    <label className="pcp-drawer-field">
+                    <div className="pcp-drawer-field">
                         <span className="pcp-form-label"><em>*</em>分组类型：</span>
                         <ElSelect
                             className="el-select--medium pcp-form-select"
@@ -102,7 +103,7 @@ export default function DeviceGroupFormDialog({
                                 type: value,
                             }))}
                         />
-                    </label>
+                    </div>
                 </div>
                 <div className="pcp-drawer__foot">
                     <button type="button" className="pm-btn pm-btn-ghost" onClick={onClose}>取消</button>

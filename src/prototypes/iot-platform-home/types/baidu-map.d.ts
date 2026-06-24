@@ -25,6 +25,7 @@ declare namespace BMap {
         setViewport(points: Point[], viewportOptions?: Record<string, unknown>): void;
         getZoom(): number;
         pointToPixel(point: Point): Pixel;
+        pixelToPoint(pixel: Pixel): Point;
         addEventListener(event: string, handler: (event: MapEvent) => void): void;
         removeEventListener(event: string, handler: (event: MapEvent) => void): void;
     }

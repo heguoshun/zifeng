@@ -18,6 +18,7 @@ import '../device-access.css';
 import '../product-management.css';
 import '../product-create.css';
 import '../network-protocol.css';
+import ClearableInput from '../components/ClearableInput';
 
 const DESCRIPTION_MAX = 100;
 
@@ -53,7 +54,6 @@ type NetworkProtocolWizardPageProps = {
     onNavigateDeviceAccess: () => void;
     onNavigateMessageCenter: () => void;
     onNavigate: (pageId: DeviceAccessPageId) => void;
-    onNavigateOmManagement: () => void;
     onBack: () => void;
 };
 
@@ -124,7 +124,6 @@ export default function NetworkProtocolWizardPage({
     onNavigateDeviceAccess,
     onNavigateMessageCenter,
     onNavigate,
-    onNavigateOmManagement,
     onBack,
 }: NetworkProtocolWizardPageProps) {
     const [currentStep, setCurrentStep] = useState(1);
@@ -214,11 +213,9 @@ export default function NetworkProtocolWizardPage({
         <AppShell
             activeTopTab="设备接入"
             sidebar={sidebar}
-            onNavigateOmManagement={onNavigateOmManagement}
             onNavigateMessageCenter={onNavigateMessageCenter}
             onTopTabChange={(tab) => {
                 if (tab === '设备接入') onNavigate('home');
-                if (tab === '运维管理') onNavigateOmManagement();
             }}
         >
             <div className="np-wizard-page">
@@ -332,7 +329,7 @@ export default function NetworkProtocolWizardPage({
                             <div className="np-wizard-form">
                                 <label className="pcp-drawer-field">
                                     <span className="pcp-form-label"><em>*</em>组件名称：</span>
-                                    <input
+                                    <ClearableInput
                                         type="text"
                                         className="pcp-form-input"
                                         placeholder="请输入组件名称"

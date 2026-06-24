@@ -13,10 +13,6 @@
     min-width: 220px;
 }
 
-.log-filter-row .pm-filter-actions {
-    margin-left: auto;
-}
-
 .log-status-tag {
     display: inline-flex;
     align-items: center;

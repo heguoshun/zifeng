@@ -41,26 +41,32 @@ function CategoryTreeNodes({
                         <div
                             className={`arc-tree-item ${isActive ? 'is-active' : ''}`}
                             style={{ paddingLeft: `${8 + depth * 18}px` }}
+                            onClick={() => onSelect(node.id)}
+                            onKeyDown={(event) => {
+                                if (event.key === 'Enter' || event.key === ' ') {
+                                    event.preventDefault();
+                                    onSelect(node.id);
+                                }
+                            }}
+                            role="button"
+                            tabIndex={0}
                         >
                             {hasChildren ? (
                                 <button
                                     type="button"
                                     className="arc-tree-toggle"
                                     aria-label={isExpanded ? '收起' : '展开'}
-                                    onClick={() => onToggle(node.id)}
+                                    onClick={(event) => {
+                                        event.stopPropagation();
+                                        onToggle(node.id);
+                                    }}
                                 >
                                     <TreeToggleIcon expanded={isExpanded} />
                                 </button>
                             ) : (
                                 <span className="arc-tree-spacer" />
                             )}
-                            <button
-                                type="button"
-                                className="arc-tree-label-btn"
-                                onClick={() => onSelect(node.id)}
-                            >
-                                {node.name}
-                            </button>
+                            <span className="arc-tree-label-btn">{node.name}</span>
                             <button
                                 type="button"
                                 className="arc-tree-menu-btn"
@@ -108,15 +114,18 @@ export default function AlarmRuleCategoryTree({
                     <div
                         className={`arc-tree-item arc-tree-item--all ${activeId === 'all' ? 'is-active' : ''}`}
                         style={{ paddingLeft: '8px' }}
+                        onClick={() => onSelect('all')}
+                        onKeyDown={(event) => {
+                            if (event.key === 'Enter' || event.key === ' ') {
+                                event.preventDefault();
+                                onSelect('all');
+                            }
+                        }}
+                        role="button"
+                        tabIndex={0}
                     >
                         <span className="arc-tree-spacer" />
-                        <button
-                            type="button"
-                            className="arc-tree-label-btn"
-                            onClick={() => onSelect('all')}
-                        >
-                            全部分类
-                        </button>
+                        <span className="arc-tree-label-btn">全部分类</span>
                     </div>
                 </li>
             </ul>

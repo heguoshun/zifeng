@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { Calendar, ChevronDown, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, X } from 'lucide-react';
+import { Calendar, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, X } from 'lucide-react';
 import { formatDateValue } from './ElDatePicker';
+import { useDismissOnOutsideMouseDown } from './useDismissOnOutsideMouseDown';
 
 type ElDateTimePickerProps = {
     value: string;
@@ -115,18 +116,7 @@ export default function ElDateTimePicker({
         setDraftSecond(pad(base.getSeconds()));
     }, [open, committedDate]);
 
-    useEffect(() => {
-        if (!open) return undefined;
-
-        const handleClickOutside = (event: MouseEvent) => {
-            if (wrapRef.current && !wrapRef.current.contains(event.target as Node)) {
-                setOpen(false);
-            }
-        };
-
-        document.addEventListener('mousedown', handleClickOutside);
-        return () => document.removeEventListener('mousedown', handleClickOutside);
-    }, [open]);
+    useDismissOnOutsideMouseDown(open, wrapRef, () => setOpen(false));
 
     const monthCells = useMemo(
         () => buildMonthCells(viewYear, viewMonth),
@@ -178,9 +168,13 @@ export default function ElDateTimePicker({
             <button
                 type="button"
                 className="el-select__wrapper el-date-picker__wrapper"
-                onClick={() => setOpen((prev) => !prev)}
+                onMouseDown={(event) => {
+                    event.stopPropagation();
+                    const target = event.target as HTMLElement;
+                    if (target.closest('.el-date-picker__clear')) return;
+                    if (!open) setOpen(true);
+                }}
             >
-                <Calendar size={14} className="el-date-picker__icon" />
                 <span className={`el-select__selected ${displayValue ? '' : 'is-placeholder'}`.trim()}>
                     {displayValue || placeholder}
                 </span>
@@ -201,10 +195,16 @@ export default function ElDateTimePicker({
                         <X size={12} />
                     </span>
                 )}
-                <ChevronDown size={12} className="el-select__caret" />
+                <Calendar size={14} className="el-date-picker__icon" />
             </button>
             {open && (
-                <div className="el-select-dropdown el-date-picker-dropdown el-datetime-picker-dropdown el-select-dropdown--left">
+                <div
+                    className="el-select-dropdown el-date-picker-dropdown el-datetime-picker-dropdown el-select-dropdown--left"
+                    onMouseDown={(event) => {
+                        event.preventDefault();
+                        event.stopPropagation();
+                    }}
+                >
                     {panelMode === 'date' ? (
                         <div className="el-date-picker-panel">
                             <div className="el-date-picker-panel__head">

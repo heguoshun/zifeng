@@ -1,7 +1,8 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { ChevronDown, ChevronUp, Plus, Search } from 'lucide-react';
+import { handleSelectableRowClick } from '../../../common/selectableRow';
 import AppShell from '../components/AppShell';
-import OmManagementSidebar, { type OmManagementPageId } from '../components/OmManagementSidebar';
+import AlarmWorkOrderSidebar, { type AlarmWorkOrderPageId } from '../components/AlarmWorkOrderSidebar';
 import ElSelect from '../components/ElSelect';
 import ElDateRangePicker from '../components/ElDateRangePicker';
 import ListPagination from '../components/ListPagination';
@@ -9,8 +10,9 @@ import WorkOrderCreateDrawer from '../components/WorkOrderCreateDrawer';
 import WorkOrderDetailDrawer from '../components/WorkOrderDetailDrawer';
 import WorkOrderProcessDrawer from '../components/WorkOrderProcessDrawer';
 import WorkOrderAcceptDialog, { type WorkOrderAcceptPayload } from '../components/WorkOrderAcceptDialog';
+import BatchWorkOrderAcceptDialog from '../components/BatchWorkOrderAcceptDialog';
 import IotToast, { type IotToastData, type IotToastType, triggerIotToast } from '../components/IotToast';
-import { paginateItems } from '../utils/listPagination';
+import { paginateItems, DEFAULT_LIST_PAGE_SIZE } from '../utils/listPagination';
 import type { DeviceRecord } from '../data/devices';
 import type { ProductRecord } from '../data/products';
 import {
@@ -22,6 +24,7 @@ import {
     canShowWorkOrderProcessAction,
     CURRENT_WORK_ORDER_USER,
     getVisibleWorkOrdersForViewer,
+    isWorkOrderAdminViewer,
     type WorkOrderRecord,
     type WorkOrderReadStatus,
     type WorkOrderStatus,
@@ -29,6 +32,7 @@ import {
 import '../device-access.css';
 import '../product-management.css';
 import '../work-order-management.css';
+import ClearableInput from '../components/ClearableInput';
 
 const TYPE_OPTIONS = WORK_ORDER_TYPE_OPTIONS.map((item) => ({ label: item, value: item }));
 const LEVEL_OPTIONS = WORK_ORDER_LEVEL_OPTIONS.map((item) => ({ label: item, value: item }));
@@ -108,7 +112,7 @@ type WorkOrderManagementPageProps = {
     onNavigateHome: () => void;
     onNavigateDeviceAccess: () => void;
     onNavigateMessageCenter: () => void;
-    onNavigate: (pageId: OmManagementPageId) => void;
+    onNavigate: (pageId: AlarmWorkOrderPageId) => void;
     onCreateWorkOrder: (workOrder: WorkOrderRecord) => void;
     initialStatus?: string;
 };
@@ -137,12 +141,14 @@ export default function WorkOrderManagementPage({
     const [appliedFilters, setAppliedFilters] = useState<FilterState>(() =>
         initialStatus ? { ...DEFAULT_FILTERS, status: initialStatus } : DEFAULT_FILTERS,
     );
-    const [pageSize, setPageSize] = useState('10');
+    const [pageSize, setPageSize] = useState('20');
     const [currentPage, setCurrentPage] = useState(1);
     const [jumpPage, setJumpPage] = useState('1');
     const [toast, setToast] = useState<IotToastData | null>(null);
     const [processTarget, setProcessTarget] = useState<WorkOrderRecord | null>(null);
     const [acceptTarget, setAcceptTarget] = useState<WorkOrderRecord | null>(null);
+    const [selectedIds, setSelectedIds] = useState<string[]>([]);
+    const [batchAcceptOpen, setBatchAcceptOpen] = useState(false);
     const [createDrawerVisible, setCreateDrawerVisible] = useState(createDrawerOpen);
     const [detailDrawerVisible, setDetailDrawerVisible] = useState(detailDrawerOpen);
     const [detailWorkOrder, setDetailWorkOrder] = useState<WorkOrderRecord | null>(null);
@@ -182,6 +188,8 @@ export default function WorkOrderManagementPage({
         triggerIotToast(setToast, message, type);
     };
 
+    const canBatchAccept = isWorkOrderAdminViewer();
+
     const visibleWorkOrders = useMemo(
         () => getVisibleWorkOrdersForViewer(workOrders),
         [workOrders],
@@ -209,6 +217,46 @@ export default function WorkOrderManagementPage({
         () => paginateItems(filteredWorkOrders, currentPage, Number(pageSize)),
         [filteredWorkOrders, currentPage, pageSize],
     );
+
+    const workOrderMap = useMemo(
+        () => new Map(filteredWorkOrders.map((item) => [item.id, item])),
+        [filteredWorkOrders],
+    );
+
+    const selectedAcceptableWorkOrders = useMemo(
+        () => selectedIds
+            .map((id) => workOrderMap.get(id))
+            .filter((item): item is WorkOrderRecord => Boolean(item && canShowWorkOrderAcceptAction(item))),
+        [selectedIds, workOrderMap],
+    );
+
+    const selectablePageIds = useMemo(
+        () => pagination.items
+            .filter((item) => canShowWorkOrderAcceptAction(item))
+            .map((item) => item.id),
+        [pagination.items],
+    );
+
+    const allPageSelected = selectablePageIds.length > 0
+        && selectablePageIds.every((id) => selectedIds.includes(id));
+
+    const toggleSelect = (workOrderId: string) => {
+        const workOrder = workOrderMap.get(workOrderId);
+        if (!workOrder || !canShowWorkOrderAcceptAction(workOrder)) return;
+        setSelectedIds((prev) => (
+            prev.includes(workOrderId)
+                ? prev.filter((id) => id !== workOrderId)
+                : [...prev, workOrderId]
+        ));
+    };
+
+    const toggleSelectAll = () => {
+        if (allPageSelected) {
+            setSelectedIds((prev) => prev.filter((id) => !selectablePageIds.includes(id)));
+            return;
+        }
+        setSelectedIds((prev) => [...new Set([...prev, ...selectablePageIds])]);
+    };
 
     const updateDraft = (patch: Partial<FilterState>) => {
         setDraftFilters((prev) => ({ ...prev, ...patch }));
@@ -256,13 +304,19 @@ export default function WorkOrderManagementPage({
         setProcessTarget(item);
     };
 
-    const handleAcceptWorkOrder = (workOrder: WorkOrderRecord, payload: WorkOrderAcceptPayload) => {
+    const buildTimestamp = () => {
         const now = new Date();
         const pad = (value: number) => String(value).padStart(2, '0');
-        const timestamp = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())} `
+        return `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())} `
             + `${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
+    };
 
-        const updated: WorkOrderRecord = payload.result === '通过'
+    const applyWorkOrderAcceptance = (
+        workOrder: WorkOrderRecord,
+        payload: WorkOrderAcceptPayload,
+        timestamp: string,
+    ): WorkOrderRecord => (
+        payload.result === '通过'
             ? {
                 ...workOrder,
                 status: '已结单',
@@ -274,7 +328,12 @@ export default function WorkOrderManagementPage({
                 status: '退回',
                 readStatus: '已读',
                 acceptanceRemark: payload.remark,
-            };
+            }
+    );
+
+    const handleAcceptWorkOrder = (workOrder: WorkOrderRecord, payload: WorkOrderAcceptPayload) => {
+        const timestamp = buildTimestamp();
+        const updated = applyWorkOrderAcceptance(workOrder, payload, timestamp);
 
         onUpdateWorkOrders((prev) => prev.map((item) => (
             item.id === workOrder.id ? updated : item
@@ -286,6 +345,37 @@ export default function WorkOrderManagementPage({
         showToast(payload.result === '通过'
             ? `工单「${workOrder.name}」验收通过`
             : `工单「${workOrder.name}」已退回`);
+    };
+
+    const handleOpenBatchAccept = () => {
+        if (!selectedAcceptableWorkOrders.length) {
+            showToast('请先选择待验收的工单', 'warning');
+            return;
+        }
+        setBatchAcceptOpen(true);
+    };
+
+    const handleConfirmBatchAccept = (payload: WorkOrderAcceptPayload) => {
+        const timestamp = buildTimestamp();
+        const targetIds = new Set(selectedAcceptableWorkOrders.map((item) => item.id));
+        const updates = new Map(
+            selectedAcceptableWorkOrders.map((item) => [
+                item.id,
+                applyWorkOrderAcceptance(item, payload, timestamp),
+            ]),
+        );
+
+        onUpdateWorkOrders((prev) => prev.map((item) => updates.get(item.id) ?? item));
+        if (detailWorkOrder && targetIds.has(detailWorkOrder.id)) {
+            setDetailWorkOrder(updates.get(detailWorkOrder.id) ?? detailWorkOrder);
+        }
+
+        const count = selectedAcceptableWorkOrders.length;
+        setSelectedIds((prev) => prev.filter((id) => !targetIds.has(id)));
+        setBatchAcceptOpen(false);
+        showToast(payload.result === '通过'
+            ? `已批量验收通过 ${count} 个工单`
+            : `已批量退回 ${count} 个工单`);
     };
 
     const handleProcessWorkOrder = (payload: { result: string; attachmentCount: number }) => {
@@ -315,25 +405,25 @@ export default function WorkOrderManagementPage({
         showToast(`工单「${processTarget.name}」已提交处理结果`);
     };
 
-    const sidebar = <OmManagementSidebar pageId="work-order-management" onNavigate={onNavigate} />;
+    const sidebar = <AlarmWorkOrderSidebar pageId="work-order-management" onNavigate={onNavigate} />;
 
     return (
         <AppShell
-            activeTopTab="运维管理"
+            activeTopTab="告警工单"
             sidebar={sidebar}
-            onNavigateOmManagement={() => onNavigate('work-order-management')}
+            onNavigateAlarmWorkOrder={() => onNavigate('work-order-management')}
             onNavigateMessageCenter={onNavigateMessageCenter}
             onTopTabChange={(tab) => {
                 if (tab === '设备接入') onNavigateDeviceAccess();
             }}
         >
             <div className="pm-page wom-page">
-                <div className="crumb">运维管理 / 工单中心 / 工单管理</div>
+                <div className="crumb">告警工单 / 工单管理</div>
 
                 <section className="panel pm-filter-panel">
                     <div className="wom-filter-row">
                         <div className="wom-filter-main-row">
-                            <label className="pm-filter-field">
+                            <div className="pm-filter-field">
                                 <span className="pm-filter-label">工单类型</span>
                                 <ElSelect
                                     className="el-select--medium"
@@ -342,8 +432,8 @@ export default function WorkOrderManagementPage({
                                     options={TYPE_OPTIONS}
                                     onChange={(value) => updateDraft({ type: value })}
                                 />
-                            </label>
-                            <label className="pm-filter-field">
+                            </div>
+                            <div className="pm-filter-field">
                                 <span className="pm-filter-label">工单等级</span>
                                 <ElSelect
                                     className="el-select--medium"
@@ -352,8 +442,8 @@ export default function WorkOrderManagementPage({
                                     options={LEVEL_OPTIONS}
                                     onChange={(value) => updateDraft({ level: value })}
                                 />
-                            </label>
-                            <label className="pm-filter-field">
+                            </div>
+                            <div className="pm-filter-field">
                                 <span className="pm-filter-label">工单状态</span>
                                 <ElSelect
                                     className="el-select--medium"
@@ -362,10 +452,10 @@ export default function WorkOrderManagementPage({
                                     options={STATUS_OPTIONS}
                                     onChange={(value) => updateDraft({ status: value })}
                                 />
-                            </label>
+                            </div>
 
                             {filtersExpanded && (
-                                <label className="pm-filter-field">
+                                <div className="pm-filter-field">
                                     <span className="pm-filter-label">生成时间</span>
                                     <ElDateRangePicker
                                         size="medium"
@@ -376,15 +466,15 @@ export default function WorkOrderManagementPage({
                                             endTime: range.end,
                                         })}
                                     />
-                                </label>
+                                </div>
                             )}
 
                             {!filtersExpanded && (
                                 <>
-                                    <label className="pm-filter-field wom-filter-search">
+                                    <div className="pm-filter-field wom-filter-search">
                                         <span className="pm-filter-label">搜索</span>
                                         <div className="wom-filter-search-input">
-                                            <input
+                                            <ClearableInput
                                                 type="text"
                                                 className="pm-filter-input"
                                                 placeholder="请输入内容"
@@ -393,7 +483,7 @@ export default function WorkOrderManagementPage({
                                             />
                                             <Search size={14} className="wom-filter-search-icon" />
                                         </div>
-                                    </label>
+                                    </div>
                                     <div className="pm-filter-actions wom-filter-actions">
                                         <button type="button" className="pm-btn pm-btn-primary" onClick={handleSearch}>
                                             <Search size={14} />
@@ -415,10 +505,10 @@ export default function WorkOrderManagementPage({
                             )}
 
                             {filtersExpanded && (
-                                <label className="pm-filter-field wom-filter-search">
+                                <div className="pm-filter-field wom-filter-search">
                                     <span className="pm-filter-label">搜索</span>
                                     <div className="wom-filter-search-input">
-                                        <input
+                                        <ClearableInput
                                             type="text"
                                             className="pm-filter-input"
                                             placeholder="请输入内容"
@@ -427,13 +517,13 @@ export default function WorkOrderManagementPage({
                                         />
                                         <Search size={14} className="wom-filter-search-icon" />
                                     </div>
-                                </label>
+                                </div>
                             )}
                         </div>
 
                         {filtersExpanded && (
                             <div className="wom-filter-second-row">
-                                <label className="pm-filter-field">
+                                <div className="pm-filter-field">
                                     <span className="pm-filter-label">阅读状态</span>
                                     <ElSelect
                                         className="el-select--medium"
@@ -442,7 +532,7 @@ export default function WorkOrderManagementPage({
                                         options={READ_STATUS_OPTIONS}
                                         onChange={(value) => updateDraft({ readStatus: value })}
                                     />
-                                </label>
+                                </div>
                                 <div className="pm-filter-actions wom-filter-actions">
                                     <button type="button" className="pm-btn pm-btn-primary" onClick={handleSearch}>
                                         <Search size={14} />
@@ -467,17 +557,47 @@ export default function WorkOrderManagementPage({
 
                 <section className="panel pm-list-panel">
                     <div className="pm-section-head">
-                        <h3>工单列表</h3>
-                        <button type="button" className="pm-btn pm-btn-primary wom-add-btn" onClick={openCreateDrawer}>
-                            <Plus size={14} />
-                            新增工单
-                        </button>
+                        <h3>
+                            工单列表
+                            {canBatchAccept && selectedAcceptableWorkOrders.length > 0 && (
+                                <span className="wom-list-selection">
+                                    （已选 {selectedAcceptableWorkOrders.length} 项）
+                                </span>
+                            )}
+                        </h3>
+                        <div className="wom-list-toolbar">
+                            {canBatchAccept ? (
+                                <button
+                                    type="button"
+                                    className="pm-btn pm-btn-ghost"
+                                    disabled={!selectedAcceptableWorkOrders.length}
+                                    onClick={handleOpenBatchAccept}
+                                >
+                                    批量验收
+                                </button>
+                            ) : null}
+                            <button type="button" className="pm-btn pm-btn-primary wom-add-btn" onClick={openCreateDrawer}>
+                                <Plus size={14} />
+                                新增工单
+                            </button>
+                        </div>
                     </div>
 
                     <div className="pm-table-wrap">
-                        <table className="pm-table">
+                        <table className={`pm-table${canBatchAccept ? ' pm-table--work-order-selectable' : ''}`}>
                             <thead>
                                 <tr>
+                                    {canBatchAccept ? (
+                                        <th className="wom-table__check">
+                                            <input
+                                                type="checkbox"
+                                                checked={allPageSelected}
+                                                disabled={!selectablePageIds.length}
+                                                onChange={toggleSelectAll}
+                                                aria-label="全选当前页待验收工单"
+                                            />
+                                        </th>
+                                    ) : null}
                                     <th>序号</th>
                                     <th>工单编号</th>
                                     <th>工单名称</th>
@@ -487,14 +607,33 @@ export default function WorkOrderManagementPage({
                                     <th>生成时间</th>
                                     <th>阅读状态</th>
                                     <th>工单内容</th>
-                                    <th>所属空间</th>
+                                    <th>所属区域</th>
                                     <th>结单时间</th>
                                     <th>操作</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                {pagination.items.map((item, index) => (
-                                    <tr key={item.id}>
+                                {pagination.items.map((item, index) => {
+                                    const selectable = canShowWorkOrderAcceptAction(item);
+                                    return (
+                                    <tr
+                                        key={item.id}
+                                        className={canBatchAccept && selectable ? 'iot-selectable-row' : undefined}
+                                        onClick={canBatchAccept && selectable
+                                            ? (event) => handleSelectableRowClick(event, () => toggleSelect(item.id))
+                                            : undefined}
+                                    >
+                                        {canBatchAccept ? (
+                                            <td className="wom-table__check">
+                                                <input
+                                                    type="checkbox"
+                                                    checked={selectable && selectedIds.includes(item.id)}
+                                                    disabled={!selectable}
+                                                    onChange={() => toggleSelect(item.id)}
+                                                    aria-label={`选择${item.name}`}
+                                                />
+                                            </td>
+                                        ) : null}
                                         <td>{(pagination.currentPage - 1) * Number(pageSize) + index + 1}</td>
                                         <td>{item.id}</td>
                                         <td>{item.name}</td>
@@ -518,7 +657,8 @@ export default function WorkOrderManagementPage({
                                             </div>
                                         </td>
                                     </tr>
-                                ))}
+                                    );
+                                })}
                             </tbody>
                         </table>
                     </div>
@@ -572,6 +712,13 @@ export default function WorkOrderManagementPage({
                     if (!acceptTarget) return;
                     handleAcceptWorkOrder(acceptTarget, payload);
                 }}
+            />
+
+            <BatchWorkOrderAcceptDialog
+                open={batchAcceptOpen}
+                count={selectedAcceptableWorkOrders.length}
+                onClose={() => setBatchAcceptOpen(false)}
+                onConfirm={handleConfirmBatchAccept}
             />
 
             <IotToast toast={toast} />

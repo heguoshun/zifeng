@@ -1,47 +1,76 @@
 .dai-filter-row {
     --dai-filter-label-width: 56px;
-    --dai-filter-control-width: 198px;
+    --dai-filter-date-width: 240px;
+    --dai-filter-control-width: var(--dai-filter-date-width);
     --dai-filter-field-gap: 8px;
     --dai-filter-col-width: calc(var(--dai-filter-label-width) + var(--dai-filter-field-gap) + var(--dai-filter-control-width));
+    --pm-filter-control-width: var(--dai-filter-control-width);
+    --pm-filter-date-width: var(--dai-filter-date-width);
     display: flex;
     flex-direction: column;
     gap: 12px;
-}
-
-.dai-filter-main-row {
-    display: flex;
-    flex-wrap: nowrap;
-    align-items: center;
-    gap: 16px;
-}
-
-.dai-filter-main-row .pm-filter-field {
-    display: flex;
-    align-items: center;
-    gap: var(--dai-filter-field-gap);
-    flex: 0 0 auto;
+    width: 100%;
     min-width: 0;
+    overflow: visible;
 }
 
+.dai-filter-main-row,
 .dai-filter-second-row {
     display: flex;
-    align-items: center;
-    gap: 16px;
     flex-wrap: nowrap;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    min-width: 0;
+    overflow: visible;
 }
 
+.dai-filter-main-row .pm-filter-field,
 .dai-filter-second-row .pm-filter-field {
     display: flex;
     align-items: center;
     gap: var(--dai-filter-field-gap);
-    flex: 0 0 auto;
+    flex: 0 1 auto;
+    min-width: 0;
 }
 
-.dai-filter-row .pm-filter-label,
-.dai-filter-second-row .pm-filter-label {
+.dai-filter-row .pm-filter-label {
     width: var(--dai-filter-label-width);
     text-align: right;
     flex-shrink: 0;
+}
+
+.dai-filter-row .pm-filter-field > .el-select.el-select--medium,
+.dai-filter-row .pm-filter-field > .el-tree-select.el-select--medium {
+    width: var(--pm-filter-control-width);
+    min-width: 0;
+    max-width: var(--pm-filter-control-width);
+}
+
+.dai-filter-row .pm-filter-field > .el-date-range-picker.el-select--medium {
+    width: var(--pm-filter-date-width);
+    min-width: 0;
+    max-width: var(--pm-filter-date-width);
+}
+
+.dai-filter-search {
+    flex: 1 1 120px;
+    min-width: 0;
+}
+
+.dai-filter-date {
+    flex: 0 0 auto;
+}
+
+.dai-filter-search > .iot-clearable-input {
+    width: 100%;
+    min-width: 0;
+    max-width: none;
+}
+
+.dai-filter-search > .iot-clearable-input > .pm-filter-input {
+    width: 100%;
+    min-width: 0;
 }
 
 .dai-filter-row .dai-filter-actions,
@@ -50,8 +79,19 @@
     align-items: center;
     gap: 8px;
     flex: 0 0 auto;
+    flex-shrink: 0;
     flex-wrap: nowrap;
-    margin-left: 30px;
+    margin-left: auto;
+}
+
+.dai-alarm-page .pm-filter-panel {
+    min-width: 0;
+    overflow: visible;
+}
+
+.dcp-alarm-panel .dai-filter-row {
+    --dai-filter-date-width: 240px;
+    --dai-filter-control-width: var(--dai-filter-date-width);
 }
 
 .dai-filter-expand {
@@ -70,6 +110,352 @@
 
 .dai-alarm-page > .pm-list-panel {
     flex: 1;
+    min-width: 0;
+}
+
+.dai-alarm-page {
+    scrollbar-gutter: stable;
+    min-width: 0;
+}
+
+.pm-table-wrap:has(.pm-table--device-alarm-page),
+.pm-table-wrap:has(.pm-table--device-alarm),
+.pcp-table-wrap:has(.pm-table--device-alarm),
+.wua-alarm-table-wrap,
+.wua-page .wua-alarm-table-wrap {
+    overflow-x: auto;
+    overflow-y: visible;
+    min-width: 0;
+    max-width: 100%;
+}
+
+.dai-alarm-page .pm-table-wrap {
+    overflow-x: auto;
+    overflow-y: visible;
+}
+
+.dcp-alarm-panel .pcp-table-wrap {
+    flex: 1;
+    min-height: 0;
+    min-width: 0;
+    overflow-x: auto;
+    overflow-y: auto;
+}
+
+/* ── 设备详情 Tab：告警列表（10 列）── */
+
+.pm-table--device-alarm {
+    width: max(100%, 1200px);
+    min-width: 1200px;
+    table-layout: fixed;
+}
+
+.pm-table--device-alarm th,
+.pm-table--device-alarm td {
+    overflow: visible;
+    text-overflow: clip;
+    white-space: nowrap;
+    padding-left: 20px;
+    padding-right: 20px;
+}
+
+.pm-table--device-alarm th:first-child,
+.pm-table--device-alarm td:first-child,
+.pm-table--device-alarm th:last-child,
+.pm-table--device-alarm td:last-child {
+    padding-left: 20px;
+    padding-right: 20px;
+}
+
+.pm-table--device-alarm th:nth-child(1),
+.pm-table--device-alarm td:nth-child(1) {
+    width: 56px;
+    min-width: 56px;
+}
+
+.pm-table--device-alarm th:nth-child(2),
+.pm-table--device-alarm td:nth-child(2) {
+    width: 14%;
+}
+
+.pm-table--device-alarm th:nth-child(3),
+.pm-table--device-alarm td:nth-child(3) {
+    width: 80px;
+}
+
+.pm-table--device-alarm th:nth-child(4),
+.pm-table--device-alarm td:nth-child(4) {
+    width: 12%;
+}
+
+.pm-table--device-alarm th:nth-child(5),
+.pm-table--device-alarm td:nth-child(5) {
+    width: 12%;
+}
+
+.pm-table--device-alarm th:nth-child(6),
+.pm-table--device-alarm td:nth-child(6) {
+    width: 12%;
+}
+
+.pm-table--device-alarm th:nth-child(7),
+.pm-table--device-alarm td:nth-child(7) {
+    width: 180px;
+    min-width: 180px;
+}
+
+.pm-table--device-alarm th:nth-child(8),
+.pm-table--device-alarm td:nth-child(8) {
+    width: 96px;
+    min-width: 96px;
+}
+
+.pm-table--device-alarm th:nth-child(9),
+.pm-table--device-alarm td:nth-child(9) {
+    width: 150px;
+}
+
+.pm-table--device-alarm th:nth-child(10),
+.pm-table--device-alarm td:nth-child(10) {
+    position: sticky;
+    right: 0;
+    z-index: 1;
+    width: 148px;
+    min-width: 148px;
+    max-width: 148px;
+    background: #fff;
+    border-bottom: 1px solid #f0f2f5;
+    box-shadow: -8px 0 14px rgba(15, 23, 42, 0.06);
+    overflow: visible;
+    text-overflow: clip;
+}
+
+.pm-table--device-alarm th:nth-child(10) {
+    z-index: 2;
+    background: #fafbfd;
+}
+
+.pm-table--device-alarm tbody tr:hover td:nth-child(10) {
+    background: #fafcff;
+}
+
+.pm-table--device-alarm td:nth-child(10) .dai-table-actions {
+    flex-wrap: nowrap;
+}
+
+/* ── 设备告警信息页：告警列表（12 列）── */
+
+.pm-table--device-alarm-page {
+    width: max(100%, 1680px);
+    min-width: 1680px;
+    table-layout: fixed;
+}
+
+.pm-table--device-alarm-page th,
+.pm-table--device-alarm-page td {
+    overflow: visible;
+    text-overflow: clip;
+    white-space: nowrap;
+    padding-left: 20px;
+    padding-right: 20px;
+}
+
+.pm-table--device-alarm-page th:first-child,
+.pm-table--device-alarm-page td:first-child,
+.pm-table--device-alarm-page th:last-child,
+.pm-table--device-alarm-page td:last-child {
+    padding-left: 20px;
+    padding-right: 20px;
+}
+
+.pm-table--device-alarm-page th:nth-child(1),
+.pm-table--device-alarm-page td:nth-child(1) {
+    width: 72px;
+    min-width: 72px;
+    max-width: 72px;
+}
+
+.pm-table--device-alarm-page th:nth-child(2),
+.pm-table--device-alarm-page td:nth-child(2) {
+    width: 11%;
+}
+
+.pm-table--device-alarm-page th:nth-child(3),
+.pm-table--device-alarm-page td:nth-child(3) {
+    width: 96px;
+    min-width: 96px;
+    max-width: 96px;
+}
+
+.pm-table--device-alarm-page th:nth-child(4),
+.pm-table--device-alarm-page td:nth-child(4) {
+    width: 9%;
+}
+
+.pm-table--device-alarm-page th:nth-child(5),
+.pm-table--device-alarm-page td:nth-child(5) {
+    width: 9%;
+}
+
+.pm-table--device-alarm-page th:nth-child(6),
+.pm-table--device-alarm-page td:nth-child(6) {
+    width: 9%;
+}
+
+.pm-table--device-alarm-page th:nth-child(7),
+.pm-table--device-alarm-page td:nth-child(7) {
+    width: 180px;
+    min-width: 180px;
+}
+
+.pm-table--device-alarm-page th:nth-child(8),
+.pm-table--device-alarm-page td:nth-child(8) {
+    width: 96px;
+    min-width: 96px;
+}
+
+.pm-table--device-alarm-page th:nth-child(9),
+.pm-table--device-alarm-page td:nth-child(9) {
+    width: 150px;
+    min-width: 150px;
+}
+
+.pm-table--device-alarm-page th:nth-child(10),
+.pm-table--device-alarm-page td:nth-child(10) {
+    width: 420px;
+    min-width: 420px;
+    max-width: 420px;
+    vertical-align: middle;
+}
+
+.pm-table--device-alarm-page th:nth-child(11),
+.pm-table--device-alarm-page td:nth-child(11) {
+    width: 112px;
+    min-width: 112px;
+}
+
+.pm-table--device-alarm-page td:nth-child(11) .dai-process-status {
+    min-width: 0;
+}
+
+.pm-table--device-alarm-page th:last-child,
+.pm-table--device-alarm-page td:last-child {
+    position: sticky;
+    right: 0;
+    z-index: 1;
+    width: 148px;
+    min-width: 148px;
+    max-width: 148px;
+    background: #fff;
+    border-bottom: 1px solid #f0f2f5;
+    box-shadow: -8px 0 14px rgba(15, 23, 42, 0.06);
+    overflow: visible;
+    text-overflow: clip;
+    vertical-align: middle;
+}
+
+.pm-table--device-alarm-page th:last-child {
+    z-index: 2;
+    background: #fafbfd;
+}
+
+.pm-table--device-alarm-page tbody tr:hover td:last-child {
+    background: #fafcff;
+}
+
+.pm-table--device-alarm-page td:last-child .dai-table-actions {
+    flex-wrap: nowrap;
+    white-space: nowrap;
+}
+
+/* ── 设备告警信息页：带复选框（13 列）── */
+
+.pm-table--device-alarm-page--selectable {
+    width: max(100%, 1724px);
+    min-width: 1724px;
+}
+
+.pm-table--device-alarm-page--selectable th:first-child,
+.pm-table--device-alarm-page--selectable td:first-child {
+    padding-left: 12px;
+    padding-right: 28px;
+}
+
+.pm-table--device-alarm-page--selectable th:nth-child(1),
+.pm-table--device-alarm-page--selectable td:nth-child(1) {
+    width: 44px;
+    min-width: 44px;
+    max-width: 44px;
+}
+
+.pm-table--device-alarm-page--selectable th:nth-child(2),
+.pm-table--device-alarm-page--selectable td:nth-child(2) {
+    width: 72px;
+    min-width: 72px;
+    max-width: 72px;
+}
+
+.pm-table--device-alarm-page--selectable th:nth-child(3),
+.pm-table--device-alarm-page--selectable td:nth-child(3) {
+    width: 11%;
+}
+
+.pm-table--device-alarm-page--selectable th:nth-child(4),
+.pm-table--device-alarm-page--selectable td:nth-child(4) {
+    width: 96px;
+    min-width: 96px;
+    max-width: 96px;
+}
+
+.pm-table--device-alarm-page--selectable th:nth-child(5),
+.pm-table--device-alarm-page--selectable td:nth-child(5) {
+    width: 9%;
+}
+
+.pm-table--device-alarm-page--selectable th:nth-child(6),
+.pm-table--device-alarm-page--selectable td:nth-child(6) {
+    width: 9%;
+}
+
+.pm-table--device-alarm-page--selectable th:nth-child(7),
+.pm-table--device-alarm-page--selectable td:nth-child(7) {
+    width: 9%;
+}
+
+.pm-table--device-alarm-page--selectable th:nth-child(8),
+.pm-table--device-alarm-page--selectable td:nth-child(8) {
+    width: 180px;
+    min-width: 180px;
+}
+
+.pm-table--device-alarm-page--selectable th:nth-child(9),
+.pm-table--device-alarm-page--selectable td:nth-child(9) {
+    width: 96px;
+    min-width: 96px;
+}
+
+.pm-table--device-alarm-page--selectable th:nth-child(10),
+.pm-table--device-alarm-page--selectable td:nth-child(10) {
+    width: 150px;
+    min-width: 150px;
+}
+
+.pm-table--device-alarm-page--selectable th:nth-child(11),
+.pm-table--device-alarm-page--selectable td:nth-child(11) {
+    width: 420px;
+    min-width: 420px;
+    max-width: 420px;
+    vertical-align: middle;
+}
+
+.pm-table--device-alarm-page--selectable th:nth-child(12),
+.pm-table--device-alarm-page--selectable td:nth-child(12) {
+    width: 112px;
+    min-width: 112px;
+}
+
+.pm-table--device-alarm-page--selectable td:nth-child(12) .dai-process-status {
+    min-width: 0;
 }
 
 .dai-level-tag {
@@ -108,9 +494,8 @@
 }
 
 .dai-trigger-content {
-    max-width: 280px;
-    white-space: normal;
-    line-height: 1.5;
+    display: inline;
+    white-space: nowrap;
 }
 
 .dai-process-status {
@@ -120,6 +505,7 @@
     font-size: 13px;
     color: var(--text-secondary);
     white-space: nowrap;
+    min-width: 72px;
 }
 
 .dai-process-status__icon {
@@ -147,8 +533,11 @@
 }
 
 .dai-table-actions {
-    display: flex;
+    display: inline-flex;
+    align-items: center;
     gap: 16px;
+    min-height: 22px;
+    white-space: nowrap;
 }
 
 .dai-table-actions button {
@@ -435,6 +824,48 @@
     color: #f56c6c;
 }
 
+.dai-list-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+}
+
+.dai-list-selection {
+    margin-left: 4px;
+    font-size: 13px;
+    font-weight: 400;
+    color: var(--text-secondary);
+}
+
+.dai-batch-summary {
+    margin: 0;
+    font-size: 13px;
+    line-height: 1.6;
+    color: var(--text-secondary);
+}
+
+.dai-batch-summary strong {
+    color: var(--blue);
+    font-weight: 600;
+}
+
+.pm-table--device-alarm-page--selectable .dai-table__check {
+    width: 44px;
+    min-width: 44px;
+    max-width: 44px;
+    padding-left: 12px;
+    padding-right: 28px;
+    text-align: right;
+    overflow: visible;
+    text-overflow: clip;
+}
+
+.pm-table--device-alarm-page--selectable .dai-table__check input[type="checkbox"]:disabled {
+    cursor: not-allowed;
+    opacity: 0.45;
+}
+
 /* ── 选择指派人侧拉抽屉 ── */
 .dai-assignee-picker-mask {
     z-index: 130;
@@ -450,6 +881,8 @@
     flex-direction: column;
     gap: 12px;
     padding: 16px 20px;
+    min-width: 0;
+    overflow-x: hidden;
 }
 
 .dai-assignee-picker-filter {
@@ -479,9 +912,60 @@
 .dai-assignee-picker-table-wrap {
     flex: 1;
     min-height: 0;
-    overflow: auto;
+    min-width: 0;
+    overflow-x: hidden;
+    overflow-y: auto;
     border: 1px solid #ebeef5;
     border-radius: 2px;
+}
+
+.dai-assignee-picker-table-wrap .pm-table {
+    width: 100%;
+    min-width: 0;
+    table-layout: fixed;
+}
+
+.dai-assignee-picker-table-wrap .pm-table th,
+.dai-assignee-picker-table-wrap .pm-table td {
+    min-width: 0;
+    padding: 11px 12px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.dai-assignee-picker-table-wrap .pm-table th:first-child,
+.dai-assignee-picker-table-wrap .pm-table td:first-child {
+    width: 72px;
+    min-width: 72px;
+    max-width: 72px;
+    padding-left: 16px;
+    overflow: visible;
+    text-overflow: clip;
+}
+
+.dai-assignee-picker-table-wrap .pm-table th:nth-child(2),
+.dai-assignee-picker-table-wrap .pm-table td:nth-child(2) {
+    width: 18%;
+}
+
+.dai-assignee-picker-table-wrap .pm-table th:nth-child(3),
+.dai-assignee-picker-table-wrap .pm-table td:nth-child(3) {
+    width: 22%;
+}
+
+.dai-assignee-picker-table-wrap .pm-table th:nth-child(4),
+.dai-assignee-picker-table-wrap .pm-table td:nth-child(4) {
+    width: 18%;
+}
+
+.dai-assignee-picker-table-wrap .pm-table th:last-child,
+.dai-assignee-picker-table-wrap .pm-table td:last-child {
+    width: auto;
+    min-width: 0;
+    padding-right: 16px;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .dai-assignee-picker-check-col {

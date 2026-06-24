@@ -8,6 +8,7 @@ import { ConfirmDialog, ViewDrawer } from '../components/IotDialogs';
 import IotToast, { type IotToastData, type IotToastType, triggerIotToast } from '../components/IotToast';
 import {
     buildFunctionInputJson,
+    buildProductModelState,
     categoryIdToLabel,
     createEmptyProductForm,
     getFunctionInputParams,
@@ -46,6 +47,7 @@ export type ThingModelSavePayload = {
 import '../device-access.css';
 import '../product-management.css';
 import '../product-create.css';
+import ClearableInput from '../components/ClearableInput';
 
 type MainTab = 'basic' | 'model';
 type ModelTab = 'property' | 'function' | 'event';
@@ -242,16 +244,16 @@ function ProtocolPickerDrawer({
 
                 <div className="pcp-drawer__body">
                     <div className="pcp-drawer-filter">
-                        <label className="pm-filter-field">
+                        <div className="pm-filter-field">
                             <span className="pm-filter-label">组件名称</span>
-                            <input
+                            <ClearableInput
                                 type="text"
                                 className="pm-filter-input pcp-drawer-filter-input"
                                 placeholder="请输入组件名称"
                                 value={draftKeyword}
                                 onChange={(event) => setDraftKeyword(event.target.value)}
                             />
-                        </label>
+                        </div>
                         <button
                             type="button"
                             className="pm-btn pm-btn-primary"
@@ -480,7 +482,7 @@ function PropertyDrawer({
         >
             <label className="pcp-drawer-field">
                 <span className="pcp-form-label"><em>*</em>属性标识</span>
-                <input
+                <ClearableInput
                     type="text"
                     className="pcp-form-input"
                     placeholder="请输入属性标识"
@@ -490,7 +492,7 @@ function PropertyDrawer({
             </label>
             <label className="pcp-drawer-field">
                 <span className="pcp-form-label"><em>*</em>属性名称</span>
-                <input
+                <ClearableInput
                     type="text"
                     className="pcp-form-input"
                     placeholder="请输入属性名称"
@@ -498,7 +500,7 @@ function PropertyDrawer({
                     onChange={(event) => setForm((prev) => ({ ...prev, name: event.target.value }))}
                 />
             </label>
-            <label className="pcp-drawer-field">
+            <div className="pcp-drawer-field">
                 <span className="pcp-form-label"><em>*</em>数据类型</span>
                 <ElSelect
                     className="el-select--medium pcp-form-select"
@@ -507,8 +509,8 @@ function PropertyDrawer({
                     options={[{ label: '请选择数据类型', value: '' }, ...DATA_TYPE_OPTIONS]}
                     onChange={(value) => setForm((prev) => ({ ...prev, dataType: value }))}
                 />
-            </label>
-            <label className="pcp-drawer-field">
+            </div>
+            <div className="pcp-drawer-field">
                 <span className="pcp-form-label"><em>*</em>读写类型</span>
                 <ElSelect
                     className="el-select--medium pcp-form-select"
@@ -517,7 +519,7 @@ function PropertyDrawer({
                     options={[{ label: '请选择读写类型', value: '' }, ...ACCESS_MODE_OPTIONS]}
                     onChange={(value) => setForm((prev) => ({ ...prev, accessMode: value }))}
                 />
-            </label>
+            </div>
             <label className="pcp-drawer-field">
                 <span className="pcp-form-label">说明</span>
                 <textarea
@@ -606,7 +608,7 @@ function FunctionDrawer({
         >
             <label className="pcp-drawer-field">
                 <span className="pcp-form-label"><em>*</em>功能标识</span>
-                <input
+                <ClearableInput
                     type="text"
                     className="pcp-form-input"
                     placeholder="请输入功能标识"
@@ -616,7 +618,7 @@ function FunctionDrawer({
             </label>
             <label className="pcp-drawer-field">
                 <span className="pcp-form-label"><em>*</em>功能名称</span>
-                <input
+                <ClearableInput
                     type="text"
                     className="pcp-form-input"
                     placeholder="请输入功能名称"
@@ -663,7 +665,7 @@ function FunctionDrawer({
                     </button>
                 </div>
             </div>
-            <label className="pcp-drawer-field">
+            <div className="pcp-drawer-field">
                 <span className="pcp-form-label">输出参数</span>
                 <ElSelect
                     className="el-select--medium pcp-form-select"
@@ -672,7 +674,7 @@ function FunctionDrawer({
                     options={[{ label: '请选择数据类型', value: '' }, ...OUTPUT_PARAM_OPTIONS]}
                     onChange={(value) => setForm((prev) => ({ ...prev, outputParam: value }))}
                 />
-            </label>
+            </div>
             <label className="pcp-drawer-field">
                 <span className="pcp-form-label">说明</span>
                 <textarea
@@ -760,7 +762,7 @@ function EventDrawer({
         >
             <label className="pcp-drawer-field">
                 <span className="pcp-form-label"><em>*</em>事件标识</span>
-                <input
+                <ClearableInput
                     type="text"
                     className="pcp-form-input"
                     placeholder="请输入事件标识"
@@ -770,7 +772,7 @@ function EventDrawer({
             </label>
             <label className="pcp-drawer-field">
                 <span className="pcp-form-label"><em>*</em>事件名称</span>
-                <input
+                <ClearableInput
                     type="text"
                     className="pcp-form-input"
                     placeholder="请输入事件名称"
@@ -778,7 +780,7 @@ function EventDrawer({
                     onChange={(event) => setForm((prev) => ({ ...prev, name: event.target.value }))}
                 />
             </label>
-            <label className="pcp-drawer-field">
+            <div className="pcp-drawer-field">
                 <span className="pcp-form-label"><em>*</em>事件类型</span>
                 <ElSelect
                     className="el-select--medium pcp-form-select"
@@ -787,8 +789,8 @@ function EventDrawer({
                     options={[{ label: '请选择事件类型', value: '' }, ...EVENT_TYPE_OPTIONS]}
                     onChange={(value) => setForm((prev) => ({ ...prev, eventType: value }))}
                 />
-            </label>
-            <label className="pcp-drawer-field">
+            </div>
+            <div className="pcp-drawer-field">
                 <span className="pcp-form-label">输出参数</span>
                 <ElSelect
                     className="el-select--medium pcp-form-select"
@@ -797,7 +799,7 @@ function EventDrawer({
                     options={OUTPUT_PARAM_OPTIONS}
                     onChange={(value) => setForm((prev) => ({ ...prev, outputParam: value }))}
                 />
-            </label>
+            </div>
             <div className="pcp-drawer-field">
                 <span className="pcp-form-label">JSON对象</span>
                 <div className="pcp-param-panel">
@@ -853,7 +855,7 @@ function ModelTableToolbar({
     return (
         <div className="pcp-model-toolbar">
             <div className="pcp-model-search">
-                <input
+                <ClearableInput
                     type="text"
                     className="pcp-form-input"
                     placeholder="请输入关键字进行搜索"
@@ -906,10 +908,12 @@ export default function ProductCreatePage({
 }: ProductCreatePageProps) {
     const isThingModelEntry = entry === 'thing-model';
     const readonly = mode === 'view';
-    const existingProduct = !isThingModelEntry && mode !== 'create' && productId
-        ? products.find((item) => item.id === productId)
+    const resolvedProduct = !isThingModelEntry && mode !== 'create' && productId
+        ? products.find((item) => item.id === productId) ?? null
         : null;
+    const existingProduct = resolvedProduct;
     const existingThingModel = isThingModelEntry && mode !== 'create' ? thingModel : null;
+    const initialProductState = resolvedProduct ? buildProductModelState(resolvedProduct) : null;
 
     const [mainTab, setMainTab] = useState<MainTab>('basic');
     const [modelTab, setModelTab] = useState<ModelTab>('property');
@@ -928,11 +932,19 @@ export default function ProductCreatePage({
     const [modelPreviewOpen, setModelPreviewOpen] = useState(false);
     const [toast, setToast] = useState<IotToastData | null>(null);
 
-    const [properties, setProperties] = useState<PropertyRow[]>([]);
-    const [functions, setFunctions] = useState<FunctionRow[]>([]);
-    const [events, setEvents] = useState<EventRow[]>([]);
+    const [properties, setProperties] = useState<PropertyRow[]>(
+        () => initialProductState?.properties ?? [],
+    );
+    const [functions, setFunctions] = useState<FunctionRow[]>(
+        () => initialProductState?.functions ?? [],
+    );
+    const [events, setEvents] = useState<EventRow[]>(
+        () => initialProductState?.events ?? [],
+    );
 
-    const [form, setForm] = useState(createEmptyProductForm);
+    const [form, setForm] = useState(
+        () => initialProductState?.form ?? createEmptyProductForm(),
+    );
 
     useEffect(() => {
         if (mode === 'create') {
@@ -969,28 +981,24 @@ export default function ProductCreatePage({
         }
 
         if (!productId) {
-            onBack();
             return;
         }
 
         const product = products.find((item) => item.id === productId);
         if (!product) {
-            onBack();
             return;
         }
 
-        setForm(productToForm(product));
-        setProperties(product.properties.map((row) => ({ ...row })));
-        setFunctions(product.functions.map((row) => normalizeFunctionRow({
-            ...row,
-            inputJson: row.inputJson ?? '{}',
-        })));
-        setEvents(product.events.map((row) => ({ ...row })));
+        const nextState = buildProductModelState(product);
+        setForm(nextState.form);
+        setProperties(nextState.properties);
+        setFunctions(nextState.functions);
+        setEvents(nextState.events);
         setMainTab('basic');
         setModelTab('property');
         setDraftKeyword('');
         setKeyword('');
-    }, [mode, productId, products, isThingModelEntry, existingThingModel, thingModelEntry, onBack]);
+    }, [mode, productId, products, isThingModelEntry, existingThingModel, thingModelEntry]);
 
     const filteredProperties = useMemo(
         () => filterByKeyword(properties, keyword),
@@ -1120,7 +1128,7 @@ export default function ProductCreatePage({
     if (isThingModelEntry) {
         if (mode !== 'create' && !existingThingModel) return null;
         if (mode === 'create' && !thingModelEntry) return null;
-    } else if (mode !== 'create' && !existingProduct) {
+    } else if (mode !== 'create' && productId && !existingProduct) {
         return null;
     }
 
@@ -1132,7 +1140,15 @@ export default function ProductCreatePage({
 
     const sidebar = (
         <DeviceAccessSidebar
-            pageId={isThingModelEntry ? 'model-library' : 'product-create'}
+            pageId={
+                isThingModelEntry
+                    ? 'model-library'
+                    : mode === 'edit'
+                        ? 'product-edit'
+                        : mode === 'view'
+                            ? 'product-view'
+                            : 'product-create'
+            }
             onNavigate={onNavigate}
         />
     );
@@ -1183,7 +1199,7 @@ export default function ProductCreatePage({
                             <div className="pcp-form-grid">
                                 <label className="pcp-form-field">
                                     <span className="pcp-form-label"><em>*</em>产品名称</span>
-                                    <input
+                                    <ClearableInput
                                         type="text"
                                         className={`pcp-form-input ${readonly ? 'is-readonly' : ''}`.trim()}
                                         placeholder="请输入产品名称"
@@ -1195,7 +1211,7 @@ export default function ProductCreatePage({
                                         }))}
                                     />
                                 </label>
-                                <label className="pcp-form-field">
+                                <div className="pcp-form-field">
                                     <span className="pcp-form-label"><em>*</em>节点类型</span>
                                     {readonly ? (
                                         <input
@@ -1214,8 +1230,8 @@ export default function ProductCreatePage({
                                             onChange={(value) => setForm((prev) => ({ ...prev, nodeType: value }))}
                                         />
                                     )}
-                                </label>
-                                <label className="pcp-form-field">
+                                </div>
+                                <div className="pcp-form-field">
                                     <span className="pcp-form-label"><em>*</em>产品分类</span>
                                     {readonly ? (
                                         <input
@@ -1236,7 +1252,7 @@ export default function ProductCreatePage({
                                             onChange={(value) => setForm((prev) => ({ ...prev, categoryId: value }))}
                                         />
                                     )}
-                                </label>
+                                </div>
 
                                 <label className="pcp-form-field">
                                     <span className="pcp-form-label"><em>*</em>网络协议</span>
@@ -1282,7 +1298,7 @@ export default function ProductCreatePage({
                                     </label>
                                 )}
                                 {!isThingModelEntry && (
-                                    <label className="pcp-form-field">
+                                    <div className="pcp-form-field">
                                         <span className="pcp-form-label">供应商</span>
                                         {readonly ? (
                                             <input
@@ -1301,7 +1317,7 @@ export default function ProductCreatePage({
                                                 onChange={(value) => setForm((prev) => ({ ...prev, vendor: value }))}
                                             />
                                         )}
-                                    </label>
+                                    </div>
                                 )}
                                 {!isThingModelEntry && (
                                     <label className="pcp-form-field">
@@ -1357,8 +1373,6 @@ export default function ProductCreatePage({
                                     </div>
                                 </div>
                             </div>
-
-
                         </div>
                     ) : (
                         <div className="pcp-model-body">

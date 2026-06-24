@@ -15,21 +15,23 @@ import {
     type NetworkServiceRecord,
 } from '../data/networkServices';
 import type { NetworkServiceFormValue } from '../components/NetworkServiceFormDrawer';
-import { paginateItems } from '../utils/listPagination';
+import type { CertificateRecord } from '../data/certificates';
+import { paginateItems, DEFAULT_LIST_PAGE_SIZE } from '../utils/listPagination';
 import '../device-access.css';
 import '../product-management.css';
 import '../protocol-management.css';
+import ClearableInput from '../components/ClearableInput';
 
 type DrawerMode = 'add' | 'edit' | null;
 
 type NetworkServiceManagementPageProps = {
     networkServices: NetworkServiceRecord[];
+    certificates: CertificateRecord[];
     onUpdateNetworkServices: React.Dispatch<React.SetStateAction<NetworkServiceRecord[]>>;
     onNavigateHome: () => void;
     onNavigateDeviceAccess: () => void;
     onNavigateMessageCenter: () => void;
     onNavigate: (pageId: DeviceAccessPageId) => void;
-    onNavigateOmManagement: () => void;
 };
 
 const TYPE_FILTER_OPTIONS = NETWORK_SERVICE_TYPE_OPTIONS.map((item) => ({
@@ -116,19 +118,19 @@ function ServiceTable({
 
 export default function NetworkServiceManagementPage({
     networkServices,
+    certificates,
     onUpdateNetworkServices,
     onNavigateHome,
     onNavigateDeviceAccess,
     onNavigateMessageCenter,
     onNavigate,
-    onNavigateOmManagement,
 }: NetworkServiceManagementPageProps) {
     const [draftName, setDraftName] = useState('');
     const [draftType, setDraftType] = useState('全部');
     const [appliedName, setAppliedName] = useState('');
     const [appliedType, setAppliedType] = useState('全部');
     const [viewMode, setViewMode] = useState<'card' | 'list'>('card');
-    const [pageSize, setPageSize] = useState('10');
+    const [pageSize, setPageSize] = useState('20');
     const [currentPage, setCurrentPage] = useState(1);
     const [jumpPage, setJumpPage] = useState('1');
     const [drawerMode, setDrawerMode] = useState<DrawerMode>(null);
@@ -203,11 +205,63 @@ export default function NetworkServiceManagementPage({
             return;
         }
 
+        if (value.enableDtls === '是') {
+            if (!value.certificateId) {
+                showToast('请选择证书');
+                return;
+            }
+            if (!certificates.some((item) => item.id === value.certificateId)) {
+                showToast('所选证书不存在，请重新选择');
+                return;
+            }
+        }
+
+        if (value.componentSource === '系统内置' && value.serviceType === 'TCP服务') {
+            if (!value.packetRule) {
+                showToast('请选择粘拆包规则');
+                return;
+            }
+            if (value.packetRule === '分隔符' && !value.delimiter.trim()) {
+                showToast('请输入分隔符');
+                return;
+            }
+            if (value.packetRule === '固定长度' && !value.fixedLength.trim()) {
+                showToast('请输入长度值');
+                return;
+            }
+        }
+
+        if (value.componentSource === '系统内置' && value.serviceType === 'MQTT服务') {
+            if (!value.clusterAddress.trim()) {
+                showToast('请输入集群地址');
+                return;
+            }
+            if (!value.mqttUsername.trim()) {
+                showToast('请输入用户名');
+                return;
+            }
+            if (!value.mqttPassword.trim()) {
+                showToast('请输入密码');
+                return;
+            }
+            if (!value.messageQuality.trim()) {
+                showToast('请输入消息质量');
+                return;
+            }
+        }
+
         const duplicate = networkServices.some((item) => item.name === name && item.id !== editingService?.id);
         if (duplicate) {
             showToast('服务名称已存在');
             return;
         }
+
+        const isTcp = value.componentSource === '系统内置' && value.serviceType === 'TCP服务';
+        const isMqtt = value.componentSource === '系统内置' && value.serviceType === 'MQTT服务';
+        const isDtlsEnabled = value.enableDtls === '是';
+        const isDelimiterRule = isTcp && value.packetRule === '分隔符';
+        const isFixedLengthRule = isTcp && value.packetRule === '固定长度';
+        const isLengthFieldRule = isTcp && value.packetRule === '长度字段';
 
         const payload = {
             name,
@@ -215,6 +269,34 @@ export default function NetworkServiceManagementPage({
             networkScope: value.networkScope,
             ipAddress: value.ipAddress.trim(),
             port: value.port.trim(),
+            enableDtls: isDtlsEnabled ? value.enableDtls : undefined,
+            certificateId: isDtlsEnabled ? value.certificateId : undefined,
+            privateKeyAlias: isDtlsEnabled && value.privateKeyAlias.trim()
+                ? value.privateKeyAlias.trim()
+                : undefined,
+            packetRule: isTcp ? value.packetRule as NetworkServiceRecord['packetRule'] : undefined,
+            delimiter: isDelimiterRule ? value.delimiter.trim() : undefined,
+            discardDelimiter: isDelimiterRule && value.discardDelimiter
+                ? value.discardDelimiter as NetworkServiceRecord['discardDelimiter']
+                : undefined,
+            fixedLength: isFixedLengthRule ? value.fixedLength.trim() : undefined,
+            byteCount: isLengthFieldRule && value.byteCount.trim() ? value.byteCount.trim() : undefined,
+            endOffset: isLengthFieldRule && value.endOffset.trim() ? value.endOffset.trim() : undefined,
+            subsequentLength: isLengthFieldRule && value.subsequentLength.trim()
+                ? value.subsequentLength.trim()
+                : undefined,
+            firstByteCount: isLengthFieldRule && value.firstByteCount.trim()
+                ? value.firstByteCount.trim()
+                : undefined,
+            lengthFieldValue: isLengthFieldRule && value.lengthFieldValue
+                ? value.lengthFieldValue as NetworkServiceRecord['lengthFieldValue']
+                : undefined,
+            clusterAddress: isMqtt ? value.clusterAddress.trim() : undefined,
+            mqttUsername: isMqtt ? value.mqttUsername.trim() : undefined,
+            mqttPassword: isMqtt ? value.mqttPassword.trim() : undefined,
+            messageQuality: isMqtt ? value.messageQuality.trim() : undefined,
+            timeout: isMqtt && value.timeout.trim() ? value.timeout.trim() : undefined,
+            keepAlive: isMqtt && value.keepAlive.trim() ? value.keepAlive.trim() : undefined,
             ...(value.componentSource === '系统内置'
                 ? { serviceType: value.serviceType as NetworkServiceRecord['serviceType'], sdkFileName: undefined }
                 : { serviceType: undefined, sdkFileName: value.sdkFileName }),
@@ -263,11 +345,9 @@ export default function NetworkServiceManagementPage({
         <AppShell
             activeTopTab="设备接入"
             sidebar={sidebar}
-            onNavigateOmManagement={onNavigateOmManagement}
             onNavigateMessageCenter={onNavigateMessageCenter}
             onTopTabChange={(tab) => {
                 if (tab === '设备接入') onNavigate('home');
-                if (tab === '运维管理') onNavigateOmManagement();
             }}
         >
             <div className="pm-page pt-page">
@@ -275,17 +355,17 @@ export default function NetworkServiceManagementPage({
 
                 <section className="panel pm-filter-panel">
                     <div className="pm-filter-row">
-                        <label className="pm-filter-field">
+                        <div className="pm-filter-field">
                             <span className="pm-filter-label">服务名称</span>
-                            <input
+                            <ClearableInput
                                 type="text"
                                 className="pm-filter-input"
                                 placeholder="请输入组件名称"
                                 value={draftName}
                                 onChange={(event) => setDraftName(event.target.value)}
                             />
-                        </label>
-                        <label className="pm-filter-field">
+                        </div>
+                        <div className="pm-filter-field">
                             <span className="pm-filter-label">服务类型</span>
                             <ElSelect
                                 className="el-select--medium"
@@ -294,7 +374,7 @@ export default function NetworkServiceManagementPage({
                                 options={TYPE_FILTER_OPTIONS}
                                 onChange={setDraftType}
                             />
-                        </label>
+                        </div>
                         <div className="pm-filter-actions">
                             <button
                                 type="button"
@@ -387,6 +467,7 @@ export default function NetworkServiceManagementPage({
             <NetworkServiceFormDrawer
                 open={drawerMode !== null}
                 mode={drawerMode === 'edit' ? 'edit' : 'add'}
+                certificates={certificates}
                 initialValue={editingService ? toNetworkServiceFormValue(editingService) : undefined}
                 onClose={closeDrawer}
                 onSubmit={handleSubmit}

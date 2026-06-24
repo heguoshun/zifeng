@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 import ElSelect from './ElSelect';
 import '../product-create.css';
 import '../device-create.css';
+import ClearableInput from './ClearableInput';
 
 export type AlarmRuleCategoryFormValue = {
     name: string;
@@ -78,7 +79,7 @@ export default function AlarmRuleCategoryDialog({
                 <div className="pcp-drawer__body pcp-drawer__body--form">
                     <label className="pcp-drawer-field">
                         <span className="pcp-form-label"><em>*</em>分类名称：</span>
-                        <input
+                        <ClearableInput
                             type="text"
                             className="pcp-form-input"
                             placeholder="请输入分类名称"
@@ -86,7 +87,7 @@ export default function AlarmRuleCategoryDialog({
                             onChange={(event) => setForm((prev) => ({ ...prev, name: event.target.value }))}
                         />
                     </label>
-                    <label className="pcp-drawer-field">
+                    <div className="pcp-drawer-field">
                         <span className="pcp-form-label">上级分类：</span>
                         <ElSelect
                             className="el-select--medium pcp-form-select"
@@ -95,7 +96,7 @@ export default function AlarmRuleCategoryDialog({
                             options={[{ label: '无（顶级分类）', value: '' }, ...parentOptions]}
                             onChange={(value) => setForm((prev) => ({ ...prev, parentId: value }))}
                         />
-                    </label>
+                    </div>
                 </div>
                 <div className="pcp-drawer__foot">
                     <button type="button" className="pm-btn pm-btn-ghost" onClick={onClose}>取消</button>

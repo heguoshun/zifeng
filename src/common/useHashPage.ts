@@ -16,6 +16,8 @@ import { useCallback, useEffect, useState } from 'react';
 export interface HashPageRoutePage {
     id: string;
     title: string;
+    /** 为 false 时不出现在 Make 页面菜单（如新增、编辑、详情等子页面） */
+    showInMenu?: boolean;
 }
 
 export interface HashPageRoute {
@@ -38,9 +40,32 @@ function normalizeRoutePages(pages: HashPageRoutePage[]): HashPageRoutePage[] {
         .map((page) => {
             const id = normalizePageId(page?.id);
             const title = typeof page?.title === 'string' ? page.title.trim() : '';
-            return id && title ? { id, title } : null;
+            if (!id || !title) {
+                return null;
+            }
+            const normalized: HashPageRoutePage = { id, title };
+            if (page?.showInMenu === false) {
+                normalized.showInMenu = false;
+            }
+            return normalized;
         })
         .filter((page): page is HashPageRoutePage => Boolean(page));
+}
+
+function getHostRoutePages(pages: HashPageRoutePage[]): Array<{ id: string; title: string; showInMenu?: boolean }> {
+    return pages.map(({ id, title, showInMenu }) => {
+        const entry: { id: string; title: string; showInMenu?: boolean } = { id, title };
+        if (showInMenu === false) {
+            entry.showInMenu = false;
+        }
+        return entry;
+    });
+}
+
+function getMenuRoutePages(pages: HashPageRoutePage[]): Array<{ id: string; title: string }> {
+    return pages
+        .filter((page) => page.showInMenu !== false)
+        .map(({ id, title }) => ({ id, title }));
 }
 
 export function parseHashPage(hash: string): string | null {
@@ -104,7 +129,8 @@ function notifyHostPrototypeRouteInfo(
     }
     window.parent.postMessage({
         type: 'AXHUB_PROTOTYPE_ROUTE_INFO',
-        pages,
+        pages: getHostRoutePages(pages),
+        menuPages: getMenuRoutePages(pages),
         defaultPageId,
         activePageId,
     }, '*');
@@ -123,7 +149,7 @@ export function useHashPage(routeOrDefault: HashPageRoute | string = 'home') {
 
     useEffect(() => {
         notifyHostPrototypeRouteInfo(pages, defaultPageId, page);
-    }, [routeSignature]);
+    }, [routeSignature, page]);
 
     useEffect(() => {
         if (typeof window === 'undefined') {

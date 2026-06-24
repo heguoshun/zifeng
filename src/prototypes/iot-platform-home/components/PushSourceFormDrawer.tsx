@@ -10,6 +10,7 @@ import {
 } from '../data/pushSources';
 import '../product-create.css';
 import '../push-source-config.css';
+import ClearableInput from './ClearableInput';
 
 type PushSourceFormDrawerProps = {
     open: boolean;
@@ -96,7 +97,7 @@ export default function PushSourceFormDrawer({
                 <div className="pcp-drawer__body pcp-drawer__body--form">
                     <label className="pcp-drawer-field">
                         <span className="pcp-form-label"><em>*</em>名称：</span>
-                        <input
+                        <ClearableInput
                             type="text"
                             className="pcp-form-input"
                             placeholder="请输入名称"
@@ -107,7 +108,7 @@ export default function PushSourceFormDrawer({
                             <span className="psc-field-error">请输入名称</span>
                         ) : null}
                     </label>
-                    <label className="pcp-drawer-field">
+                    <div className="pcp-drawer-field">
                         <span className="pcp-form-label"><em>*</em>消息类型：</span>
                         <ElSelect
                             value={form.messageType}
@@ -121,8 +122,8 @@ export default function PushSourceFormDrawer({
                         {touched && !form.messageType ? (
                             <span className="psc-field-error">请选择消息类型</span>
                         ) : null}
-                    </label>
-                    <label className="pcp-drawer-field">
+                    </div>
+                    <div className="pcp-drawer-field">
                         <span className="pcp-form-label"><em>*</em>推送源平台：</span>
                         <ElSelect
                             value={form.platform}
@@ -136,7 +137,7 @@ export default function PushSourceFormDrawer({
                         {touched && !form.platform ? (
                             <span className="psc-field-error">请选择推送源平台</span>
                         ) : null}
-                    </label>
+                    </div>
                 </div>
                 <div className="pcp-drawer__foot">
                     <button type="button" className="pm-btn pm-btn-ghost" onClick={onClose}>取消</button>

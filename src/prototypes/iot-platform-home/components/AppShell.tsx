@@ -1,11 +1,16 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Bell, ChevronDown, UserRound } from 'lucide-react';
+import platformLogo from '../assets/platform-logo.png';
+import sidebarBg from '../assets/sidebar-bg.png';
 import NotificationDropdown, { type NotificationFilter } from './NotificationDropdown';
 import ProfileDropdown from './ProfileDropdown';
+import { useOptionalPlatformAuth } from './PlatformAuthContext';
+import { useAnnouncementNotifications } from './AnnouncementNotificationContext';
 
-const TOP_TABS = ['设备接入', '消息中心', '运维管理', '系统管理'] as const;
-const MESSAGE_CENTER_PAGE_ID = 'device-alarm-info';
-const OM_MANAGEMENT_PAGE_ID = 'work-order-management';
+const TOP_TABS = ['设备接入', '大表中心', '告警工单', '消息中心', '系统管理'] as const;
+const LARGE_METER_PAGE_ID = 'data-monitor';
+const MESSAGE_CENTER_PAGE_ID = 'msg-subscribe';
+const ALARM_WORK_ORDER_PAGE_ID = 'awo-device-alarm-info';
 const SYSTEM_MANAGEMENT_PAGE_ID = 'tenant-mgmt';
 
 type AppShellProps = {
@@ -13,10 +18,22 @@ type AppShellProps = {
     sidebar: React.ReactNode;
     children: React.ReactNode;
     onTopTabChange: (tab: typeof TOP_TABS[number]) => void;
+    onNavigateLargeMeterCenter?: () => void;
     onNavigateMessageCenter?: (filter?: NotificationFilter) => void;
-    onNavigateOmManagement?: (filter?: NotificationFilter) => void;
+    onNavigateAlarmWorkOrder?: (filter?: NotificationFilter) => void;
     onNavigateSystemManagement?: () => void;
 };
+
+function navigateToLargeMeterCenter(onNavigateLargeMeterCenter?: () => void) {
+    if (onNavigateLargeMeterCenter) {
+        onNavigateLargeMeterCenter();
+        return;
+    }
+    const nextHash = `page=${LARGE_METER_PAGE_ID}`;
+    if (window.location.hash.replace(/^#/, '') !== nextHash) {
+        window.location.hash = nextHash;
+    }
+}
 
 function navigateToMessageCenter(onNavigateMessageCenter?: (filter?: NotificationFilter) => void, filter?: NotificationFilter) {
     if (onNavigateMessageCenter) {
@@ -29,12 +46,12 @@ function navigateToMessageCenter(onNavigateMessageCenter?: (filter?: Notificatio
     }
 }
 
-function navigateToOmManagement(onNavigateOmManagement?: (filter?: NotificationFilter) => void, filter?: NotificationFilter) {
-    if (onNavigateOmManagement) {
-        onNavigateOmManagement(filter);
+function navigateToAlarmWorkOrder(onNavigateAlarmWorkOrder?: (filter?: NotificationFilter) => void, filter?: NotificationFilter) {
+    if (onNavigateAlarmWorkOrder) {
+        onNavigateAlarmWorkOrder(filter);
         return;
     }
-    const nextHash = `page=${OM_MANAGEMENT_PAGE_ID}`;
+    const nextHash = `page=${ALARM_WORK_ORDER_PAGE_ID}`;
     if (window.location.hash.replace(/^#/, '') !== nextHash) {
         window.location.hash = nextHash;
     }
@@ -56,12 +73,18 @@ export default function AppShell({
     sidebar,
     children,
     onTopTabChange,
+    onNavigateLargeMeterCenter,
     onNavigateMessageCenter,
-    onNavigateOmManagement,
+    onNavigateAlarmWorkOrder,
     onNavigateSystemManagement,
 }: AppShellProps) {
+    const auth = useOptionalPlatformAuth();
     const [notifOpen, setNotifOpen] = useState(false);
     const [profileOpen, setProfileOpen] = useState(false);
+    const [otherUnreadCount, setOtherUnreadCount] = useState(4);
+    const { unreadAnnouncementCount } = useAnnouncementNotifications();
+    const displayName = auth?.user.displayName || auth?.user.account || 'superadmin';
+    const hasUnread = unreadAnnouncementCount > 0 || otherUnreadCount > 0;
 
     const bellRef = useRef<HTMLSpanElement>(null);
     const userAreaRef = useRef<HTMLDivElement>(null);
@@ -93,12 +116,16 @@ export default function AppShell({
     }, [notifOpen, profileOpen]);
 
     const handleTabClick = (tab: typeof TOP_TABS[number]) => {
-        if (tab === '消息中心') {
-            navigateToMessageCenter(onNavigateMessageCenter);
+        if (tab === '大表中心') {
+            navigateToLargeMeterCenter(onNavigateLargeMeterCenter);
             return;
         }
-        if (tab === '运维管理') {
-            navigateToOmManagement(onNavigateOmManagement);
+        if (tab === '告警工单') {
+            navigateToAlarmWorkOrder(onNavigateAlarmWorkOrder);
+            return;
+        }
+        if (tab === '消息中心') {
+            navigateToMessageCenter(onNavigateMessageCenter);
             return;
         }
         if (tab === '系统管理') {
@@ -122,7 +149,7 @@ export default function AppShell({
         <main className="iot-page" aria-label="紫峰装备智慧化管理平台">
             <header className="topbar">
                 <div className="brand">
-                    <span className="brand-mark" />
+                    <img className="brand-mark" src={platformLogo} alt="紫峰装备" />
                     <strong>紫峰装备智慧化管理平台</strong>
                 </div>
                 <div className="top-tabs">
@@ -146,13 +173,14 @@ export default function AppShell({
                         tabIndex={0}
                     >
                         <Bell size={16} />
-                        <i className="bell-dot" />
+                        {hasUnread ? <i className="bell-dot" /> : null}
                         {notifOpen && (
                             <NotificationDropdown
                                 open={notifOpen}
                                 onClose={() => setNotifOpen(false)}
                                 onNavigateMessageCenter={onNavigateMessageCenter}
-                                onNavigateOmManagement={onNavigateOmManagement}
+                                onNavigateAlarmWorkOrder={onNavigateAlarmWorkOrder}
+                                onOtherUnreadCountChange={setOtherUnreadCount}
                             />
                         )}
                     </span>
@@ -167,12 +195,13 @@ export default function AppShell({
                         <span className="avatar">
                             <UserRound size={16} />
                         </span>
-                        <span className="username">superadmin</span>
+                        <span className="username">{displayName}</span>
                         <ChevronDown size={12} />
                         {profileOpen && (
                             <ProfileDropdown
                                 open={profileOpen}
                                 onClose={() => setProfileOpen(false)}
+                                onLogout={auth?.logout}
                             />
                         )}
                     </div>
@@ -181,8 +210,8 @@ export default function AppShell({
 
             <div className="page-body">
                 <aside className="sidebar">
+                    <div className="sidebar-bg" style={{ backgroundImage: `url(${sidebarBg})` }} aria-hidden="true" />
                     {sidebar}
-                    <div className="sidebar-art" aria-hidden="true" />
                 </aside>
                 <section className="main-shell">{children}</section>
             </div>
@@ -190,5 +219,5 @@ export default function AppShell({
     );
 }
 
-export { TOP_TABS, MESSAGE_CENTER_PAGE_ID, OM_MANAGEMENT_PAGE_ID, SYSTEM_MANAGEMENT_PAGE_ID };
+export { TOP_TABS, LARGE_METER_PAGE_ID, MESSAGE_CENTER_PAGE_ID, ALARM_WORK_ORDER_PAGE_ID, SYSTEM_MANAGEMENT_PAGE_ID };
 export type { NotificationFilter };

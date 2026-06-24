@@ -7,10 +7,11 @@ import { ConfirmDialog } from '../components/IotDialogs';
 import IotToast, { type IotToastData, type IotToastType, triggerIotToast } from '../components/IotToast';
 import type { NetworkProtocolRecord } from '../data/networkProtocols';
 import { navigateNetworkProtocolForm } from '../utils/networkProtocolRoute';
-import { paginateItems } from '../utils/listPagination';
+import { paginateItems, DEFAULT_LIST_PAGE_SIZE } from '../utils/listPagination';
 import '../device-access.css';
 import '../product-management.css';
 import '../network-protocol.css';
+import ClearableInput from '../components/ClearableInput';
 
 type NetworkProtocolManagementPageProps = {
     networkProtocols: NetworkProtocolRecord[];
@@ -19,7 +20,6 @@ type NetworkProtocolManagementPageProps = {
     onNavigateDeviceAccess: () => void;
     onNavigateMessageCenter: () => void;
     onNavigate: (pageId: DeviceAccessPageId) => void;
-    onNavigateOmManagement: () => void;
 };
 
 function NetworkProtocolCard({
@@ -69,11 +69,10 @@ export default function NetworkProtocolManagementPage({
     onNavigateDeviceAccess,
     onNavigateMessageCenter,
     onNavigate,
-    onNavigateOmManagement,
 }: NetworkProtocolManagementPageProps) {
     const [draftKeyword, setDraftKeyword] = useState('');
     const [appliedKeyword, setAppliedKeyword] = useState('');
-    const [pageSize, setPageSize] = useState('10');
+    const [pageSize, setPageSize] = useState('20');
     const [currentPage, setCurrentPage] = useState(1);
     const [jumpPage, setJumpPage] = useState('1');
     const [deleteTarget, setDeleteTarget] = useState<NetworkProtocolRecord | null>(null);
@@ -117,11 +116,9 @@ export default function NetworkProtocolManagementPage({
         <AppShell
             activeTopTab="设备接入"
             sidebar={sidebar}
-            onNavigateOmManagement={onNavigateOmManagement}
             onNavigateMessageCenter={onNavigateMessageCenter}
             onTopTabChange={(tab) => {
                 if (tab === '设备接入') onNavigate('home');
-                if (tab === '运维管理') onNavigateOmManagement();
             }}
         >
             <div className="pm-page np-page">
@@ -129,16 +126,16 @@ export default function NetworkProtocolManagementPage({
 
                 <section className="panel pm-filter-panel">
                     <div className="pm-filter-row">
-                        <label className="pm-filter-field">
+                        <div className="pm-filter-field">
                             <span className="pm-filter-label">组件名称</span>
-                            <input
+                            <ClearableInput
                                 type="text"
                                 className="pm-filter-input"
                                 placeholder="请输入组件名称"
                                 value={draftKeyword}
                                 onChange={(event) => setDraftKeyword(event.target.value)}
                             />
-                        </label>
+                        </div>
                         <div className="pm-filter-actions">
                             <button
                                 type="button"

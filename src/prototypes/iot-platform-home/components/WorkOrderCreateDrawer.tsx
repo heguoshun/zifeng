@@ -19,6 +19,7 @@ import '../device-create.css';
 import '../device-alarm-info.css';
 import '../alarm-rule-config.css';
 import '../work-order-management.css';
+import ClearableInput from './ClearableInput';
 
 const CONTENT_MAX = 100;
 
@@ -257,7 +258,7 @@ export default function WorkOrderCreateDrawer({
                     <div className="pcp-drawer__body pcp-drawer__body--form">
                         <label className="pcp-drawer-field">
                             <span className="pcp-form-label"><em>*</em>工单标题</span>
-                            <input
+                            <ClearableInput
                                 type="text"
                                 className="pcp-form-input"
                                 placeholder="请输入工单名称"
@@ -265,7 +266,7 @@ export default function WorkOrderCreateDrawer({
                                 onChange={(event) => setName(event.target.value)}
                             />
                         </label>
-                        <label className="pcp-drawer-field">
+                        <div className="pcp-drawer-field">
                             <span className="pcp-form-label"><em>*</em>工单等级</span>
                             <ElSelect
                                 className="el-select--medium"
@@ -274,7 +275,7 @@ export default function WorkOrderCreateDrawer({
                                 options={LEVEL_OPTIONS}
                                 onChange={setLevel}
                             />
-                        </label>
+                        </div>
                         <div className="pcp-drawer-field">
                             <span className="pcp-form-label"><em>*</em>关联设备</span>
                             <div className="wom-device-rows">
@@ -289,6 +290,7 @@ export default function WorkOrderCreateDrawer({
                                                 placeholder="请选择产品"
                                                 showAllOption={false}
                                                 defaultExpanded={DEFAULT_PRODUCT_TREE_EXPANDED}
+                                                filterable
                                                 onChange={(productId) => {
                                                     if (!productIds.has(productId)) return;
                                                     updateDeviceRow(row.id, { productId, deviceIds: [] });

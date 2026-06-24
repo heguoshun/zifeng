@@ -16,6 +16,7 @@ import {
 import '../device-create.css';
 import '../product-create.css';
 import '../remote-upgrade.css';
+import ClearableInput from './ClearableInput';
 
 type FirmwarePackageFormDialogProps = {
     open: boolean;
@@ -135,7 +136,7 @@ export default function FirmwarePackageFormDialog({
                     </div>
                     <label className="pcp-drawer-field">
                         <span className="pcp-form-label"><em>*</em>固件包名称</span>
-                        <input
+                        <ClearableInput
                             type="text"
                             className="pcp-form-input"
                             placeholder="请输入固件包名称"
@@ -143,7 +144,7 @@ export default function FirmwarePackageFormDialog({
                             onChange={(event) => setForm((prev) => ({ ...prev, name: event.target.value }))}
                         />
                     </label>
-                    <label className="pcp-drawer-field">
+                    <div className="pcp-drawer-field">
                         <span className="pcp-form-label"><em>*</em>所属产品</span>
                         <ElTreeSelect
                             className="el-select--medium pcp-form-select ru-product-tree-select"
@@ -153,15 +154,16 @@ export default function FirmwarePackageFormDialog({
                             placeholder="请选择产品"
                             showAllOption={false}
                             defaultExpanded={DEFAULT_PRODUCT_TREE_EXPANDED}
+                            filterable
                             onChange={(productId) => {
                                 if (!productIds.has(productId)) return;
                                 setForm((prev) => ({ ...prev, productId }));
                             }}
                         />
-                    </label>
+                    </div>
                     <label className="pcp-drawer-field">
                         <span className="pcp-form-label"><em>*</em>固件包版本号</span>
-                        <input
+                        <ClearableInput
                             type="text"
                             className="pcp-form-input"
                             placeholder="请输入版本号"
@@ -172,7 +174,7 @@ export default function FirmwarePackageFormDialog({
                     {showDiffVersion && (
                         <label className="pcp-drawer-field">
                             <span className="pcp-form-label"><em>*</em>开始版本号</span>
-                            <input
+                            <ClearableInput
                                 type="text"
                                 className="pcp-form-input"
                                 placeholder="请输入版本号"

@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 import ElSelect from './ElSelect';
 import '../product-create.css';
 import '../device-create.css';
+import ClearableInput from './ClearableInput';
 
 export type ModelLibraryCategoryFormValue = {
     name: string;
@@ -78,7 +79,7 @@ export default function ModelLibraryCategoryDialog({
                 <div className="pcp-drawer__body pcp-drawer__body--form">
                     <label className="pcp-drawer-field">
                         <span className="pcp-form-label"><em>*</em>目录名称：</span>
-                        <input
+                        <ClearableInput
                             type="text"
                             className="pcp-form-input"
                             placeholder="请输入，不超过20字符"
@@ -87,7 +88,7 @@ export default function ModelLibraryCategoryDialog({
                             onChange={(event) => setForm((prev) => ({ ...prev, name: event.target.value }))}
                         />
                     </label>
-                    <label className="pcp-drawer-field">
+                    <div className="pcp-drawer-field">
                         <span className="pcp-form-label">父级目录：</span>
                         <ElSelect
                             className="el-select--medium pcp-form-select"
@@ -101,7 +102,7 @@ export default function ModelLibraryCategoryDialog({
                             ]}
                             onChange={(value) => setForm((prev) => ({ ...prev, parentId: value }))}
                         />
-                    </label>
+                    </div>
                 </div>
                 <div className="pcp-drawer__foot">
                     <button type="button" className="pm-btn pm-btn-ghost" onClick={onClose}>取消</button>

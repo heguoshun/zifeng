@@ -58,6 +58,7 @@
 .arc-tree-item,
 .mt-tree-row {
     padding-right: 4px;
+    cursor: pointer;
 }
 
 .dg-type-item {

@@ -96,7 +96,7 @@ function ConditionDetailTable({
     const rows = [
         ['触发设备：', condition.deviceCode],
         ['所属产品：', resolveConditionProductName(condition, products)],
-        ['所属空间：', condition.space],
+        ['所属片区：', condition.space],
         ['触发条件：', condition.condition],
     ] as const;
 

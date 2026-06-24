@@ -178,6 +178,48 @@
     gap: 4px;
 }
 
+.wom-list-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+}
+
+.wom-list-selection {
+    margin-left: 4px;
+    font-size: 13px;
+    font-weight: 400;
+    color: var(--text-secondary);
+}
+
+.wom-batch-accept-summary {
+    margin: 0 0 16px;
+    font-size: 13px;
+    line-height: 1.6;
+    color: var(--text-secondary);
+}
+
+.wom-batch-accept-summary strong {
+    color: var(--blue);
+    font-weight: 600;
+}
+
+.pm-table--work-order-selectable .wom-table__check {
+    width: 44px;
+    min-width: 44px;
+    max-width: 44px;
+    padding-left: 16px;
+    padding-right: 28px;
+    text-align: right;
+    overflow: visible;
+    text-overflow: clip;
+}
+
+.pm-table--work-order-selectable .wom-table__check input[type="checkbox"]:disabled {
+    cursor: not-allowed;
+    opacity: 0.45;
+}
+
 .wom-create-drawer,
 .pcp-drawer.pcp-drawer--form.dcp-group-dialog.wom-create-drawer {
     width: min(580px, 100vw);

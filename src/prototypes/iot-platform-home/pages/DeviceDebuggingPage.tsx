@@ -24,6 +24,7 @@ import type { ProductRecord } from '../data/products';
 import '../device-access.css';
 import '../device-debugging.css';
 import '../product-create.css';
+import ClearableInput from '../components/ClearableInput';
 
 type DeviceDebuggingPageProps = {
     products: ProductRecord[];
@@ -32,7 +33,6 @@ type DeviceDebuggingPageProps = {
     onNavigateDeviceAccess: () => void;
     onNavigateMessageCenter: () => void;
     onNavigate: (pageId: DeviceAccessPageId) => void;
-    onNavigateOmManagement: () => void;
     onNavigateSystemManagement: () => void;
 };
 
@@ -103,7 +103,7 @@ function PropertyFieldRow({
                     onChange={onChange}
                 />
             ) : (
-                <input
+                <ClearableInput
                     className="ddb-prop-item__control"
                     type="text"
                     placeholder="请输入"
@@ -163,7 +163,6 @@ export default function DeviceDebuggingPage({
     onNavigateDeviceAccess,
     onNavigateMessageCenter,
     onNavigate,
-    onNavigateOmManagement,
     onNavigateSystemManagement,
 }: DeviceDebuggingPageProps) {
     const productTree = useMemo(() => buildDebugProductSelectTree(products ?? []), [products]);
@@ -616,7 +615,7 @@ export default function DeviceDebuggingPage({
             return (
                 <div className="ddb-simulator__form">
                     <div className="ddb-prop-list">
-                        <label className="pcp-form-field" style={{ maxWidth: 320 }}>
+                        <div className="pcp-form-field" style={{ maxWidth: 320 }}>
                             <span className="pcp-form-label">选择服务</span>
                             <ElSelect
                                 className="el-select--medium"
@@ -625,7 +624,7 @@ export default function DeviceDebuggingPage({
                                 options={serviceOptions}
                                 onChange={setSelectedServiceId}
                             />
-                        </label>
+                        </div>
                         <div className="ddb-event-detail">
                             <div className="ddb-event-detail__meta">
                                 <div className="ddb-prop-row__label">{selectedService.name}</div>
@@ -673,7 +672,7 @@ export default function DeviceDebuggingPage({
             return (
                 <div className="ddb-simulator__form">
                     <div className="ddb-prop-list">
-                        <label className="pcp-form-field" style={{ maxWidth: 320 }}>
+                        <div className="pcp-form-field" style={{ maxWidth: 320 }}>
                             <span className="pcp-form-label">选择事件</span>
                             <ElSelect
                                 className="el-select--medium"
@@ -682,7 +681,7 @@ export default function DeviceDebuggingPage({
                                 options={eventOptions}
                                 onChange={setSelectedEventId}
                             />
-                        </label>
+                        </div>
                         <div className="ddb-event-detail">
                             <div className="ddb-event-detail__meta">
                                 <div className="ddb-prop-row__label">{selectedEvent.name}</div>
@@ -728,11 +727,9 @@ export default function DeviceDebuggingPage({
             activeTopTab="设备接入"
             sidebar={sidebar}
             onNavigateMessageCenter={onNavigateMessageCenter}
-            onNavigateOmManagement={onNavigateOmManagement}
             onNavigateSystemManagement={onNavigateSystemManagement}
             onTopTabChange={(tab) => {
                 if (tab === '设备接入') onNavigate('home');
-                if (tab === '运维管理') onNavigateOmManagement();
             }}
         >
             <div className="ddb-page">
@@ -763,6 +760,7 @@ export default function DeviceDebuggingPage({
                                     placeholder="请选择产品"
                                     showAllOption={false}
                                     defaultExpanded={DEFAULT_PRODUCT_TREE_EXPANDED}
+                                    filterable
                                     onChange={(value) => {
                                         if (validProductIds.has(value)) {
                                             setProductId(value);

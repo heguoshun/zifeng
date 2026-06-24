@@ -7,13 +7,18 @@ export type DeviceAccessPageId =
     | 'product-management'
     | 'product-category'
     | 'product-create'
+    | 'product-edit'
+    | 'product-view'
     | 'model-library'
     | 'device-management'
     | 'device-create'
+    | 'device-edit'
+    | 'device-view'
     | 'device-group'
     | 'device-map'
     | 'remote-upgrade'
     | 'protocol-mgmt'
+    | 'certificate-mgmt'
     | 'network-service'
     | 'network-protocol'
     | 'network-protocol-create'
@@ -56,6 +61,7 @@ const sidebarMenuGroups: SidebarMenuGroupData[] = [
             { id: 'network-protocol', label: '网络协议' },
             { id: 'network-service', label: '网络服务' },
             { id: 'protocol-mgmt', label: '协议管理' },
+            { id: 'certificate-mgmt', label: '证书管理' },
         ],
     },
 ];
@@ -135,8 +141,10 @@ export default function DeviceAccessSidebar({ pageId, onNavigate }: DeviceAccess
 
     const routeActive = pageId === 'home'
         ? 'home'
-        : pageId === 'device-management' || pageId === 'device-create'
+        : pageId === 'device-management' || pageId === 'device-create' || pageId === 'device-edit' || pageId === 'device-view'
             ? 'device-mgmt'
+            : pageId === 'product-edit' || pageId === 'product-view' || pageId === 'product-create'
+                ? 'product-mgmt'
             : pageId === 'device-group'
                 ? 'device-group'
                 : pageId === 'device-map'
@@ -145,6 +153,7 @@ export default function DeviceAccessSidebar({ pageId, onNavigate }: DeviceAccess
                             ? 'network-protocol'
                             : pageId === 'remote-upgrade'
                                 || pageId === 'protocol-mgmt'
+                                || pageId === 'certificate-mgmt'
                                 || pageId === 'network-service'
                                 || pageId === 'network-protocol'
                                 ? pageId
@@ -194,6 +203,11 @@ export default function DeviceAccessSidebar({ pageId, onNavigate }: DeviceAccess
         }
         if (itemId === 'protocol-mgmt') {
             onNavigate('protocol-mgmt');
+            setLocalActive(null);
+            return;
+        }
+        if (itemId === 'certificate-mgmt') {
+            onNavigate('certificate-mgmt');
             setLocalActive(null);
             return;
         }

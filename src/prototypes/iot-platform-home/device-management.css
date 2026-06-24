@@ -279,8 +279,8 @@
 }
 
 .dm-status-tag--offline {
-    background: #fef0f0;
-    color: #f56c6c;
+    background: #f4f4f5;
+    color: #909399;
 }
 
 .dm-status-tag--fault {
@@ -289,8 +289,8 @@
 }
 
 .dm-status-tag--disabled {
-    background: #f4f4f5;
-    color: #909399;
+    background: #fef0f0;
+    color: #f56c6c;
 }
 
 .dm-group-tags {

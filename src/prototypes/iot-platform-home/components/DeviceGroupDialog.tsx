@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import ElSelect from './ElSelect';
+import ClearableInput from './ClearableInput';
 
 export type DeviceGroupType = 'type' | 'area' | 'pipeline';
 
@@ -68,7 +69,7 @@ export default function DeviceGroupDialog({
                 <div className="pcp-drawer__body pcp-drawer__body--form">
                     <label className="pcp-drawer-field">
                         <span className="pcp-form-label"><em>*</em>分组名称：</span>
-                        <input
+                        <ClearableInput
                             type="text"
                             className="pcp-form-input"
                             placeholder="请输入标签名称"
@@ -76,7 +77,7 @@ export default function DeviceGroupDialog({
                             onChange={(event) => setForm((prev) => ({ ...prev, name: event.target.value }))}
                         />
                     </label>
-                    <label className="pcp-drawer-field">
+                    <div className="pcp-drawer-field">
                         <span className="pcp-form-label"><em>*</em>所属类型：</span>
                         <ElSelect
                             className="el-select--medium pcp-form-select"
@@ -88,7 +89,7 @@ export default function DeviceGroupDialog({
                                 type: value as DeviceGroupType | '',
                             }))}
                         />
-                    </label>
+                    </div>
                 </div>
                 <div className="pcp-drawer__foot">
                     <button type="button" className="pm-btn pm-btn-ghost" onClick={onClose}>取消</button>

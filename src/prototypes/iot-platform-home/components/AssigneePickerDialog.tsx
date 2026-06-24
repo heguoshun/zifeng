@@ -10,11 +10,13 @@ import {
     getTreeNodeLabel,
     matchesTreeSelection,
 } from '../data/orgHierarchy';
-import { paginateItems } from '../utils/listPagination';
+import { paginateItems, DEFAULT_LIST_PAGE_SIZE } from '../utils/listPagination';
+import { handleSelectableRowClick } from '../../../common/selectableRow';
 import '../product-create.css';
 import '../device-create.css';
 import '../product-management.css';
 import '../device-alarm-info.css';
+import ClearableInput from './ClearableInput';
 
 function formatAssigneeDepartment(departmentId: string) {
     const label = getTreeNodeLabel(DEPARTMENT_TREE, departmentId);
@@ -39,7 +41,7 @@ export default function AssigneePickerDialog({
     const [appliedDepartment, setAppliedDepartment] = useState('all');
     const [appliedKeyword, setAppliedKeyword] = useState('');
     const [selectedNames, setSelectedNames] = useState<string[]>([]);
-    const [pageSize, setPageSize] = useState('10');
+    const [pageSize, setPageSize] = useState('20');
     const [currentPage, setCurrentPage] = useState(1);
     const [jumpPage, setJumpPage] = useState('1');
 
@@ -134,7 +136,7 @@ export default function AssigneePickerDialog({
 
                 <div className="pcp-drawer__body dai-assignee-picker-body">
                     <div className="dai-assignee-picker-filter">
-                        <label className="pm-filter-field">
+                        <div className="pm-filter-field">
                             <span className="pm-filter-label">所属部门</span>
                             <ElTreeSelect
                                 className="el-select--medium dai-assignee-dept-select"
@@ -145,17 +147,17 @@ export default function AssigneePickerDialog({
                                 placeholder="请选择"
                                 onChange={setDraftDepartment}
                             />
-                        </label>
-                        <label className="pm-filter-field">
+                        </div>
+                        <div className="pm-filter-field">
                             <span className="pm-filter-label">用户名称</span>
-                            <input
+                            <ClearableInput
                                 type="text"
                                 className="pm-filter-input"
                                 placeholder="请输入用户名称"
                                 value={draftKeyword}
                                 onChange={(event) => setDraftKeyword(event.target.value)}
                             />
-                        </label>
+                        </div>
                         <button type="button" className="pm-btn pm-btn-primary" onClick={handleSearch}>
                             <Search size={14} />
                             查询
@@ -163,7 +165,7 @@ export default function AssigneePickerDialog({
                     </div>
 
                     <div className="pm-table-wrap dai-assignee-picker-table-wrap">
-                        <table className="pm-table">
+                        <table className="pm-table pm-table--assignee-picker">
                             <thead>
                                 <tr>
                                     <th className="dai-assignee-picker-check-col">
@@ -184,7 +186,14 @@ export default function AssigneePickerDialog({
                             </thead>
                             <tbody>
                                 {pagination.items.map((assignee) => (
-                                    <tr key={assignee.id}>
+                                    <tr
+                                        key={assignee.id}
+                                        className="iot-selectable-row"
+                                        onClick={(event) => handleSelectableRowClick(
+                                            event,
+                                            () => toggleSelect(assignee.name),
+                                        )}
+                                    >
                                         <td>
                                             <input
                                                 type="checkbox"

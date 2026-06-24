@@ -5,6 +5,7 @@ import SpaceImageUpload from './SpaceImageUpload';
 import '../product-create.css';
 import '../device-create.css';
 import '../space-config.css';
+import ClearableInput from './ClearableInput';
 
 export type EditSpaceFormValue = {
     name: string;
@@ -79,7 +80,7 @@ export default function EditSpaceDrawer({
                 <div className="pcp-drawer__body pcp-drawer__body--form">
                     <label className="pcp-drawer-field">
                         <span className="pcp-form-label"><em>*</em>空间名称：</span>
-                        <input
+                        <ClearableInput
                             type="text"
                             className="pcp-form-input"
                             placeholder="请输入空间名称"
@@ -95,7 +96,7 @@ export default function EditSpaceDrawer({
                         <span className="pcp-form-label"><em>*</em>空间类型：</span>
                         <input type="text" className="pcp-form-input is-readonly" value={spaceTypeLabel} readOnly />
                     </label>
-                    <label className="pcp-drawer-field">
+                    <div className="pcp-drawer-field">
                         <span className="pcp-form-label"><em>*</em>所属部门：</span>
                         <ElSelect
                             className="el-select--medium pcp-form-select"
@@ -104,7 +105,7 @@ export default function EditSpaceDrawer({
                             options={[{ label: '请选择', value: '' }, ...departmentOptions]}
                             onChange={(value) => setForm((prev) => ({ ...prev, department: value }))}
                         />
-                    </label>
+                    </div>
                     <label className="pcp-drawer-field">
                         <span className="pcp-form-label">空间描述：</span>
                         <div className="sc-space-drawer__textarea-wrap">

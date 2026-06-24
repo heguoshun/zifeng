@@ -19,11 +19,13 @@ import {
     type PushSourceFormValue,
     type PushSourceRecord,
 } from '../data/pushSources';
-import { paginateItems } from '../utils/listPagination';
+import { paginateItems, DEFAULT_LIST_PAGE_SIZE } from '../utils/listPagination';
+import { handleSelectableRowClick } from '../../../common/selectableRow';
 import '../device-access.css';
 import '../product-management.css';
 import '../product-category.css';
 import '../push-source-config.css';
+import ClearableInput from '../components/ClearableInput';
 
 type FormMode = 'add' | 'edit' | null;
 
@@ -46,7 +48,7 @@ export default function PushSourceConfigPage({
     const [draftKeyword, setDraftKeyword] = useState('');
     const [messageTypeFilter, setMessageTypeFilter] = useState('all');
     const [keyword, setKeyword] = useState('');
-    const [pageSize, setPageSize] = useState('10');
+    const [pageSize, setPageSize] = useState('20');
     const [currentPage, setCurrentPage] = useState(1);
     const [jumpPage, setJumpPage] = useState('1');
     const [formMode, setFormMode] = useState<FormMode>(null);
@@ -212,7 +214,7 @@ export default function PushSourceConfigPage({
 
                 <section className="panel pm-filter-panel">
                     <div className="pm-filter-row">
-                        <label className="pm-filter-field">
+                        <div className="pm-filter-field">
                             <span className="pm-filter-label">消息类型</span>
                             <ElSelect
                                 className="el-select--medium"
@@ -221,17 +223,17 @@ export default function PushSourceConfigPage({
                                 options={PUSH_SOURCE_MESSAGE_TYPE_FILTER_OPTIONS}
                                 onChange={setDraftMessageType}
                             />
-                        </label>
-                        <label className="pm-filter-field">
+                        </div>
+                        <div className="pm-filter-field">
                             <span className="pm-filter-label">搜索</span>
-                            <input
+                            <ClearableInput
                                 type="text"
                                 className="pm-filter-input"
                                 placeholder="请输入推送源名称"
                                 value={draftKeyword}
                                 onChange={(event) => setDraftKeyword(event.target.value)}
                             />
-                        </label>
+                        </div>
                         <div className="pm-filter-actions">
                             <button type="button" className="pm-btn pm-btn-primary" onClick={handleSearch}>
                                 <Search size={14} />
@@ -281,7 +283,14 @@ export default function PushSourceConfigPage({
                             </thead>
                             <tbody>
                                 {pagination.items.map((record, index) => (
-                                    <tr key={record.id}>
+                                    <tr
+                                        key={record.id}
+                                        className="iot-selectable-row"
+                                        onClick={(event) => handleSelectableRowClick(
+                                            event,
+                                            () => toggleSelect(record.id),
+                                        )}
+                                    >
                                         <td className="psc-table__check">
                                             <input
                                                 type="checkbox"

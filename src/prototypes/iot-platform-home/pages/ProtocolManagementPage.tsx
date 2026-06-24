@@ -14,10 +14,11 @@ import {
     type ProtocolRecord,
 } from '../data/protocols';
 import type { ProductRecord } from '../data/products';
-import { paginateItems } from '../utils/listPagination';
+import { paginateItems, DEFAULT_LIST_PAGE_SIZE } from '../utils/listPagination';
 import '../device-access.css';
 import '../product-management.css';
 import '../protocol-management.css';
+import ClearableInput from '../components/ClearableInput';
 
 type DrawerMode = 'add' | 'edit' | null;
 
@@ -29,7 +30,6 @@ type ProtocolManagementPageProps = {
     onNavigateDeviceAccess: () => void;
     onNavigateMessageCenter: () => void;
     onNavigate: (pageId: DeviceAccessPageId) => void;
-    onNavigateOmManagement: () => void;
 };
 
 const TYPE_FILTER_OPTIONS = PROTOCOL_TYPE_OPTIONS.map((item) => ({
@@ -124,14 +124,13 @@ export default function ProtocolManagementPage({
     onNavigateDeviceAccess,
     onNavigateMessageCenter,
     onNavigate,
-    onNavigateOmManagement,
 }: ProtocolManagementPageProps) {
     const [draftName, setDraftName] = useState('');
     const [draftType, setDraftType] = useState('全部');
     const [appliedName, setAppliedName] = useState('');
     const [appliedType, setAppliedType] = useState('全部');
     const [viewMode, setViewMode] = useState<'card' | 'list'>('card');
-    const [pageSize, setPageSize] = useState('10');
+    const [pageSize, setPageSize] = useState('20');
     const [currentPage, setCurrentPage] = useState(1);
     const [jumpPage, setJumpPage] = useState('1');
     const [drawerMode, setDrawerMode] = useState<DrawerMode>(null);
@@ -276,11 +275,9 @@ export default function ProtocolManagementPage({
         <AppShell
             activeTopTab="设备接入"
             sidebar={sidebar}
-            onNavigateOmManagement={onNavigateOmManagement}
             onNavigateMessageCenter={onNavigateMessageCenter}
             onTopTabChange={(tab) => {
                 if (tab === '设备接入') onNavigate('home');
-                if (tab === '运维管理') onNavigateOmManagement();
             }}
         >
             <div className="pm-page pt-page">
@@ -288,17 +285,17 @@ export default function ProtocolManagementPage({
 
                 <section className="panel pm-filter-panel">
                     <div className="pm-filter-row">
-                        <label className="pm-filter-field">
+                        <div className="pm-filter-field">
                             <span className="pm-filter-label">协议名称</span>
-                            <input
+                            <ClearableInput
                                 type="text"
                                 className="pm-filter-input"
                                 placeholder="请输入协议名称"
                                 value={draftName}
                                 onChange={(event) => setDraftName(event.target.value)}
                             />
-                        </label>
-                        <label className="pm-filter-field">
+                        </div>
+                        <div className="pm-filter-field">
                             <span className="pm-filter-label">协议类型</span>
                             <ElSelect
                                 className="el-select--medium"
@@ -307,7 +304,7 @@ export default function ProtocolManagementPage({
                                 options={TYPE_FILTER_OPTIONS}
                                 onChange={setDraftType}
                             />
-                        </label>
+                        </div>
                         <div className="pm-filter-actions">
                             <button
                                 type="button"

@@ -1,6 +1,8 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { ChevronDown } from 'lucide-react';
+import { useOverlayCoordination } from './useOverlayCoordination';
+import { useDismissOnOutsideMouseDown } from './useDismissOnOutsideMouseDown';
 
 export type ElSelectOption = {
     label: string;
@@ -18,9 +20,11 @@ type ElSelectProps = {
     className?: string;
     size?: 'small' | 'medium';
     dropdownAlign?: 'left' | 'right';
+    dropdownDirection?: 'down' | 'up';
     disabled?: boolean;
     usePortal?: boolean;
     placeholder?: string;
+    filterable?: boolean;
 };
 
 export default function ElSelect({
@@ -30,36 +34,67 @@ export default function ElSelect({
     className = '',
     size = 'small',
     dropdownAlign = 'left',
+    dropdownDirection = 'down',
     disabled = false,
     usePortal = false,
     placeholder,
+    filterable = false,
 }: ElSelectProps) {
     const [open, setOpen] = useState(false);
+    const [inputValue, setInputValue] = useState('');
     const [dropdownStyle, setDropdownStyle] = useState<React.CSSProperties>({});
     const wrapRef = useRef<HTMLDivElement>(null);
+    const inputRef = useRef<HTMLInputElement>(null);
+
     const placeholderOption = options.find(isElSelectPlaceholderOption);
     const resolvedPlaceholder = placeholder ?? placeholderOption?.label ?? '请选择';
-    const dropdownOptions = options.filter((option) => !isElSelectPlaceholderOption(option));
+    const dropdownOptions = useMemo(
+        () => options.filter((option) => !isElSelectPlaceholderOption(option)),
+        [options],
+    );
+
+    const filteredOptions = useMemo(() => {
+        if (!open || !filterable || !inputValue.trim()) return dropdownOptions;
+        const keyword = inputValue.trim().toLowerCase();
+        return dropdownOptions.filter((option) => option.label.toLowerCase().includes(keyword));
+    }, [dropdownOptions, inputValue, open, filterable]);
+
     const selected = options.find((option) => option.value === value);
     const isPlaceholder = !value || isElSelectPlaceholderOption(selected ?? { label: '', value: value });
     const displayLabel = isPlaceholder ? resolvedPlaceholder : (selected?.label ?? value);
 
+    const handleClose = useCallback(() => {
+        setOpen(false);
+        setInputValue('');
+    }, []);
+
+    const { claim, release } = useOverlayCoordination('select', open, handleClose, 'el-select');
+
+    const dismissSelect = useCallback(() => {
+        release();
+        handleClose();
+    }, [release, handleClose]);
+
+    const handleOpen = useCallback(() => {
+        claim();
+        setOpen(true);
+        setInputValue('');
+    }, [claim]);
+
+    const ignorePortalDropdown = useCallback(
+        (target: HTMLElement) => usePortal && Boolean(target.closest('.el-select-dropdown')),
+        [usePortal],
+    );
+    useDismissOnOutsideMouseDown(open, wrapRef, dismissSelect, ignorePortalDropdown);
+
     useEffect(() => {
-        if (!open) return undefined;
-
-        const handleClickOutside = (event: MouseEvent) => {
-            if (wrapRef.current && !wrapRef.current.contains(event.target as Node)) {
-                const target = event.target as HTMLElement;
-                if (usePortal && target.closest('.el-select-dropdown')) {
-                    return;
-                }
-                setOpen(false);
-            }
-        };
-
-        document.addEventListener('mousedown', handleClickOutside);
-        return () => document.removeEventListener('mousedown', handleClickOutside);
-    }, [open, usePortal]);
+        if (open && filterable) {
+            requestAnimationFrame(() => {
+                inputRef.current?.focus();
+                inputRef.current?.select();
+            });
+        }
+    }, [open, filterable]);
 
     useEffect(() => {
         if (!open || !usePortal || !wrapRef.current) return undefined;
@@ -69,7 +104,8 @@ export default function ElSelect({
             const rect = wrapRef.current.getBoundingClientRect();
             setDropdownStyle({
                 position: 'fixed',
-                top: rect.bottom + 6,
+                top: dropdownDirection === 'up' ? 'auto' : rect.bottom + 6,
+                bottom: dropdownDirection === 'up' ? window.innerHeight - rect.top + 6 : 'auto',
                 left: dropdownAlign === 'left' ? rect.left : undefined,
                 right: dropdownAlign === 'right' ? window.innerWidth - rect.right : undefined,
                 minWidth: rect.width,
@@ -84,7 +120,7 @@ export default function ElSelect({
             window.removeEventListener('resize', updatePosition);
             window.removeEventListener('scroll', updatePosition, true);
         };
-    }, [open, usePortal, dropdownAlign]);
+    }, [open, usePortal, dropdownAlign, dropdownDirection]);
 
     if (disabled) {
         return (
@@ -101,26 +137,48 @@ export default function ElSelect({
         );
     }
 
+    const handleWrapperMouseDown = (event: React.MouseEvent<HTMLDivElement>) => {
+        event.stopPropagation();
+
+        const target = event.target as HTMLElement;
+        if (open) {
+            if (filterable && target.closest('.el-select__input')) {
+                return;
+            }
+            return;
+        }
+
+        handleOpen();
+    };
+
     const dropdown = open ? (
         <div
-            className={`el-select-dropdown ${dropdownAlign === 'left' ? 'el-select-dropdown--left' : ''}`}
+            className={`el-select-dropdown ${dropdownAlign === 'left' ? 'el-select-dropdown--left' : ''} ${dropdownDirection === 'up' ? 'el-select-dropdown--up' : ''}`}
             style={usePortal ? dropdownStyle : undefined}
+            onMouseDown={(event) => {
+                event.preventDefault();
+                event.stopPropagation();
+            }}
         >
             <ul className="el-select-dropdown__list">
-                {dropdownOptions.map((option) => (
-                    <li key={option.value}>
-                        <button
-                            type="button"
-                            className={option.value === value ? 'is-selected' : ''}
-                            onClick={() => {
-                                onChange(option.value);
-                                setOpen(false);
-                            }}
-                        >
-                            {option.label}
-                        </button>
-                    </li>
-                ))}
+                {filteredOptions.length === 0 ? (
+                    <li className="el-select-dropdown__empty">无匹配项</li>
+                ) : (
+                    filteredOptions.map((option) => (
+                        <li key={option.value}>
+                            <button
+                                type="button"
+                                className={option.value === value ? 'is-selected' : ''}
+                                onClick={() => {
+                                    onChange(option.value);
+                                    dismissSelect();
+                                }}
+                            >
+                                {option.label}
+                            </button>
+                        </li>
+                    ))
+                )}
             </ul>
         </div>
     ) : null;
@@ -130,16 +188,39 @@ export default function ElSelect({
             className={`el-select ${size === 'medium' ? 'el-select--medium' : ''} ${open ? 'is-open' : ''} ${className}`.trim()}
             ref={wrapRef}
         >
-            <button
-                type="button"
-                className="el-select__wrapper"
-                onClick={() => setOpen((prev) => !prev)}
+            <div
+                className={`el-select__wrapper ${open && filterable ? 'el-select__wrapper--input is-editing' : ''}`.trim()}
+                role="combobox"
+                aria-expanded={open}
+                onMouseDown={handleWrapperMouseDown}
             >
-                <span className={`el-select__selected ${isPlaceholder ? 'is-placeholder' : ''}`.trim()}>
-                    {displayLabel}
-                </span>
-                <ChevronDown size={12} className="el-select__caret" />
-            </button>
+                {open && filterable ? (
+                    <input
+                        ref={inputRef}
+                        type="text"
+                        className="el-select__input"
+                        value={inputValue}
+                        placeholder={resolvedPlaceholder}
+                        onChange={(e) => setInputValue(e.target.value)}
+                        onKeyDown={(e) => {
+                            if (e.key === 'Escape') dismissSelect();
+                            if (e.key === 'Enter' && filteredOptions.length > 0) {
+                                onChange(filteredOptions[0].value);
+                                dismissSelect();
+                            }
+                        }}
+                        onClick={(event) => event.stopPropagation()}
+                    />
+                ) : (
+                    <span className={`el-select__selected ${isPlaceholder ? 'is-placeholder' : ''}`.trim()}>
+                        {displayLabel}
+                    </span>
+                )}
+                <ChevronDown
+                    size={12}
+                    className="el-select__caret"
+                />
+            </div>
             {usePortal && dropdown ? createPortal(dropdown, document.body) : dropdown}
         </div>
     );

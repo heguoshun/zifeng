@@ -10,7 +10,6 @@
     flex: 1;
     display: flex;
     flex-direction: column;
-    min-height: 620px;
 }
 
 .ms-table-head {
@@ -61,8 +60,7 @@
 }
 
 .ms-table-wrap {
-    flex: 1;
-    min-height: 420px;
+    flex: none;
     min-width: 0;
     overflow: auto;
     border: 1px solid var(--border);

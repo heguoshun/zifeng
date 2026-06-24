@@ -1,6 +1,10 @@
-import React, { useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
+import {
+    stripAnnouncementHtml,
+    useAnnouncementNotifications,
+} from './AnnouncementNotificationContext';
 
-type NotificationType = 'alarm' | 'work-order';
+type NotificationType = 'alarm' | 'work-order' | 'announcement';
 
 export type NotificationFilter = {
     keyword?: string;
@@ -13,7 +17,8 @@ type NotificationItem = {
     title: string;
     description: string;
     read: boolean;
-    filter: NotificationFilter;
+    filter?: NotificationFilter;
+    announcementId?: string;
 };
 
 const DEFAULT_NOTIFICATIONS: NotificationItem[] = [
@@ -55,36 +60,72 @@ type NotificationDropdownProps = {
     open: boolean;
     onClose: () => void;
     onNavigateMessageCenter?: (filter?: NotificationFilter) => void;
-    onNavigateOmManagement?: (filter?: NotificationFilter) => void;
+    onNavigateAlarmWorkOrder?: (filter?: NotificationFilter) => void;
+    onOtherUnreadCountChange?: (count: number) => void;
 };
 
 export default function NotificationDropdown({
     open,
     onClose,
     onNavigateMessageCenter,
-    onNavigateOmManagement,
+    onNavigateAlarmWorkOrder,
+    onOtherUnreadCountChange,
 }: NotificationDropdownProps) {
     const [items, setItems] = useState<NotificationItem[]>(DEFAULT_NOTIFICATIONS);
+    const {
+        publishedAnnouncements,
+        isAnnouncementUnread,
+        markAnnouncementRead,
+        markAllAnnouncementsRead,
+        openAnnouncement,
+    } = useAnnouncementNotifications();
+
+    const announcementItems = useMemo<NotificationItem[]>(
+        () => publishedAnnouncements.map((item) => ({
+            id: `announcement-${item.id}`,
+            type: 'announcement',
+            title: `【${item.type}】${item.title}`,
+            description: stripAnnouncementHtml(item.content) || '点击查看公告详情',
+            read: !isAnnouncementUnread(item.id),
+            announcementId: item.id,
+        })),
+        [publishedAnnouncements, isAnnouncementUnread],
+    );
+
+    const mergedItems = useMemo(
+        () => [...announcementItems, ...items],
+        [announcementItems, items],
+    );
+
+    const unreadCount = mergedItems.filter((item) => !item.read).length;
+
+    useEffect(() => {
+        onOtherUnreadCountChange?.(items.filter((item) => !item.read).length);
+    }, [items, onOtherUnreadCountChange]);
 
     if (!open) return null;
 
-    const unreadCount = items.filter((i) => !i.read).length;
-
     const handleItemClick = (item: NotificationItem) => {
-        // Mark as read
+        if (item.type === 'announcement' && item.announcementId) {
+            markAnnouncementRead(item.announcementId);
+            openAnnouncement(item.announcementId);
+            onClose();
+            return;
+        }
+
         setItems((prev) => prev.map((n) => (n.id === item.id ? { ...n, read: true } : n)));
 
-        // Navigate with filter
         if (item.type === 'alarm' && onNavigateMessageCenter) {
             onNavigateMessageCenter(item.filter);
-        } else if (item.type === 'work-order' && onNavigateOmManagement) {
-            onNavigateOmManagement(item.filter);
+        } else if (item.type === 'work-order' && onNavigateAlarmWorkOrder) {
+            onNavigateAlarmWorkOrder(item.filter);
         }
         onClose();
     };
 
     const handleMarkAllRead = () => {
         setItems((prev) => prev.map((n) => ({ ...n, read: true })));
+        markAllAnnouncementsRead();
     };
 
     return (
@@ -102,10 +143,10 @@ export default function NotificationDropdown({
                 )}
             </div>
             <div className="notif-dropdown__list">
-                {items.length === 0 ? (
+                {mergedItems.length === 0 ? (
                     <div className="notif-dropdown__empty">暂无消息</div>
                 ) : (
-                    items.map((item) => (
+                    mergedItems.map((item) => (
                         <button
                             key={item.id}
                             type="button"

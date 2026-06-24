@@ -245,7 +245,7 @@ export default function WorkOrderDetailDrawer({
                                     {workOrder.type === '告警工单' && (
                                         <DetailRow label="工单内容">{workOrder.content}</DetailRow>
                                     )}
-                                    <DetailRow label={workOrder.type === '其他工单' ? '所属站点' : '所属空间'}>
+                                    <DetailRow label={workOrder.type === '其他工单' ? '所属站点' : '所属区域'}>
                                         {workOrder.space}
                                     </DetailRow>
                                     <DetailRow label="处理人员">{detail.processor}</DetailRow>

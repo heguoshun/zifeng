@@ -26,12 +26,13 @@ import {
     type UpgradeTaskFormValue,
     type UpgradeTaskRecord,
 } from '../data/remoteUpgrade';
-import { paginateItems } from '../utils/listPagination';
+import { paginateItems, DEFAULT_LIST_PAGE_SIZE } from '../utils/listPagination';
 import '../device-access.css';
 import '../device-create.css';
 import '../product-management.css';
 import '../product-create.css';
 import '../remote-upgrade.css';
+import ClearableInput from '../components/ClearableInput';
 
 type RemoteUpgradePageProps = {
     products: ProductRecord[];
@@ -47,7 +48,6 @@ type RemoteUpgradePageProps = {
     onNavigateDeviceAccess: () => void;
     onNavigateMessageCenter: () => void;
     onNavigate: (pageId: DeviceAccessPageId) => void;
-    onNavigateOmManagement: () => void;
 };
 
 type ListSearchState = {
@@ -104,7 +104,6 @@ export default function RemoteUpgradePage({
     onNavigateDeviceAccess,
     onNavigateMessageCenter,
     onNavigate,
-    onNavigateOmManagement,
 }: RemoteUpgradePageProps) {
     const [search, setSearch] = useState<ListSearchState>(INITIAL_SEARCH);
     const [fwFormMode, setFwFormMode] = useState<'add' | 'edit' | null>(null);
@@ -222,11 +221,9 @@ export default function RemoteUpgradePage({
         <AppShell
             activeTopTab="设备接入"
             sidebar={sidebar}
-            onNavigateOmManagement={onNavigateOmManagement}
             onNavigateMessageCenter={onNavigateMessageCenter}
             onTopTabChange={(tab) => {
                 if (tab === '设备接入') onNavigate('home');
-                if (tab === '运维管理') onNavigateOmManagement();
             }}
         >
             <div className="pm-page ru-page">
@@ -245,17 +242,6 @@ export default function RemoteUpgradePage({
                 <section className="panel pm-list-panel">
                     <div className="pm-section-head">
                         <h3>固件包列表</h3>
-                        <button
-                            type="button"
-                            className="pm-btn pm-btn-primary"
-                            onClick={() => {
-                                setFwEditingRecord(null);
-                                setFwFormMode('add');
-                            }}
-                        >
-                            <Plus size={14} />
-                            添加固件包
-                        </button>
                     </div>
 
                     <div className="pm-filter-panel" style={{ boxShadow: 'none', border: 0, padding: '0 0 12px' }}>
@@ -268,7 +254,7 @@ export default function RemoteUpgradePage({
                                     options={FIRMWARE_SEARCH_FIELD_OPTIONS}
                                     onChange={(value) => setSearch((prev) => ({ ...prev, searchField: value }))}
                                 />
-                                <input
+                                <ClearableInput
                                     type="text"
                                     className="pm-filter-input ru-search-keyword-input"
                                     placeholder="请输入搜索内容"
@@ -282,6 +268,17 @@ export default function RemoteUpgradePage({
                             </button>
                             <button type="button" className="pm-btn pm-btn-ghost" onClick={handleReset}>
                                 重置
+                            </button>
+                            <button
+                                type="button"
+                                className="pm-btn pm-btn-primary ru-search-row__add"
+                                onClick={() => {
+                                    setFwEditingRecord(null);
+                                    setFwFormMode('add');
+                                }}
+                            >
+                                <Plus size={14} />
+                                添加固件包
                             </button>
                         </div>
                     </div>

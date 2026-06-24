@@ -30,11 +30,23 @@
           },
           {
             "id": "product-category",
-            "title": "产品分类"
+            "title": "产品分类",
+            "showInMenu": false
           },
           {
             "id": "product-create",
-            "title": "新增产品"
+            "title": "新增产品",
+            "showInMenu": false
+          },
+          {
+            "id": "product-edit",
+            "title": "编辑产品",
+            "showInMenu": false
+          },
+          {
+            "id": "product-view",
+            "title": "查看产品",
+            "showInMenu": false
           },
           {
             "id": "model-library",
@@ -42,7 +54,8 @@
           },
           {
             "id": "model-library-create",
-            "title": "创建物模型"
+            "title": "创建物模型",
+            "showInMenu": false
           },
           {
             "id": "device-management",
@@ -50,7 +63,18 @@
           },
           {
             "id": "device-create",
-            "title": "新增设备"
+            "title": "新增设备",
+            "showInMenu": false
+          },
+          {
+            "id": "device-edit",
+            "title": "编辑设备",
+            "showInMenu": false
+          },
+          {
+            "id": "device-view",
+            "title": "查看设备",
+            "showInMenu": false
           },
           {
             "id": "device-group",
@@ -65,12 +89,27 @@
             "title": "设备告警信息"
           },
           {
+            "id": "awo-device-alarm-info",
+            "title": "设备告警信息",
+            "showInMenu": false
+          },
+          {
             "id": "alarm-rule-config",
             "title": "告警规则配置"
           },
           {
+            "id": "awo-alarm-rule-config",
+            "title": "告警规则配置",
+            "showInMenu": false
+          },
+          {
             "id": "alarm-level-mgmt",
             "title": "告警等级管理"
+          },
+          {
+            "id": "awo-alarm-level-mgmt",
+            "title": "告警等级管理",
+            "showInMenu": false
           },
           {
             "id": "msg-subscribe",
@@ -94,15 +133,21 @@
           },
           {
             "id": "work-order-detail",
-            "title": "工单详情"
+            "title": "工单详情",
+            "showInMenu": false
           },
           {
             "id": "work-order-create",
-            "title": "新增工单"
+            "title": "新增工单",
+            "showInMenu": false
           },
           {
             "id": "protocol-mgmt",
             "title": "协议管理"
+          },
+          {
+            "id": "certificate-mgmt",
+            "title": "证书管理"
           },
           {
             "id": "network-service",
@@ -114,11 +159,13 @@
           },
           {
             "id": "network-protocol-create",
-            "title": "新增网络协议"
+            "title": "新增网络协议",
+            "showInMenu": false
           },
           {
             "id": "network-protocol-edit",
-            "title": "编辑网络协议"
+            "title": "编辑网络协议",
+            "showInMenu": false
           },
           {
             "id": "login-log",
@@ -149,8 +196,49 @@
             "title": "部门管理"
           },
           {
+            "id": "position-mgmt",
+            "title": "岗位管理"
+          },
+          {
             "id": "menu-mgmt",
             "title": "菜单管理"
+          },
+          {
+            "id": "dict-mgmt",
+            "title": "字典管理"
+          },
+          {
+            "id": "param-mgmt",
+            "title": "参数管理"
+          },
+          {
+            "id": "notice-announcement",
+            "title": "通知公告"
+          },
+          {
+            "id": "file-mgmt",
+            "title": "文件管理"
+          },
+          {
+            "id": "data-monitor",
+            "title": "数据监测"
+          },
+          {
+            "id": "water-usage-analysis",
+            "title": "设备数据",
+            "showInMenu": false
+          },
+          {
+            "id": "data-report",
+            "title": "数据报表"
+          },
+          {
+            "id": "area-config",
+            "title": "区域配置"
+          },
+          {
+            "id": "device-archive",
+            "title": "大表档案"
           }
         ],
         "defaultPageId": "home"

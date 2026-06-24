@@ -1,6 +1,6 @@
 .da-sidebar-shell {
     flex: 1;
-    background: #fff;
+    background: transparent;
     padding: 4px 8px;
     min-height: 0;
 }
@@ -25,7 +25,7 @@
     font-weight: 500;
     color: var(--text);
     cursor: pointer;
-    border-radius: 4px;
+    border-radius: 6px;
     text-align: left;
     line-height: 1;
 }
@@ -39,13 +39,15 @@
     color: var(--blue);
 }
 
-.da-sidebar-top-item.is-active {
-    background: var(--blue-light);
-    color: var(--blue);
+.da-sidebar-top-item.is-active,
+.da-sidebar-top-item.is-active:hover {
+    background: var(--sidebar-active-bg);
+    color: var(--sidebar-active-color);
+    box-shadow: var(--sidebar-active-shadow);
 }
 
 .da-sidebar-top-item.is-active .da-sidebar-icon {
-    color: var(--blue);
+    color: var(--sidebar-active-color);
 }
 
 .da-sidebar-block {
@@ -123,7 +125,7 @@
     background: transparent;
     height: 40px;
     padding: 0 12px 0 36px;
-    border-radius: 4px;
+    border-radius: 6px;
     color: var(--text-secondary);
     font-size: 14px;
     font-family: inherit;
@@ -137,8 +139,10 @@
     background: #fafcff;
 }
 
-.da-sidebar-link.is-active {
-    background: var(--blue-light);
-    color: var(--blue);
+.da-sidebar-link.is-active,
+.da-sidebar-link.is-active:hover {
+    background: var(--sidebar-active-bg);
+    color: var(--sidebar-active-color);
     font-weight: 500;
+    box-shadow: var(--sidebar-active-shadow);
 }

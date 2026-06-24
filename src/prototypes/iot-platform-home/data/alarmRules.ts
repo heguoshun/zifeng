@@ -1,5 +1,5 @@
 import type { AlarmTriggerMethod } from './deviceAlarms';
-import type { AlarmLevelRecord } from './alarmLevels';
+import { createInitialAlarmLevels, type AlarmLevelRecord } from './alarmLevels';
 import type { TreeSelectNode } from './orgHierarchy';
 
 export type AlarmRuleCategory = {
@@ -28,6 +28,12 @@ export type AlarmRuleValueMethod =
 
 export type AlarmRuleJudgeOperator = '>' | '<' | '=' | '>=' | '<=' | '!=';
 
+export type AlarmPropertyReportCheckType = '属性变更' | '非整点上报';
+
+export type AlarmPropertyReportTimeSource = '数据时间' | '收到时间';
+
+export type AlarmPropertyReportToleranceUnit = '秒' | '分钟';
+
 export type AlarmRuleConditionItem = {
     id: string;
     productId: string;
@@ -45,6 +51,10 @@ export type AlarmRuleConditionItem = {
     samplePeriod: string;
     eventIds: string[];
     functionId: string;
+    reportCheckType: AlarmPropertyReportCheckType | '';
+    reportTimeSource: AlarmPropertyReportTimeSource | '';
+    reportToleranceValue: string;
+    reportToleranceUnit: AlarmPropertyReportToleranceUnit | '';
 };
 
 export type AlarmRepeatSuppressionMode = '抑制' | '规定时间内抑制' | '不抑制';
@@ -126,6 +136,36 @@ export const ALARM_RULE_VALUE_METHOD_OPTIONS = [
 
 export const ALARM_RULE_JUDGE_OPERATOR_OPTIONS = ['>', '<', '=', '>=', '<=', '!='] as const;
 
+export const ALARM_PROPERTY_REPORT_CHECK_TYPE_OPTIONS = ['属性变更', '非整点上报'] as const;
+
+export const ALARM_PROPERTY_REPORT_TIME_SOURCE_OPTIONS = ['数据时间', '收到时间'] as const;
+
+export const ALARM_PROPERTY_REPORT_TOLERANCE_UNIT_OPTIONS = ['秒', '分钟'] as const;
+
+export const DEFAULT_OFF_HOUR_REPORT_TOLERANCE_VALUE = '5';
+
+export const DEFAULT_OFF_HOUR_REPORT_TOLERANCE_UNIT: AlarmPropertyReportToleranceUnit = '秒';
+
+export function isOffHourReportCheck(checkType: string): checkType is '非整点上报' {
+    return checkType === '非整点上报';
+}
+
+export function resolveDataTimePropertyId(
+    properties: { id: string; identifier?: string; name: string }[],
+): string {
+    const matched = properties.find((item) => (
+        item.identifier === 'data_time' || item.name === '数据时间'
+    ));
+    return matched?.id ?? '';
+}
+
+export function formatOffHourReportConditionSummary(condition: AlarmRuleConditionItem): string {
+    const tolerance = condition.reportToleranceValue.trim() || DEFAULT_OFF_HOUR_REPORT_TOLERANCE_VALUE;
+    const unit = condition.reportToleranceUnit || DEFAULT_OFF_HOUR_REPORT_TOLERANCE_UNIT;
+    const timeProperty = condition.reportTimeSource || '数据时间';
+    return `非整点上报（时间属性：${timeProperty}，容差 ±${tolerance} ${unit}）`;
+}
+
 export const ALARM_RULE_SAMPLE_PERIOD_VALUE_METHODS = ['最大值', '最小值', '平均值'] as const;
 
 export const ALARM_RULE_SAMPLE_PERIOD_OPTIONS = [
@@ -144,7 +184,7 @@ export function needsSamplePeriodValueMethod(valueMethod: string) {
     return (ALARM_RULE_SAMPLE_PERIOD_VALUE_METHODS as readonly string[]).includes(valueMethod);
 }
 
-export const ALARM_RULE_DEVICE_STATUS_TRIGGER_CONDITIONS = ['设备下线', '设备上线'] as const;
+export const ALARM_RULE_DEVICE_STATUS_TRIGGER_CONDITIONS = ['设备下线', '设备上线', '连续未上报'] as const;
 
 export const ALARM_RULE_TRIGGER_CONDITION_OPTIONS = [
     '设备离线',
@@ -172,33 +212,240 @@ export const ALARM_RULE_TRIGGER_FILTER_OPTIONS = [
 ] as const;
 
 const INITIAL_CATEGORIES: AlarmRuleCategory[] = [
+    { id: 'cat-large-meter', parentId: null, name: '大表' },
+    { id: 'cat-large-offline', parentId: 'cat-large-meter', name: '离线' },
+    { id: 'cat-large-reverse-flow', parentId: 'cat-large-meter', name: '反向流量' },
+    { id: 'cat-large-low-voltage', parentId: 'cat-large-meter', name: '低电压告警' },
+    { id: 'cat-large-high-flow', parentId: 'cat-large-meter', name: '大流告警' },
+    { id: 'cat-large-continuous-usage', parentId: 'cat-large-meter', name: '持续用水' },
+    { id: 'cat-large-identity-mismatch', parentId: 'cat-large-meter', name: '识别不一致' },
+    { id: 'cat-large-no-report', parentId: 'cat-large-meter', name: '连续三天未上报' },
+    { id: 'cat-large-off-hour', parentId: 'cat-large-meter', name: '非整点上报' },
+
+    { id: 'cat-household-meter', parentId: null, name: '户表' },
+    { id: 'cat-household-offline', parentId: 'cat-household-meter', name: '离线告警' },
+    { id: 'cat-household-reading', parentId: 'cat-household-meter', name: '读数异常' },
+    { id: 'cat-household-theft', parentId: 'cat-household-meter', name: '窃水监测' },
+
     { id: 'cat-pressure', parentId: null, name: '压力计' },
     { id: 'cat-pressure-offline', parentId: 'cat-pressure', name: '离线告警' },
     { id: 'cat-pressure-threshold', parentId: 'cat-pressure', name: '阈值告警' },
-    { id: 'cat-meter', parentId: null, name: '电表规则' },
-    { id: 'cat-meter-offline', parentId: 'cat-meter', name: '离线告警' },
-    { id: 'cat-meter-abnormal', parentId: 'cat-meter', name: '读数异常' },
-    { id: 'cat-water', parentId: null, name: '水表规则' },
-    { id: 'cat-water-flow', parentId: 'cat-water', name: '流量异常' },
-    { id: 'cat-water-fault', parentId: 'cat-water', name: '故障上报' },
+    { id: 'cat-pressure-fluctuation', parentId: 'cat-pressure', name: '波动异常' },
+
+    { id: 'cat-water-quality', parentId: null, name: '水质分析仪' },
+    { id: 'cat-water-quality-offline', parentId: 'cat-water-quality', name: '离线告警' },
+    { id: 'cat-water-quality-limit', parentId: 'cat-water-quality', name: '指标超限' },
+    { id: 'cat-water-quality-missing', parentId: 'cat-water-quality', name: '数据异常' },
+
+    { id: 'cat-smart-station', parentId: null, name: '智慧水站' },
+    { id: 'cat-smart-station-offline', parentId: 'cat-smart-station', name: '离线告警' },
+    { id: 'cat-smart-station-device', parentId: 'cat-smart-station', name: '设备异常' },
+    { id: 'cat-smart-station-security', parentId: 'cat-smart-station', name: '安防告警' },
 ];
 
 const INITIAL_RULES: AlarmRuleRecord[] = [
+    // 大表（属性上报：数据时间、累计流量、正向流量、反向流量、瞬时流量、电池电压、信号强度）
     {
-        id: 'rule-1',
-        categoryId: 'cat-pressure-offline',
-        name: '压力计离线告警',
-        description: '设备离线超过5分钟触发告警',
+        id: 'rule-large-7',
+        categoryId: 'cat-large-offline',
+        name: '大表离线告警',
+        description: '平台判定设备离线且超过 30 分钟未恢复时触发',
+        editMode: '触发条件设置',
+        triggerMethods: ['设备状态触发'],
+        notifyAlarm: true,
+        createWorkOrder: true,
+        workOrderAssignees: ['张三'],
+        enabled: true,
+        createdAt: '2025-06-10 07:30:00',
+    },
+    {
+        id: 'rule-large-1',
+        categoryId: 'cat-large-reverse-flow',
+        name: '大表反向流量告警',
+        description: '属性上报中反向流量超过 0.8m³/h，或检测到反向用水异常时触发',
+        editMode: '触发条件设置',
+        triggerMethods: ['数据条件判断触发'],
+        notifyAlarm: true,
+        createWorkOrder: false,
+        workOrderAssignees: [],
+        enabled: true,
+        createdAt: '2025-06-10 08:12:30',
+    },
+    {
+        id: 'rule-large-2',
+        categoryId: 'cat-large-low-voltage',
+        name: '大表低电压告警',
+        description: '设备上报低电压告警事件，或属性上报中电池电压低于 3.2V 时触发',
+        editMode: '触发条件设置',
+        triggerMethods: ['事件上报时触发'],
+        notifyAlarm: true,
+        createWorkOrder: false,
+        workOrderAssignees: [],
+        enabled: true,
+        createdAt: '2025-06-11 09:20:15',
+    },
+    {
+        id: 'rule-large-3',
+        categoryId: 'cat-large-high-flow',
+        name: '大表大流告警',
+        description: '属性上报中瞬时流量超过 150m³/h 时触发',
+        editMode: '触发条件设置',
+        triggerMethods: ['数据条件判断触发'],
+        notifyAlarm: true,
+        createWorkOrder: false,
+        workOrderAssignees: [],
+        enabled: true,
+        createdAt: '2025-06-11 11:05:30',
+    },
+    {
+        id: 'rule-large-4',
+        categoryId: 'cat-large-continuous-usage',
+        name: '大表持续用水告警',
+        description: '连续用水时长超过 6 小时未停止时触发',
+        editMode: '触发条件设置',
+        triggerMethods: ['数据条件判断触发'],
+        notifyAlarm: true,
+        createWorkOrder: true,
+        workOrderAssignees: ['李四'],
+        enabled: true,
+        createdAt: '2025-06-11 14:18:42',
+    },
+    {
+        id: 'rule-large-5',
+        categoryId: 'cat-large-identity-mismatch',
+        name: '大表识别不一致告警',
+        description: '设备上报表身号与用户档案信息不一致时触发',
+        editMode: '触发条件设置',
+        triggerMethods: ['属性数据上报时触发'],
+        notifyAlarm: true,
+        createWorkOrder: false,
+        workOrderAssignees: [],
+        enabled: true,
+        createdAt: '2025-06-12 14:30:00',
+    },
+    {
+        id: 'rule-large-6',
+        categoryId: 'cat-large-no-report',
+        name: '大表连续三天未上报告警',
+        description: '连续 72 小时未收到设备上报数据时触发',
+        editMode: '触发条件设置',
+        triggerMethods: ['设备状态触发'],
+        notifyAlarm: true,
+        createWorkOrder: true,
+        workOrderAssignees: ['张三'],
+        enabled: true,
+        createdAt: '2025-06-13 10:45:22',
+    },
+    {
+        id: 'rule-large-off-hour',
+        categoryId: 'cat-large-off-hour',
+        name: '大表非整点上报告警',
+        description: '属性上报的数据时间偏离整点超过容差范围时触发',
+        editMode: '触发条件设置',
+        triggerMethods: ['属性数据上报时触发'],
+        notifyAlarm: true,
+        createWorkOrder: false,
+        workOrderAssignees: [],
+        enabled: true,
+        createdAt: '2025-06-14 09:15:00',
+    },
+
+    // 户表
+    {
+        id: 'rule-household-1',
+        categoryId: 'cat-household-offline',
+        name: '户表离线告警',
+        description: '户表设备离线状态持续超过30分钟',
         editMode: '触发条件设置',
         triggerMethods: ['设备状态触发'],
         notifyAlarm: true,
         createWorkOrder: false,
         workOrderAssignees: [],
         enabled: true,
-        createdAt: '2025-07-01 12:00:30',
+        createdAt: '2025-06-16 07:15:30',
     },
     {
-        id: 'rule-2',
+        id: 'rule-household-2',
+        categoryId: 'cat-household-offline',
+        name: 'NB-IoT信号弱',
+        description: 'RSRP低于-110dBm持续1小时触发信号质量告警',
+        editMode: '触发条件设置',
+        triggerMethods: ['属性数据上报时触发'],
+        notifyAlarm: true,
+        createWorkOrder: false,
+        workOrderAssignees: [],
+        enabled: true,
+        createdAt: '2025-06-17 13:22:11',
+    },
+    {
+        id: 'rule-household-3',
+        categoryId: 'cat-household-reading',
+        name: '户表读数异常',
+        description: '读数突变超过50%或与上期差值异常',
+        editMode: 'SQL语句编辑',
+        triggerMethods: ['属性数据上报时触发'],
+        notifyAlarm: true,
+        createWorkOrder: true,
+        workOrderAssignees: ['张三', '李四'],
+        enabled: true,
+        createdAt: '2025-06-18 09:15:42',
+    },
+    {
+        id: 'rule-household-4',
+        categoryId: 'cat-household-reading',
+        name: '夜间异常用水',
+        description: '凌晨2点至5点用水量超过日均夜间用水3倍',
+        editMode: '触发条件设置',
+        triggerMethods: ['数据条件判断触发'],
+        notifyAlarm: true,
+        createWorkOrder: true,
+        workOrderAssignees: ['王五'],
+        enabled: true,
+        createdAt: '2025-06-19 22:40:00',
+    },
+    {
+        id: 'rule-household-5',
+        categoryId: 'cat-household-theft',
+        name: '反向流量告警',
+        description: '检测到反向累计流量增长触发窃水嫌疑告警',
+        editMode: '触发条件设置',
+        triggerMethods: ['数据条件判断触发'],
+        notifyAlarm: true,
+        createWorkOrder: true,
+        workOrderAssignees: ['张三'],
+        enabled: true,
+        createdAt: '2025-06-20 15:30:18',
+    },
+    {
+        id: 'rule-household-6',
+        categoryId: 'cat-household-theft',
+        name: '旁路用水告警',
+        description: '进出口流量差值持续超过阈值判定旁路用水',
+        editMode: '触发条件设置',
+        triggerMethods: ['数据条件判断触发'],
+        notifyAlarm: true,
+        createWorkOrder: true,
+        workOrderAssignees: ['李四'],
+        enabled: false,
+        createdAt: '2025-06-21 08:55:33',
+    },
+
+    // 压力计
+    {
+        id: 'rule-pressure-1',
+        categoryId: 'cat-pressure-offline',
+        name: '压力计离线告警',
+        description: '压力计设备离线超过5分钟触发告警',
+        editMode: '触发条件设置',
+        triggerMethods: ['设备状态触发'],
+        notifyAlarm: true,
+        createWorkOrder: false,
+        workOrderAssignees: [],
+        enabled: true,
+        createdAt: '2025-06-22 12:00:30',
+    },
+    {
+        id: 'rule-pressure-2',
         categoryId: 'cat-pressure-threshold',
         name: '水压阈值告警',
         description: '水压值超过设定阈值时触发，适用于一泵房压力监测场景',
@@ -208,69 +455,608 @@ const INITIAL_RULES: AlarmRuleRecord[] = [
         createWorkOrder: false,
         workOrderAssignees: [],
         enabled: true,
-        createdAt: '2025-07-01 12:05:18',
+        createdAt: '2025-06-23 12:05:18',
     },
     {
-        id: 'rule-3',
-        categoryId: 'cat-meter-abnormal',
-        name: '电表读数异常',
-        description: '读数突变超过50%触发告警',
-        editMode: 'SQL语句编辑',
-        triggerMethods: ['属性数据上报时触发'],
+        id: 'rule-pressure-3',
+        categoryId: 'cat-pressure-threshold',
+        name: '低压告警',
+        description: '管网压力低于0.15MPa持续10分钟触发低压告警',
+        editMode: '触发条件设置',
+        triggerMethods: ['数据条件判断触发'],
         notifyAlarm: true,
         createWorkOrder: true,
-        workOrderAssignees: ['张三', '李四'],
-        sqlSettings: undefined,
-        enabled: false,
-        createdAt: '2025-07-02 09:15:42',
-    },
-    {
-        id: 'rule-4',
-        categoryId: 'cat-meter-offline',
-        name: '电表设备离线',
-        description: '电表设备离线状态持续超过10分钟',
-        editMode: '触发条件设置',
-        triggerMethods: ['设备状态触发'],
-        notifyAlarm: true,
-        createWorkOrder: false,
-        workOrderAssignees: [],
+        workOrderAssignees: ['张三'],
         enabled: true,
-        createdAt: '2025-07-02 10:22:11',
+        createdAt: '2025-06-24 06:30:00',
     },
     {
-        id: 'rule-5',
-        categoryId: 'cat-water-flow',
-        name: '水表流量异常',
-        description: '水表流量数据连续3次上报异常值',
+        id: 'rule-pressure-4',
+        categoryId: 'cat-pressure-threshold',
+        name: '高压告警',
+        description: '管网压力高于0.6MPa持续5分钟触发高压告警',
+        editMode: '触发条件设置',
+        triggerMethods: ['数据条件判断触发'],
+        notifyAlarm: true,
+        createWorkOrder: true,
+        workOrderAssignees: ['李四'],
+        enabled: true,
+        createdAt: '2025-06-25 18:20:45',
+    },
+    {
+        id: 'rule-pressure-5',
+        categoryId: 'cat-pressure-fluctuation',
+        name: '压力波动异常',
+        description: '1小时内压力波动幅度超过0.2MPa触发稳定性告警',
         editMode: '触发条件设置',
         triggerMethods: ['数据条件判断触发'],
         notifyAlarm: true,
         createWorkOrder: false,
         workOrderAssignees: [],
         enabled: true,
-        createdAt: '2025-07-03 14:30:00',
+        createdAt: '2025-06-26 14:10:22',
+    },
+
+    // 水质分析仪
+    {
+        id: 'rule-quality-1',
+        categoryId: 'cat-water-quality-offline',
+        name: '水质仪离线告警',
+        description: '水质分析仪离线超过15分钟触发告警',
+        editMode: '触发条件设置',
+        triggerMethods: ['设备状态触发'],
+        notifyAlarm: true,
+        createWorkOrder: false,
+        workOrderAssignees: [],
+        enabled: true,
+        createdAt: '2025-06-27 09:00:00',
     },
     {
-        id: 'rule-6',
-        categoryId: 'cat-water-fault',
-        name: '水表故障上报',
-        description: '设备上报故障码E102时触发',
+        id: 'rule-quality-2',
+        categoryId: 'cat-water-quality-limit',
+        name: '余氯超限告警',
+        description: '出厂水余氯低于0.3mg/L或高于4mg/L触发告警',
+        editMode: '触发条件设置',
+        triggerMethods: ['数据条件判断触发'],
+        notifyAlarm: true,
+        createWorkOrder: true,
+        workOrderAssignees: ['张三', '王五'],
+        enabled: true,
+        createdAt: '2025-06-28 10:15:30',
+    },
+    {
+        id: 'rule-quality-3',
+        categoryId: 'cat-water-quality-limit',
+        name: 'pH值异常',
+        description: 'pH值超出6.5-8.5正常范围持续30分钟',
+        editMode: '触发条件设置',
+        triggerMethods: ['数据条件判断触发'],
+        notifyAlarm: true,
+        createWorkOrder: true,
+        workOrderAssignees: ['李四'],
+        enabled: true,
+        createdAt: '2025-06-29 11:30:18',
+    },
+    {
+        id: 'rule-quality-4',
+        categoryId: 'cat-water-quality-limit',
+        name: '浊度超标',
+        description: '浊度超过1NTU持续20分钟触发水质异常告警',
+        editMode: '触发条件设置',
+        triggerMethods: ['数据条件判断触发'],
+        notifyAlarm: true,
+        createWorkOrder: false,
+        workOrderAssignees: [],
+        enabled: true,
+        createdAt: '2025-06-30 15:45:42',
+    },
+    {
+        id: 'rule-quality-5',
+        categoryId: 'cat-water-quality-missing',
+        name: '水质数据缺失',
+        description: '连续2个采集周期未上报水质数据触发缺失告警',
+        editMode: '触发条件设置',
+        triggerMethods: ['属性数据上报时触发'],
+        notifyAlarm: true,
+        createWorkOrder: false,
+        workOrderAssignees: [],
+        enabled: true,
+        createdAt: '2025-07-01 08:20:11',
+    },
+
+    // 智慧水站
+    {
+        id: 'rule-station-1',
+        categoryId: 'cat-smart-station-offline',
+        name: '水站离线告警',
+        description: '智慧水站网关离线超过5分钟触发整站离线告警',
+        editMode: '触发条件设置',
+        triggerMethods: ['设备状态触发'],
+        notifyAlarm: true,
+        createWorkOrder: true,
+        workOrderAssignees: ['张三'],
+        enabled: true,
+        createdAt: '2025-07-02 07:30:00',
+    },
+    {
+        id: 'rule-station-2',
+        categoryId: 'cat-smart-station-device',
+        name: '泵站故障告警',
+        description: '泵站运行状态上报故障码F201时触发',
+        editMode: '触发条件设置',
+        triggerMethods: ['事件上报时触发'],
+        notifyAlarm: true,
+        createWorkOrder: true,
+        workOrderAssignees: ['李四', '王五'],
+        enabled: true,
+        createdAt: '2025-07-03 09:45:18',
+    },
+    {
+        id: 'rule-station-3',
+        categoryId: 'cat-smart-station-device',
+        name: '加药设备异常',
+        description: '加药泵电流异常或药剂余量低于10%',
+        editMode: '触发条件设置',
+        triggerMethods: ['数据条件判断触发'],
+        notifyAlarm: true,
+        createWorkOrder: true,
+        workOrderAssignees: ['张三'],
+        enabled: true,
+        createdAt: '2025-07-04 13:10:33',
+    },
+    {
+        id: 'rule-station-4',
+        categoryId: 'cat-smart-station-security',
+        name: '门禁异常告警',
+        description: '非授权时段门禁开启或强行开门触发安防告警',
         editMode: '触发条件设置',
         triggerMethods: ['事件上报时触发'],
         notifyAlarm: true,
         createWorkOrder: true,
         workOrderAssignees: ['王五'],
         enabled: true,
-        createdAt: '2025-07-03 16:45:22',
+        createdAt: '2025-07-05 22:15:00',
+    },
+    {
+        id: 'rule-station-5',
+        categoryId: 'cat-smart-station-security',
+        name: '视频离线告警',
+        description: '水站视频监控离线超过30分钟触发告警',
+        editMode: '触发条件设置',
+        triggerMethods: ['设备状态触发'],
+        notifyAlarm: true,
+        createWorkOrder: false,
+        workOrderAssignees: [],
+        enabled: false,
+        createdAt: '2025-07-06 16:40:22',
     },
 ];
+
+type MockCategoryBinding = {
+    productId: string;
+    deviceIds: string[];
+    spaceId: string;
+    propertyIds: {
+        flow: string;
+        pressure: string;
+        battery: string;
+        signal: string;
+        ph: string;
+        chlorine: string;
+        turbidity: string;
+        dataTime?: string;
+        totalFlow?: string;
+        forwardFlow?: string;
+        reverseFlow?: string;
+        instantFlow?: string;
+        batteryVoltage?: string;
+        signalStrength?: string;
+    };
+    eventIds: {
+        fault: string;
+        offline: string;
+        flowAbnormal: string;
+        security: string;
+        pumpFault: string;
+        emptyPipe?: string;
+        lowBattery?: string;
+        reverseFlow?: string;
+        flowOverload?: string;
+        motherboard?: string;
+    };
+    functionIds: {
+        valve: string;
+    };
+};
+
+function resolveMockCategoryBinding(categoryId: string): MockCategoryBinding {
+    if (categoryId.includes('household')) {
+        return {
+            productId: '5',
+            deviceIds: ['5'],
+            spaceId: '',
+            propertyIds: {
+                flow: 'hb-p2',
+                pressure: '',
+                battery: 'hb-p4',
+                signal: 'hb-p5',
+                ph: '',
+                chlorine: '',
+                turbidity: '',
+            },
+            eventIds: {
+                fault: 'hb-e2',
+                offline: 'hb-e4',
+                flowAbnormal: 'hb-e1',
+                security: 'hb-e2',
+                pumpFault: '',
+            },
+            functionIds: { valve: 'hb-f1' },
+        };
+    }
+
+    if (categoryId.includes('pressure')) {
+        return {
+            productId: '9',
+            deviceIds: ['9'],
+            spaceId: '',
+            propertyIds: {
+                flow: '',
+                pressure: 'yl-p1',
+                battery: 'yl-p3',
+                signal: 'yl-p4',
+                ph: '',
+                chlorine: '',
+                turbidity: '',
+            },
+            eventIds: {
+                fault: 'yl-e3',
+                offline: 'yl-e4',
+                flowAbnormal: 'yl-e1',
+                security: '',
+                pumpFault: '',
+            },
+            functionIds: { valve: 'yl-f1' },
+        };
+    }
+
+    if (categoryId.includes('water-quality')) {
+        return {
+            productId: '13',
+            deviceIds: ['13'],
+            spaceId: '',
+            propertyIds: {
+                flow: '',
+                pressure: '',
+                battery: '',
+                signal: '',
+                ph: 'szy-p2',
+                chlorine: 'szy-p3',
+                turbidity: 'szy-p1',
+            },
+            eventIds: {
+                fault: 'szy-e3',
+                offline: 'szy-e4',
+                flowAbnormal: 'szy-e1',
+                security: '',
+                pumpFault: '',
+            },
+            functionIds: { valve: 'szy-f1' },
+        };
+    }
+
+    if (categoryId.includes('smart-station')) {
+        return {
+            productId: '17',
+            deviceIds: ['17'],
+            spaceId: '',
+            propertyIds: {
+                flow: 'zhsz-p2',
+                pressure: 'zhsz-p1',
+                battery: '',
+                signal: '',
+                ph: '',
+                chlorine: 'zhsz-p4',
+                turbidity: 'zhsz-p3',
+            },
+            eventIds: {
+                fault: 'zhsz-e2',
+                offline: 'zhsz-e3',
+                flowAbnormal: 'zhsz-e1',
+                security: 'zhsz-e2',
+                pumpFault: 'zhsz-e1',
+            },
+            functionIds: { valve: 'zhsz-f1' },
+        };
+    }
+
+    return {
+        productId: '1',
+        deviceIds: ['1'],
+        spaceId: '',
+        propertyIds: {
+            flow: 'db-p5',
+            pressure: '',
+            battery: 'db-p6',
+            signal: 'db-p7',
+            ph: '',
+            chlorine: '',
+            turbidity: '',
+            dataTime: 'db-p1',
+            totalFlow: 'db-p2',
+            forwardFlow: 'db-p3',
+            reverseFlow: 'db-p4',
+            instantFlow: 'db-p5',
+            batteryVoltage: 'db-p6',
+            signalStrength: 'db-p7',
+        },
+        eventIds: {
+            fault: 'db-e6',
+            offline: 'db-e3',
+            flowAbnormal: 'db-e5',
+            security: '',
+            pumpFault: '',
+            emptyPipe: 'db-e1',
+            lowBattery: 'db-e2',
+            reverseFlow: 'db-e4',
+            flowOverload: 'db-e5',
+            motherboard: 'db-e6',
+        },
+        functionIds: { valve: 'db-f1' },
+    };
+}
+
+function createFilledAlarmRuleCondition(
+    triggerMethod: AlarmTriggerMethod,
+    categoryId: string,
+    overrides: Partial<AlarmRuleConditionItem> = {},
+): AlarmRuleConditionItem {
+    const binding = resolveMockCategoryBinding(categoryId);
+    const base: AlarmRuleConditionItem = {
+        ...createEmptyAlarmRuleCondition(),
+        productId: binding.productId,
+        spaceId: binding.spaceId,
+        deviceIds: binding.deviceIds,
+        delayUnit: '分钟',
+        ...overrides,
+    };
+
+    switch (triggerMethod) {
+        case '设备状态触发':
+            return {
+                ...base,
+                triggerCondition: overrides.triggerCondition ?? '设备下线',
+                delayValue: overrides.delayValue ?? '5',
+            };
+        case '数据条件判断触发':
+            return {
+                ...base,
+                valueMethod: overrides.valueMethod ?? '原始值',
+                propertyId: overrides.propertyId ?? (
+                    binding.propertyIds.pressure
+                    || binding.propertyIds.flow
+                    || binding.propertyIds.chlorine
+                ),
+                judgeOperator: overrides.judgeOperator ?? '>',
+                judgeValue: overrides.judgeValue ?? '0.6',
+                samplePeriod: overrides.samplePeriod ?? '',
+            };
+        case '事件上报时触发':
+            return {
+                ...base,
+                eventIds: overrides.eventIds ?? [binding.eventIds.fault || binding.eventIds.flowAbnormal],
+            };
+        case '属性数据上报时触发': {
+            const isOffHour = overrides.reportCheckType === '非整点上报';
+            const propertyId = overrides.propertyId ?? (
+                isOffHour
+                    ? (binding.propertyIds.dataTime || binding.propertyIds.battery || binding.propertyIds.signal || binding.propertyIds.flow)
+                    : (binding.propertyIds.battery || binding.propertyIds.signal || binding.propertyIds.flow)
+            );
+            const reportCheckType = overrides.reportCheckType
+                ?? (propertyId ? '属性变更' : '');
+            return {
+                ...base,
+                reportCheckType,
+                reportTimeSource: reportCheckType === '非整点上报'
+                    ? (overrides.reportTimeSource ?? '数据时间')
+                    : '',
+                reportToleranceValue: reportCheckType === '非整点上报'
+                    ? (overrides.reportToleranceValue ?? DEFAULT_OFF_HOUR_REPORT_TOLERANCE_VALUE)
+                    : '',
+                reportToleranceUnit: reportCheckType === '非整点上报'
+                    ? (overrides.reportToleranceUnit ?? DEFAULT_OFF_HOUR_REPORT_TOLERANCE_UNIT)
+                    : '',
+                propertyId,
+            };
+        }
+        case '功能调用时触发':
+            return {
+                ...base,
+                functionId: overrides.functionId ?? binding.functionIds.valve,
+            };
+        default:
+            return {
+                ...base,
+                triggerCondition: overrides.triggerCondition ?? '水压值 > 4MPa',
+                delayValue: overrides.delayValue ?? '10',
+            };
+    }
+}
+
+function createFilledAlarmRuleConditionSettings(
+    rule: AlarmRuleRecord,
+    alarmLevels: AlarmLevelRecord[],
+): AlarmRuleConditionSettings {
+    const triggerMethod = rule.triggerMethods[0] ?? '设备状态触发';
+    const ruleOverrides = RULE_CONDITION_OVERRIDES[rule.id] ?? {};
+    const levels = alarmLevels.reduce((acc, level, index) => {
+        acc[level.id] = {
+            limitMode: index % 2 === 0 ? '部分条件满足' : '全部条件满足',
+            conditions: [
+                createFilledAlarmRuleCondition(triggerMethod, rule.categoryId, {
+                    delayValue: ['5', '10', '15', '30'][index % 4],
+                    judgeValue: ['0.6', '0.15', '4', '1'][index % 4],
+                    ...ruleOverrides,
+                }),
+            ],
+            repeatSuppression: '不抑制',
+            silenceTimeValue: '',
+            silenceTimeUnit: '分钟',
+        };
+        return acc;
+    }, {} as Record<string, AlarmRuleLevelConditionConfig>);
+
+    return {
+        activeLevelId: alarmLevels[0]?.id ?? '',
+        levels,
+    };
+}
+
+const RULE_CONDITION_OVERRIDES: Record<string, Partial<AlarmRuleConditionItem>> = {
+    'rule-large-7': { triggerCondition: '设备下线', delayValue: '30', delayUnit: '分钟' },
+    'rule-large-1': { propertyId: 'db-p4', judgeValue: '0.8', judgeOperator: '>' },
+    'rule-large-2': { eventIds: ['db-e2'] },
+    'rule-large-3': { propertyId: 'db-p5', judgeValue: '150', judgeOperator: '>' },
+    'rule-large-4': {
+        propertyId: 'db-p5',
+        judgeValue: '0',
+        judgeOperator: '>',
+        valueMethod: '平均值',
+        samplePeriod: '10个周期',
+    },
+    'rule-large-5': { propertyId: 'db-p1' },
+    'rule-large-6': { triggerCondition: '设备下线', delayValue: '72', delayUnit: '小时' },
+    'rule-large-off-hour': {
+        reportCheckType: '非整点上报',
+        reportTimeSource: '数据时间',
+        reportToleranceValue: '5',
+        reportToleranceUnit: '秒',
+        propertyId: 'db-p1',
+    },
+    'rule-household-2': { propertyId: 'hb-p5' },
+    'rule-household-4': { propertyId: 'hb-p2', judgeValue: '3', judgeOperator: '>' },
+    'rule-household-5': { propertyId: 'hb-p2', judgeValue: '0', judgeOperator: '>' },
+    'rule-pressure-2': { propertyId: 'yl-p1', judgeValue: '0.6' },
+    'rule-pressure-3': { propertyId: 'yl-p1', judgeValue: '0.15', judgeOperator: '<' },
+    'rule-pressure-4': { propertyId: 'yl-p1', judgeValue: '0.6' },
+    'rule-pressure-5': { propertyId: 'yl-p1', judgeValue: '0.2' },
+    'rule-quality-2': { propertyId: 'szy-p3', judgeValue: '4' },
+    'rule-quality-3': { propertyId: 'szy-p2', judgeValue: '8.5' },
+    'rule-quality-4': { propertyId: 'szy-p1', judgeValue: '1' },
+    'rule-quality-5': { propertyId: 'szy-p3' },
+    'rule-station-2': { eventIds: ['zhsz-e1'] },
+    'rule-station-3': { propertyId: 'zhsz-p5', judgeValue: '10', judgeOperator: '<' },
+    'rule-station-4': { eventIds: ['zhsz-e2'] },
+    'rule-station-5': { delayValue: '30' },
+};
+
+const MOCK_SQL_BY_RULE: Record<string, string> = {
+    'rule-household-3': `SELECT device_id, total_flow, lag_total_flow
+FROM household_meter_stats
+WHERE abs(total_flow - lag_total_flow) / lag_total_flow > 0.5;`,
+};
+
+function createFilledAlarmRuleSqlSettings(
+    rule: AlarmRuleRecord,
+    alarmLevels: AlarmLevelRecord[],
+): AlarmRuleSqlSettings {
+    const sql = MOCK_SQL_BY_RULE[rule.id] ?? ALARM_RULE_DEFAULT_SQL_TEMPLATE;
+    const levels = alarmLevels.reduce((acc, level) => {
+        acc[level.id] = { sql };
+        return acc;
+    }, {} as Record<string, AlarmRuleLevelSqlConfig>);
+
+    return {
+        activeLevelId: alarmLevels[0]?.id ?? '',
+        levels,
+    };
+}
+
+function enrichMockAlarmRule(rule: AlarmRuleRecord, alarmLevels: AlarmLevelRecord[]): AlarmRuleRecord {
+    if (rule.editMode === 'SQL语句编辑') {
+        return {
+            ...rule,
+            sqlSettings: createFilledAlarmRuleSqlSettings(rule, alarmLevels),
+        };
+    }
+
+    return {
+        ...rule,
+        conditionSettings: createFilledAlarmRuleConditionSettings(rule, alarmLevels),
+    };
+}
+
+export function isAlarmRuleConditionSettingsFilled(
+    settings?: AlarmRuleConditionSettings,
+): boolean {
+    if (!settings?.levels) return false;
+    return Object.values(settings.levels).some((config) =>
+        config.conditions.some((item) => Boolean(item.productId && item.deviceIds.length > 0)),
+    );
+}
+
+export function ensureAlarmRuleMockSettings(
+    rule: AlarmRuleRecord,
+    alarmLevels: AlarmLevelRecord[],
+): AlarmRuleRecord {
+    if (rule.editMode === 'SQL语句编辑') {
+        if (rule.sqlSettings !== undefined) {
+            return {
+                ...rule,
+                sqlSettings: syncAlarmRuleSqlSettings(rule.sqlSettings, alarmLevels),
+            };
+        }
+        return { ...rule, sqlSettings: createFilledAlarmRuleSqlSettings(rule, alarmLevels) };
+    }
+
+    if (rule.conditionSettings !== undefined) {
+        return {
+            ...rule,
+            conditionSettings: syncAlarmRuleConditionSettings(rule.conditionSettings, alarmLevels),
+        };
+    }
+
+    return {
+        ...rule,
+        conditionSettings: createFilledAlarmRuleConditionSettings(rule, alarmLevels),
+    };
+}
+
+export function resolveAlarmRuleEditFormSettings(
+    rule: AlarmRuleRecord,
+    alarmLevels: AlarmLevelRecord[],
+): Pick<AlarmRuleRecord, 'conditionSettings' | 'sqlSettings'> {
+    const ensured = ensureAlarmRuleMockSettings(rule, alarmLevels);
+
+    if (ensured.editMode === 'SQL语句编辑') {
+        return {
+            conditionSettings: undefined,
+            sqlSettings: syncAlarmRuleSqlSettings(ensured.sqlSettings, alarmLevels),
+        };
+    }
+
+    const conditionSettings = syncAlarmRuleConditionSettings(
+        ensured.conditionSettings ?? createFilledAlarmRuleConditionSettings(ensured, alarmLevels),
+        alarmLevels,
+    );
+
+    return {
+        conditionSettings: sanitizeConditionFieldsForTrigger(
+            conditionSettings,
+            ensured.triggerMethods,
+        ),
+        sqlSettings: syncAlarmRuleSqlSettings(ensured.sqlSettings, alarmLevels),
+    };
+}
 
 export function createInitialAlarmRuleCategories(): AlarmRuleCategory[] {
     return INITIAL_CATEGORIES.map((item) => ({ ...item }));
 }
 
 export function createInitialAlarmRules(): AlarmRuleRecord[] {
-    return INITIAL_RULES.map((item) => ({ ...item }));
+    const alarmLevels = createInitialAlarmLevels();
+    return INITIAL_RULES.map((item) => enrichMockAlarmRule(item, alarmLevels));
 }
 
 export function generateAlarmRuleCategoryId(): string {
@@ -289,9 +1075,11 @@ export function formatAlarmRuleNow(): string {
 }
 
 export const DEFAULT_ALARM_CATEGORY_TREE_EXPANDED: Record<string, boolean> = {
+    'cat-large-meter': true,
+    'cat-household-meter': true,
     'cat-pressure': true,
-    'cat-meter': true,
-    'cat-water': true,
+    'cat-water-quality': true,
+    'cat-smart-station': true,
 };
 
 export function buildAlarmRuleCategorySelectTree(categories: AlarmRuleCategory[]): TreeSelectNode[] {
@@ -330,6 +1118,14 @@ export function getCategoryDescendantIds(
 ): string[] {
     const children = categories.filter((item) => item.parentId === categoryId);
     return children.flatMap((child) => [child.id, ...getCategoryDescendantIds(categories, child.id)]);
+}
+
+/** 当前分类及其所有子分类 ID（用于列表筛选） */
+export function getCategoryScopeIds(
+    categories: AlarmRuleCategory[],
+    categoryId: string,
+): string[] {
+    return [categoryId, ...getCategoryDescendantIds(categories, categoryId)];
 }
 
 export function getCategoryInvalidParentIds(
@@ -423,6 +1219,10 @@ export function createEmptyAlarmRuleCondition(): AlarmRuleConditionItem {
         samplePeriod: '',
         eventIds: [],
         functionId: '',
+        reportCheckType: '',
+        reportTimeSource: '',
+        reportToleranceValue: '',
+        reportToleranceUnit: '',
     };
 }
 
@@ -513,7 +1313,7 @@ export function sanitizeConditionFieldsForTrigger(
     triggerMethods: AlarmTriggerMethod[],
 ): AlarmRuleConditionSettings {
     const triggerMethod = triggerMethods[0];
-    const allowedTriggerConditions = new Set(getAlarmRuleTriggerConditionOptions(triggerMethods));
+    const allowedTriggerConditions = new Set<string>(getAlarmRuleTriggerConditionOptions(triggerMethods) as string[]);
 
     const levels = Object.fromEntries(
         Object.entries(settings.levels).map(([levelId, config]) => [
@@ -556,6 +1356,10 @@ export function sanitizeConditionFieldsForTrigger(
                                         : ''
                                 )
                                 : '',
+                            reportCheckType: '',
+                            reportTimeSource: '',
+                            reportToleranceValue: '',
+                            reportToleranceUnit: '',
                         };
                     }
 
@@ -574,6 +1378,10 @@ export function sanitizeConditionFieldsForTrigger(
                             triggerCondition: allowedTriggerConditions.has(condition.triggerCondition)
                                 ? condition.triggerCondition
                                 : '',
+                            reportCheckType: '',
+                            reportTimeSource: '',
+                            reportToleranceValue: '',
+                            reportToleranceUnit: '',
                         };
                     }
 
@@ -592,10 +1400,27 @@ export function sanitizeConditionFieldsForTrigger(
                             samplePeriod: '',
                             functionId: '',
                             eventIds: condition.eventIds ?? [],
+                            reportCheckType: '',
+                            reportTimeSource: '',
+                            reportToleranceValue: '',
+                            reportToleranceUnit: '',
                         };
                     }
 
                     if (triggerMethod === '属性数据上报时触发') {
+                        const reportCheckType = (
+                            ALARM_PROPERTY_REPORT_CHECK_TYPE_OPTIONS as readonly string[]
+                        ).includes(condition.reportCheckType ?? '')
+                            ? condition.reportCheckType
+                            : '';
+                        const isOffHour = isOffHourReportCheck(reportCheckType);
+                        const reportTimeSource = isOffHour && (
+                            ALARM_PROPERTY_REPORT_TIME_SOURCE_OPTIONS as readonly string[]
+                        ).includes(condition.reportTimeSource ?? '')
+                            ? condition.reportTimeSource
+                            : isOffHour
+                                ? '数据时间'
+                                : '';
                         return {
                             ...condition,
                             triggerCondition: '',
@@ -609,6 +1434,18 @@ export function sanitizeConditionFieldsForTrigger(
                             samplePeriod: '',
                             eventIds: [],
                             functionId: '',
+                            reportCheckType: reportCheckType as AlarmPropertyReportCheckType | '',
+                            reportTimeSource: reportTimeSource as AlarmPropertyReportTimeSource | '',
+                            reportToleranceValue: isOffHour
+                                ? (condition.reportToleranceValue || DEFAULT_OFF_HOUR_REPORT_TOLERANCE_VALUE)
+                                : '',
+                            reportToleranceUnit: isOffHour && (
+                                ALARM_PROPERTY_REPORT_TOLERANCE_UNIT_OPTIONS as readonly string[]
+                            ).includes(condition.reportToleranceUnit ?? '')
+                                ? condition.reportToleranceUnit
+                                : isOffHour
+                                    ? DEFAULT_OFF_HOUR_REPORT_TOLERANCE_UNIT
+                                    : '',
                             propertyId: condition.propertyId ?? '',
                         };
                     }
@@ -628,6 +1465,10 @@ export function sanitizeConditionFieldsForTrigger(
                             samplePeriod: '',
                             eventIds: [],
                             functionId: condition.functionId ?? '',
+                            reportCheckType: '',
+                            reportTimeSource: '',
+                            reportToleranceValue: '',
+                            reportToleranceUnit: '',
                         };
                     }
 
@@ -689,6 +1530,19 @@ export function isAlarmRuleConditionItemComplete(
     }
 
     if (triggerMethod === '属性数据上报时触发') {
+        if (!condition.reportCheckType) return false;
+        if (isOffHourReportCheck(condition.reportCheckType)) {
+            const toleranceValid = condition.reportToleranceValue.trim() !== ''
+                && !Number.isNaN(Number(condition.reportToleranceValue));
+            const unitValid = (
+                ALARM_PROPERTY_REPORT_TOLERANCE_UNIT_OPTIONS as readonly string[]
+            ).includes(condition.reportToleranceUnit ?? '');
+            if (!toleranceValid || !unitValid || !condition.reportTimeSource) return false;
+            if (condition.reportTimeSource === '数据时间') {
+                return Boolean(condition.propertyId);
+            }
+            return true;
+        }
         return Boolean(condition.propertyId);
     }
 

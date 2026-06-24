@@ -73,12 +73,17 @@
     border-radius: 0 4px 4px 0;
 }
 
+.ru-search-row__add {
+    margin-left: auto;
+}
+
 .ru-page {
     overflow-x: hidden;
     min-width: 0;
 }
 
 .ru-page .pm-list-panel {
+    flex: 1;
     overflow-x: hidden;
     min-width: 0;
 }
@@ -320,7 +325,7 @@
 .ru-task-detail-back {
     display: inline-flex;
     align-items: center;
-    gap: 6px;
+    gap: 5px;
     border: 0;
     background: transparent;
     color: var(--text-secondary);
@@ -328,92 +333,214 @@
     font-family: inherit;
     cursor: pointer;
     padding: 0 0 12px;
+    transition: color 0.15s;
 }
 
 .ru-task-detail-back:hover {
     color: var(--blue);
 }
 
+/* ── Detail header card ── */
+
 .ru-task-detail-head {
-    padding: 20px 24px;
+    padding: 0;
     margin-bottom: 12px;
+    border-top: 3px solid var(--blue);
+    overflow: hidden;
 }
 
-.ru-task-detail-title {
-    margin: 0 0 16px;
-    font-size: 18px;
-    font-weight: 600;
-    color: var(--text);
+.ru-detail-header {
+    display: flex;
+    gap: 16px;
+    padding: 22px 24px 0;
 }
 
-.ru-task-detail-meta {
-    margin: 0;
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 16px 24px;
+.ru-detail-header__icon {
+    flex-shrink: 0;
+    width: 48px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #edf4ff 0%, #dbeafe 100%);
+    border-radius: 10px;
+    color: var(--blue);
 }
 
-.ru-task-detail-meta div {
-    display: grid;
-    gap: 6px;
+.ru-detail-header__body {
+    flex: 1;
     min-width: 0;
 }
 
-.ru-task-detail-meta__desc {
-    grid-column: 1 / -1;
+.ru-detail-header__title {
+    margin: 0 0 14px;
+    font-size: 17px;
+    font-weight: 600;
+    color: var(--text);
+    line-height: 1.4;
 }
 
-.ru-task-detail-meta dt {
-    margin: 0;
-    font-size: 13px;
+.ru-detail-header__meta {
+    display: flex;
+    align-items: center;
+    gap: 0;
+}
+
+.ru-meta-field {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    padding: 0 22px;
+}
+
+.ru-meta-field:first-child {
+    padding-left: 0;
+}
+
+.ru-meta-field__label {
+    font-size: 12px;
     color: var(--text-muted);
+    line-height: 1.2;
 }
 
-.ru-task-detail-meta dd {
-    margin: 0;
+.ru-meta-field__value {
     font-size: 13px;
     color: var(--text);
+    font-weight: 500;
+    line-height: 1.3;
+}
+
+.ru-meta-sep {
+    width: 1px;
+    height: 28px;
+    background: var(--border);
+    flex-shrink: 0;
+}
+
+/* ── Description row ── */
+
+.ru-detail-desc {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    padding: 14px 24px;
+    margin: 16px 24px 0;
+    background: #f8fafc;
+    border-radius: 6px;
+    border: 1px solid #f0f2f5;
+}
+
+.ru-detail-desc__label {
+    font-size: 12px;
+    color: var(--text-muted);
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.ru-detail-desc__text {
+    font-size: 13px;
+    color: var(--text-secondary);
     line-height: 1.6;
 }
 
-.ru-task-detail-stats {
-    display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-    gap: 12px;
-    padding: 20px 24px;
-    margin-bottom: 12px;
+/* ── Stats row ── */
+
+.ru-detail-stats {
+    display: flex;
+    margin-top: 18px;
+    border-top: 1px solid #f0f2f5;
 }
 
-.ru-stat-card {
+.ru-detail-stat {
+    flex: 1;
     display: flex;
-    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    padding: 18px 24px;
+    border-right: 1px solid #f0f2f5;
+}
+
+.ru-detail-stat:last-child {
+    border-right: none;
+}
+
+.ru-detail-stat__icon {
+    width: 34px;
+    height: 34px;
+    display: flex;
     align-items: center;
     justify-content: center;
-    gap: 8px;
-    min-height: 88px;
-    border: 1px solid #ebeef5;
-    border-radius: 4px;
-    background: #fafbfd;
+    border-radius: 8px;
+    flex-shrink: 0;
 }
 
-.ru-stat-card strong {
-    font-size: 28px;
-    line-height: 1;
+.ru-detail-stat--pending .ru-detail-stat__icon {
+    background: #e6f4ff;
+    color: #1890ff;
+}
+
+.ru-detail-stat--upgrading .ru-detail-stat__icon {
+    background: #fff7e6;
+    color: #e6a23c;
+}
+
+.ru-detail-stat--success .ru-detail-stat__icon {
+    background: #f0f9eb;
+    color: #52c41a;
+}
+
+.ru-detail-stat--failed .ru-detail-stat__icon {
+    background: #fff1f0;
+    color: #f5222d;
+}
+
+.ru-detail-stat__data {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.ru-detail-stat__data strong {
+    font-size: 22px;
+    line-height: 1.1;
     color: var(--text);
-    font-weight: 600;
+    font-weight: 700;
 }
 
-.ru-stat-card span {
-    font-size: 13px;
-    color: var(--text-secondary);
+.ru-detail-stat__data span {
+    font-size: 12px;
+    color: var(--text-muted);
 }
+
+/* ── Batch list ── */
 
 .ru-task-batch-panel {
     margin-bottom: 0;
 }
 
+.ru-batch-search {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 0 0 14px;
+}
+
+.ru-batch-search__inner {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+}
+
+.ru-batch-search__icon {
+    position: absolute;
+    left: 10px;
+    color: var(--text-muted);
+    pointer-events: none;
+}
+
 .ru-batch-search-input {
     width: 260px;
+    padding-left: 30px !important;
 }
 
 .ru-batch-status {
@@ -440,6 +567,10 @@
 
 .ru-batch-dot--done {
     background: #67c23a;
+}
+
+.ru-batch-dot--cancelled {
+    background: #c0c4cc;
 }
 
 .ru-device-detail-drawer {
@@ -475,11 +606,26 @@
 }
 
 @media (max-width: 960px) {
-    .ru-task-detail-meta {
-        grid-template-columns: 1fr;
+    .ru-detail-header__meta {
+        flex-direction: column;
+        gap: 10px;
     }
 
-    .ru-task-detail-stats {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
+    .ru-meta-sep {
+        display: none;
+    }
+
+    .ru-meta-field {
+        padding: 0;
+    }
+
+    .ru-detail-stats {
+        flex-wrap: wrap;
+    }
+
+    .ru-detail-stat {
+        min-width: 45%;
+        border-right: none;
+        border-bottom: 1px solid #f0f2f5;
     }
 }

@@ -14,6 +14,7 @@ import type { DeviceRecord } from '../data/devices';
 import '../device-create.css';
 import '../product-create.css';
 import '../remote-upgrade.css';
+import ClearableInput from './ClearableInput';
 
 type UpgradeTaskFormDialogProps = {
     open: boolean;
@@ -97,7 +98,7 @@ export default function UpgradeTaskFormDialog({
                     <div className="pcp-drawer__body pcp-drawer__body--form">
                         <label className="pcp-drawer-field">
                             <span className="pcp-form-label"><em>*</em>待升级版本</span>
-                            <input
+                            <ClearableInput
                                 type="text"
                                 className="pcp-form-input"
                                 placeholder="请输入版本号"
@@ -171,7 +172,7 @@ export default function UpgradeTaskFormDialog({
                                 />
                             )}
                         </div>
-                        <label className="pcp-drawer-field">
+                        <div className="pcp-drawer-field">
                             <span className="pcp-form-label"><em>*</em>升级失败重试策略</span>
                             <ElSelect
                                 className="el-select--medium pcp-form-select"
@@ -180,8 +181,8 @@ export default function UpgradeTaskFormDialog({
                                 options={RETRY_STRATEGY_OPTIONS}
                                 onChange={(value) => setForm((prev) => ({ ...prev, retryStrategy: value }))}
                             />
-                        </label>
-                        <label className="pcp-drawer-field">
+                        </div>
+                        <div className="pcp-drawer-field">
                             <span className="pcp-form-label"><em>*</em>升级超时时间</span>
                             <ElSelect
                                 className="el-select--medium pcp-form-select"
@@ -190,7 +191,7 @@ export default function UpgradeTaskFormDialog({
                                 options={UPGRADE_TIMEOUT_OPTIONS}
                                 onChange={(value) => setForm((prev) => ({ ...prev, timeout: value }))}
                             />
-                        </label>
+                        </div>
                         {touched && !canSubmit && (
                             <p className="ru-form-error">请完整填写必填项</p>
                         )}

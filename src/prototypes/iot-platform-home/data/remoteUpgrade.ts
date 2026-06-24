@@ -15,32 +15,13 @@ export type FirmwarePackageRecord = {
     createdAt: string;
 };
 
-export type UpgradePackageKind = 'firmware' | 'software';
+export type UpgradePackageKind = 'firmware';
 
 export type UpgradePackageTarget = {
     id: string;
     name: string;
     version: string;
     productId: string;
-};
-
-export type SoftwarePackageRecord = {
-    id: string;
-    name: string;
-    productId: string;
-    productName: string;
-    version: string;
-    description: string;
-    fileName: string;
-    createdAt: string;
-};
-
-export type SoftwarePackageFormValue = {
-    name: string;
-    productId: string;
-    version: string;
-    description: string;
-    fileName: string;
 };
 
 export type UpgradeTaskRecord = {
@@ -81,11 +62,6 @@ export type UpgradeTaskFormValue = {
 
 export const FIRMWARE_SEARCH_FIELD_OPTIONS = [
     { label: '固件包名称', value: 'name' },
-    { label: '产品名称', value: 'productName' },
-];
-
-export const SOFTWARE_SEARCH_FIELD_OPTIONS = [
-    { label: '软件包名称', value: 'name' },
     { label: '产品名称', value: 'productName' },
 ];
 
@@ -173,19 +149,6 @@ const FIRMWARE_SEEDS: Array<Omit<FirmwarePackageRecord, 'id' | 'productId' | 'cr
     { name: '大表固件升级包', type: '完整包', productName: '大表', version: 'V1.0', baseVersion: '', description: '大表系列固件', fileName: 'dabiao_v1.0.bin' },
 ];
 
-const SOFTWARE_SEEDS: Array<Omit<SoftwarePackageRecord, 'id' | 'productId' | 'createdAt'>> = [
-    { name: '户表采集应用', productName: '户表', version: 'V2.1.0', description: '户表终端采集软件', fileName: 'hubiao_app.apk' },
-    { name: '大表管理平台', productName: '大表', version: 'V1.8.3', description: '大表设备管理应用', fileName: 'dabiao_mgmt.zip' },
-    { name: '智慧水站运维工具', productName: '智慧水站', version: 'V3.0.2', description: '智慧水站远程运维软件包', fileName: 'zhihuishuizhan_ops.zip' },
-    { name: '压力监测客户端', productName: '压力计', version: 'V2.0.0', description: '管网压力监测应用', fileName: 'yaliji_client.apk' },
-    { name: '水质分析软件', productName: '水质仪', version: 'V1.5.1', description: '水质数据分析软件', fileName: 'shuizhiyi_analytics.zip' },
-    { name: '智慧水站集控应用', productName: '智慧水站', version: 'V4.2.0', description: '智慧水站集中控制软件', fileName: 'zhihuishuizhan_ctrl.apk' },
-    { name: '户表抄表应用', productName: '户表', version: 'V2.3.4', description: '远程抄表控制应用', fileName: 'hubiao_read.apk' },
-    { name: '压力监测平台', productName: '压力计', version: 'V1.1.0', description: '压力监测分析软件', fileName: 'yaliji_mon.zip' },
-    { name: '大表水务应用', productName: '大表', version: 'V1.0.5', description: '大表水务终端应用', fileName: 'dabiao_app.apk' },
-    { name: '智慧水站调试助手', productName: '智慧水站', version: 'V2.4.1', description: '现场水站调试工具', fileName: 'zhihuishuizhan_debug.zip' },
-];
-
 function resolveProductId(productName: string, products: ProductRecord[]): string {
     const product = products.find((item) => item.name === productName || item.name.includes(productName) || productName.includes(item.name));
     return product?.id ?? products[0]?.id ?? '';
@@ -197,20 +160,6 @@ function formatCreatedAt(index: number): string {
     const minute = String((index * 7) % 60).padStart(2, '0');
     const second = String((index * 11) % 60).padStart(2, '0');
     return `2026-06-${day} ${hour}:${minute}:${second}`;
-}
-
-export function createInitialSoftwarePackages(products: ProductRecord[]): SoftwarePackageRecord[] {
-    const records: SoftwarePackageRecord[] = [];
-    for (let index = 0; index < 30; index += 1) {
-        const seed = SOFTWARE_SEEDS[index % SOFTWARE_SEEDS.length];
-        records.push({
-            id: `sw-${String(index + 1).padStart(3, '0')}`,
-            ...seed,
-            productId: resolveProductId(seed.productName, products),
-            createdAt: formatCreatedAt(index),
-        });
-    }
-    return records;
 }
 
 export function createInitialFirmwarePackages(products: ProductRecord[]): FirmwarePackageRecord[] {
@@ -236,10 +185,6 @@ export function formatRemoteUpgradeNow(): string {
 
 export function generateFirmwarePackageId(): string {
     return `fw-${Date.now()}`;
-}
-
-export function generateSoftwarePackageId(): string {
-    return `sw-${Date.now()}`;
 }
 
 export function generateUpgradeTaskId(): string {
@@ -369,24 +314,6 @@ export function toFirmwarePackageFormValue(record: FirmwarePackageRecord): Firmw
     };
 }
 
-export function toSoftwarePackageFormValue(record: SoftwarePackageRecord): SoftwarePackageFormValue {
-    return {
-        name: record.name,
-        productId: record.productId,
-        version: record.version,
-        description: record.description === '—' ? '' : record.description,
-        fileName: record.fileName,
-    };
-}
-
-export const EMPTY_SOFTWARE_FORM: SoftwarePackageFormValue = {
-    name: '',
-    productId: '',
-    version: '',
-    description: '',
-    fileName: '',
-};
-
 export const EMPTY_FIRMWARE_FORM: FirmwarePackageFormValue = {
     type: '完整包',
     name: '',
@@ -425,8 +352,4 @@ export function validatePackageFileName(fileName: string, label = '包'): string
 
 export function validateFirmwareFileName(fileName: string): string | null {
     return validatePackageFileName(fileName, '固件包');
-}
-
-export function validateSoftwareFileName(fileName: string): string | null {
-    return validatePackageFileName(fileName, '软件包');
 }

@@ -19,6 +19,7 @@ import {
     type SystemMenuRecord,
 } from '../data/systemMenus';
 import { paginateItems } from '../utils/listPagination';
+import { handleSelectableRowClick } from '../../../common/selectableRow';
 import '../device-access.css';
 import '../product-management.css';
 import '../tenant-management.css';
@@ -32,7 +33,6 @@ export type MenuManagementPageProps = {
     onNavigateHome: () => void;
     onNavigateDeviceAccess: () => void;
     onNavigateMessageCenter: () => void;
-    onNavigateOmManagement: () => void;
     onNavigate: (pageId: SystemManagementPageId) => void;
 };
 
@@ -42,12 +42,11 @@ export default function MenuManagementPage({
     onNavigateHome,
     onNavigateDeviceAccess,
     onNavigateMessageCenter,
-    onNavigateOmManagement,
     onNavigate,
 }: MenuManagementPageProps) {
     const [expanded, setExpanded] = useState<Record<string, boolean>>(() => buildDefaultMenuExpanded(menus));
     const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
-    const [pageSize, setPageSize] = useState('10');
+    const [pageSize, setPageSize] = useState('20');
     const [currentPage, setCurrentPage] = useState(1);
     const [jumpPage, setJumpPage] = useState('1');
     const [formMode, setFormMode] = useState<FormMode>(null);
@@ -206,12 +205,10 @@ export default function MenuManagementPage({
             activeTopTab="系统管理"
             sidebar={sidebar}
             onNavigateMessageCenter={onNavigateMessageCenter}
-            onNavigateOmManagement={onNavigateOmManagement}
             onNavigateSystemManagement={() => onNavigate('menu-mgmt')}
             onTopTabChange={(tab) => {
                 if (tab === '设备接入') onNavigateDeviceAccess();
                 if (tab === '消息中心') onNavigateMessageCenter();
-                if (tab === '运维管理') onNavigateOmManagement();
             }}
         >
             <div className="mm-page">
@@ -255,7 +252,11 @@ export default function MenuManagementPage({
                                     return (
                                         <tr
                                             key={item.id}
-                                            className={isSelected ? 'is-selected' : ''}
+                                            className={`iot-selectable-row ${isSelected ? 'is-selected' : ''}`.trim()}
+                                            onClick={(event) => handleSelectableRowClick(
+                                                event,
+                                                () => toggleSelect(item.id),
+                                            )}
                                         >
                                             <td>
                                                 <input

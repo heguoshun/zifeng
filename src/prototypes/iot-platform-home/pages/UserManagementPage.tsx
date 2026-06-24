@@ -11,6 +11,7 @@ import UserPasswordDialog from '../components/UserPasswordDialog';
 import { ConfirmDialog } from '../components/IotDialogs';
 import IotToast, { type IotToastData, type IotToastType, triggerIotToast } from '../components/IotToast';
 import { getRoleLabel, getRolesByTenant, isRoleBelongsToTenant, type SystemRoleRecord } from '../data/systemRoles';
+import { getPositionLabel, type SystemPositionRecord } from '../data/systemPositions';
 import {
     SYSTEM_USER_STATUS_OPTIONS,
     formatSystemUserNow,
@@ -21,10 +22,12 @@ import {
 import type { TenantRecord } from '../data/tenants';
 import { buildTenantSelectTree, buildTenantTreeExpanded } from '../data/tenants';
 import { matchesTreeSelection } from '../data/orgHierarchy';
-import { paginateItems } from '../utils/listPagination';
+import { paginateItems, DEFAULT_LIST_PAGE_SIZE } from '../utils/listPagination';
+import { handleSelectableRowClick } from '../../../common/selectableRow';
 import '../device-access.css';
 import '../product-management.css';
 import '../user-management.css';
+import ClearableInput from '../components/ClearableInput';
 
 type DrawerMode = 'add' | 'edit' | null;
 
@@ -51,11 +54,11 @@ type UserManagementPageProps = {
     users: SystemUserRecord[];
     tenants: TenantRecord[];
     roles: SystemRoleRecord[];
+    positions: SystemPositionRecord[];
     onUpdateUsers: React.Dispatch<React.SetStateAction<SystemUserRecord[]>>;
     onNavigateHome: () => void;
     onNavigateDeviceAccess: () => void;
     onNavigateMessageCenter: () => void;
-    onNavigateOmManagement: () => void;
     onNavigate: (pageId: SystemManagementPageId) => void;
 };
 
@@ -72,16 +75,16 @@ export default function UserManagementPage({
     users,
     tenants,
     roles,
+    positions,
     onUpdateUsers,
     onNavigateHome,
     onNavigateDeviceAccess,
     onNavigateMessageCenter,
-    onNavigateOmManagement,
     onNavigate,
 }: UserManagementPageProps) {
     const [draftFilters, setDraftFilters] = useState<FilterState>(DEFAULT_FILTERS);
     const [appliedFilters, setAppliedFilters] = useState<FilterState>(DEFAULT_FILTERS);
-    const [pageSize, setPageSize] = useState('10');
+    const [pageSize, setPageSize] = useState('20');
     const [currentPage, setCurrentPage] = useState(1);
     const [jumpPage, setJumpPage] = useState('1');
     const [selectedIds, setSelectedIds] = useState<string[]>([]);
@@ -232,6 +235,7 @@ export default function UserManagementPage({
                 phone: value.phone,
                 roleId: value.roleId,
                 departmentId: value.departmentId,
+                positionId: value.positionId || undefined,
                 avatar: value.avatar || undefined,
                 gender: value.gender,
                 birthday: value.birthday,
@@ -261,6 +265,7 @@ export default function UserManagementPage({
                         phone: value.phone,
                         roleId: value.roleId,
                         departmentId: value.departmentId,
+                        positionId: value.positionId || undefined,
                         avatar: value.avatar || undefined,
                         gender: value.gender,
                         birthday: value.birthday,
@@ -339,12 +344,10 @@ export default function UserManagementPage({
             activeTopTab="系统管理"
             sidebar={sidebar}
             onNavigateMessageCenter={onNavigateMessageCenter}
-            onNavigateOmManagement={onNavigateOmManagement}
             onNavigateSystemManagement={() => onNavigate('user-mgmt')}
             onTopTabChange={(tab) => {
                 if (tab === '设备接入') onNavigateDeviceAccess();
                 if (tab === '消息中心') onNavigateMessageCenter();
-                if (tab === '运维管理') onNavigateOmManagement();
             }}
         >
             <div className="um-page">
@@ -352,7 +355,7 @@ export default function UserManagementPage({
 
                 <section className="panel um-filter-panel">
                     <div className="um-filter-row">
-                        <label className="pm-filter-field">
+                        <div className="pm-filter-field">
                             <span className="pm-filter-label">所属租户</span>
                             <ElTreeSelect
                                 className="el-select--medium um-filter-tree-select"
@@ -363,8 +366,8 @@ export default function UserManagementPage({
                                 placeholder="全部"
                                 onChange={(value) => updateDraft({ tenantId: value })}
                             />
-                        </label>
-                        <label className="pm-filter-field">
+                        </div>
+                        <div className="pm-filter-field">
                             <span className="pm-filter-label">所属角色</span>
                             <ElSelect
                                 className="el-select--medium um-filter-select"
@@ -374,8 +377,8 @@ export default function UserManagementPage({
                                 disabled={!draftFilters.tenantId || draftFilters.tenantId === 'all'}
                                 onChange={(value) => updateDraft({ roleId: value })}
                             />
-                        </label>
-                        <label className="pm-filter-field">
+                        </div>
+                        <div className="pm-filter-field">
                             <span className="pm-filter-label">用户状态</span>
                             <ElSelect
                                 className="el-select--medium um-filter-select"
@@ -384,17 +387,17 @@ export default function UserManagementPage({
                                 options={STATUS_OPTIONS}
                                 onChange={(value) => updateDraft({ status: value })}
                             />
-                        </label>
-                        <label className="pm-filter-field">
+                        </div>
+                        <div className="pm-filter-field">
                             <span className="pm-filter-label">用户名称</span>
-                            <input
+                            <ClearableInput
                                 type="text"
                                 className="pm-filter-input"
                                 placeholder="请输入用户名称/手机号码"
                                 value={draftFilters.keyword}
                                 onChange={(event) => updateDraft({ keyword: event.target.value })}
                             />
-                        </label>
+                        </div>
                         <div className="pm-filter-actions">
                             <button type="button" className="pm-btn pm-btn-primary" onClick={handleSearch}>
                                 <Search size={14} />
@@ -469,7 +472,11 @@ export default function UserManagementPage({
                             </thead>
                             <tbody>
                                 {pagination.items.map((user, index) => (
-                                    <tr key={user.id}>
+                                    <tr
+                                        key={user.id}
+                                        className="iot-selectable-row"
+                                        onClick={(event) => handleSelectableRowClick(event, () => toggleSelect(user.id))}
+                                    >
                                         <td className="um-table__check">
                                             <input
                                                 type="checkbox"
@@ -536,6 +543,7 @@ export default function UserManagementPage({
                 mode={drawerMode === 'edit' ? 'edit' : 'add'}
                 tenants={tenants}
                 roles={roles}
+                positions={positions}
                 initialValue={editingUser ? toUserFormValue(editingUser) : undefined}
                 onClose={closeFormDrawer}
                 onSubmit={handleSubmit}
@@ -546,6 +554,7 @@ export default function UserManagementPage({
                 user={detailUser}
                 tenants={tenants}
                 roles={roles}
+                positions={positions}
                 onClose={() => setDetailUser(null)}
             />
 

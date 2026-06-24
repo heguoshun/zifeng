@@ -13,7 +13,6 @@ import IotToast, { type IotToastData, type IotToastType, triggerIotToast } from 
 import ListPagination from '../components/ListPagination';
 import {
     DEPARTMENT_TREE,
-    SPACE_TREE,
     matchesTreeSelection,
 } from '../data/orgHierarchy';
 import {
@@ -36,11 +35,13 @@ import {
     type DeviceGroupTypeItem,
 } from '../data/deviceGroups';
 import type { ProductRecord } from '../data/products';
-import { paginateItems } from '../utils/listPagination';
+import { paginateItems, DEFAULT_LIST_PAGE_SIZE } from '../utils/listPagination';
+import { handleSelectableRowClick } from '../../../common/selectableRow';
 import '../device-access.css';
 import '../product-management.css';
 import '../device-management.css';
 import '../device-group.css';
+import ClearableInput from '../components/ClearableInput';
 
 type DeviceGroupPageProps = {
     groups: DeviceGroupRecord[];
@@ -114,7 +115,7 @@ export default function DeviceGroupPage({
     const [activeType, setActiveType] = useState<'all' | string>('all');
     const [keyword, setKeyword] = useState('');
     const [draftKeyword, setDraftKeyword] = useState('');
-    const [pageSize, setPageSize] = useState('10');
+    const [pageSize, setPageSize] = useState('20');
     const [currentPage, setCurrentPage] = useState(1);
     const [jumpPage, setJumpPage] = useState('1');
     const [selectedIds, setSelectedIds] = useState<string[]>([]);
@@ -140,6 +141,7 @@ export default function DeviceGroupPage({
     const [deviceCurrentPage, setDeviceCurrentPage] = useState(1);
     const [deviceJumpPage, setDeviceJumpPage] = useState('1');
     const [selectedDeviceIds, setSelectedDeviceIds] = useState<string[]>([]);
+    const [viewDevice, setViewDevice] = useState<EnrichedDevice | null>(null);
 
     const typeOptions = useMemo(() => buildGroupTypeOptions(groupTypes), [groupTypes]);
 
@@ -444,16 +446,16 @@ export default function DeviceGroupPage({
                 {!viewingGroup && (
                     <section className="panel pm-filter-panel">
                         <div className="pm-filter-row dg-filter-row">
-                            <label className="pm-filter-field">
+                            <div className="pm-filter-field">
                                 <span className="pm-filter-label">分组名称</span>
-                                <input
+                                <ClearableInput
                                     type="text"
                                     className="pm-filter-input"
                                     placeholder="请输入分组名称"
                                     value={draftKeyword}
                                     onChange={(event) => setDraftKeyword(event.target.value)}
                                 />
-                            </label>
+                            </div>
                             <div className="pm-filter-actions">
                                 <button
                                     type="button"
@@ -523,7 +525,7 @@ export default function DeviceGroupPage({
 
                                 <section className="panel pm-filter-panel dg-device-filter">
                                     <div className="pm-filter-row dm-filter-row--device">
-                                        <label className="pm-filter-field">
+                                        <div className="pm-filter-field">
                                             <span className="pm-filter-label">节点类型</span>
                                             <ElSelect
                                                 className="el-select--medium"
@@ -532,8 +534,8 @@ export default function DeviceGroupPage({
                                                 options={NODE_TYPE_OPTIONS}
                                                 onChange={setDraftNodeType}
                                             />
-                                        </label>
-                                        <label className="pm-filter-field">
+                                        </div>
+                                        <div className="pm-filter-field">
                                             <span className="pm-filter-label">设备状态</span>
                                             <ElSelect
                                                 className="el-select--medium"
@@ -542,8 +544,8 @@ export default function DeviceGroupPage({
                                                 options={STATUS_OPTIONS}
                                                 onChange={setDraftDeviceStatus}
                                             />
-                                        </label>
-                                        <label className="pm-filter-field">
+                                        </div>
+                                        <div className="pm-filter-field">
                                             <span className="pm-filter-label">所属部门</span>
                                             <ElTreeSelect
                                                 className="el-select--medium dm-tree-select"
@@ -552,18 +554,18 @@ export default function DeviceGroupPage({
                                                 tree={DEPARTMENT_TREE}
                                                 onChange={setDraftDepartment}
                                             />
-                                        </label>
+                                        </div>
                                         <div className="pm-filter-inline-group">
-                                            <label className="pm-filter-field">
+                                            <div className="pm-filter-field">
                                                 <span className="pm-filter-label">设备搜索</span>
-                                                <input
+                                                <ClearableInput
                                                     type="text"
                                                     className="pm-filter-input"
                                                     placeholder="请输入设备名称/设备编号"
                                                     value={draftDeviceKeyword}
                                                     onChange={(event) => setDraftDeviceKeyword(event.target.value)}
                                                 />
-                                            </label>
+                                            </div>
                                             <div className="pm-filter-actions">
                                                 <button
                                                     type="button"
@@ -635,7 +637,14 @@ export default function DeviceGroupPage({
                                         </thead>
                                         <tbody>
                                             {devicePagination.items.map((device: EnrichedDevice) => (
-                                                <tr key={device.id}>
+                                                <tr
+                                                    key={device.id}
+                                                    className="iot-selectable-row"
+                                                    onClick={(event) => handleSelectableRowClick(
+                                                        event,
+                                                        () => toggleSelectDevice(device.id),
+                                                    )}
+                                                >
                                                     <td>
                                                         <input
                                                             type="checkbox"
@@ -654,6 +663,12 @@ export default function DeviceGroupPage({
                                                     </td>
                                                     <td>
                                                         <div className="pm-table-actions">
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => setViewDevice(device)}
+                                                            >
+                                                                查看
+                                                            </button>
                                                             <button
                                                                 type="button"
                                                                 onClick={() => setRemoveDeviceTarget({ mode: 'single', device })}
@@ -736,7 +751,14 @@ export default function DeviceGroupPage({
                                         </thead>
                                         <tbody>
                                             {pagination.items.map((group, index) => (
-                                                <tr key={group.id}>
+                                                <tr
+                                                    key={group.id}
+                                                    className="iot-selectable-row"
+                                                    onClick={(event) => handleSelectableRowClick(
+                                                        event,
+                                                        () => toggleSelectRow(group.id),
+                                                    )}
+                                                >
                                                     <td>
                                                         <input
                                                             type="checkbox"
@@ -848,6 +870,35 @@ export default function DeviceGroupPage({
                     onClose={() => setAddDeviceOpen(false)}
                     onConfirm={handleAddDevicesConfirm}
                 />
+            )}
+            {viewDevice && (
+                <>
+                    <div className="pcp-drawer-mask" onClick={() => setViewDevice(null)} />
+                    <aside className="pcp-drawer pcp-drawer--form" style={{ position: 'fixed', zIndex: 120 }}>
+                        <div className="pcp-drawer__head">
+                            <h3>设备详情</h3>
+                            <button type="button" className="pcp-drawer__close" onClick={() => setViewDevice(null)}>×</button>
+                        </div>
+                        <div className="pcp-drawer__body">
+                            {[
+                                { label: '设备名称', value: viewDevice.name },
+                                { label: '设备编号', value: viewDevice.code },
+                                { label: '所属产品', value: viewDevice.productName },
+                                { label: '当前状态', value: STATUS_LABEL[viewDevice.status as DeviceStatus] ?? viewDevice.status },
+                                { label: '所属部门', value: viewDevice.department },
+                                { label: '采集频率', value: viewDevice.collectFrequency },
+                                { label: '经度', value: String(viewDevice.longitude) },
+                                { label: '纬度', value: String(viewDevice.latitude) },
+                                { label: '注册码', value: viewDevice.registrationCode },
+                            ].map((item) => (
+                                <div key={item.label} className="pcp-drawer-field" style={{ flexDirection: 'row', gap: 12 }}>
+                                    <span style={{ width: 72, flexShrink: 0, fontSize: 13, color: 'var(--text-muted)' }}>{item.label}</span>
+                                    <span style={{ fontSize: 13, color: 'var(--text)' }}>{item.value}</span>
+                                </div>
+                            ))}
+                        </div>
+                    </aside>
+                </>
             )}
         </AppShell>
     );

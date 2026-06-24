@@ -11,6 +11,7 @@ import {
 } from '../data/spaceMapHierarchy';
 import spaceMapBg from '../assets/space-map-bg.png';
 import '../device-create.css';
+import ClearableInput from './ClearableInput';
 
 export type SpacePickerValue = {
     spaceX: string;
@@ -156,7 +157,7 @@ export default function SpacePickerDialog({
                     />
                     <label className="dcp-space-dialog__coord">
                         <span>x坐标</span>
-                        <input
+                        <ClearableInput
                             type="text"
                             className="dcp-space-dialog__coord-input"
                             value={draftX}
@@ -165,7 +166,7 @@ export default function SpacePickerDialog({
                     </label>
                     <label className="dcp-space-dialog__coord">
                         <span>y坐标</span>
-                        <input
+                        <ClearableInput
                             type="text"
                             className="dcp-space-dialog__coord-input"
                             value={draftY}

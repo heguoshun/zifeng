@@ -1,6 +1,9 @@
 import React, { useMemo, useState } from 'react';
 import AppShell from '../components/AppShell';
-import MessageCenterSidebar, { type MessageCenterPageId } from '../components/MessageCenterSidebar';
+import type { MessageCenterPageId } from '../components/MessageCenterSidebar';
+import type { AlarmWorkOrderPageId } from '../components/AlarmWorkOrderSidebar';
+import type { AlarmPageModule } from '../utils/alarmModuleShell';
+import { buildAlarmModuleShellConfig } from '../utils/alarmModuleShell';
 import AlarmLevelFormDrawer from '../components/AlarmLevelFormDrawer';
 import { ConfirmDialog } from '../components/IotDialogs';
 import IotToast, { type IotToastData, type IotToastType, triggerIotToast } from '../components/IotToast';
@@ -20,9 +23,11 @@ type AlarmLevelManagementPageProps = {
     levels: AlarmLevelRecord[];
     alarms: DeviceAlarmRecord[];
     onUpdateLevels: React.Dispatch<React.SetStateAction<AlarmLevelRecord[]>>;
+    module?: AlarmPageModule;
     onNavigateHome: () => void;
     onNavigateDeviceAccess: () => void;
     onNavigate: (pageId: MessageCenterPageId) => void;
+    onNavigateAlarmWorkOrder?: (pageId: AlarmWorkOrderPageId) => void;
 };
 
 function ColorCell({ color }: { color: string }) {
@@ -33,9 +38,11 @@ export default function AlarmLevelManagementPage({
     levels,
     alarms,
     onUpdateLevels,
+    module = 'alarm-work-order',
     onNavigateHome,
     onNavigateDeviceAccess,
     onNavigate,
+    onNavigateAlarmWorkOrder,
 }: AlarmLevelManagementPageProps) {
     const [drawerMode, setDrawerMode] = useState<DrawerMode>(null);
     const [editingLevel, setEditingLevel] = useState<AlarmLevelRecord | null>(null);
@@ -130,18 +137,29 @@ export default function AlarmLevelManagementPage({
         setDeleteTarget(null);
     };
 
-    const sidebar = <MessageCenterSidebar pageId="alarm-level-mgmt" onNavigate={onNavigate} />;
+    const shellConfig = buildAlarmModuleShellConfig({
+        module,
+        messagePageId: 'alarm-level-mgmt',
+        workOrderPageId: 'awo-alarm-level-mgmt',
+        crumbSuffix: '告警等级管理',
+        onNavigateMessageCenter: onNavigate,
+        onNavigateAlarmWorkOrder: onNavigateAlarmWorkOrder ?? (() => {}),
+    });
 
     return (
         <AppShell
-            activeTopTab="消息中心"
-            sidebar={sidebar}
+            activeTopTab={shellConfig.activeTopTab}
+            sidebar={shellConfig.sidebar}
+            onNavigateMessageCenter={() => onNavigate('msg-subscribe')}
+            onNavigateAlarmWorkOrder={() => onNavigateAlarmWorkOrder?.('awo-device-alarm-info')}
             onTopTabChange={(tab) => {
                 if (tab === '设备接入') onNavigateDeviceAccess();
+                if (tab === '消息中心') onNavigate('msg-subscribe');
+                if (tab === '告警工单') onNavigateAlarmWorkOrder?.('awo-device-alarm-info');
             }}
         >
             <div className="alm-page">
-                <div className="crumb">消息中心 / 告警消息 / 告警等级管理</div>
+                <div className="crumb">{shellConfig.crumb}</div>
 
                 <section className="panel alm-list-panel">
                     <div className="pc-table-head">

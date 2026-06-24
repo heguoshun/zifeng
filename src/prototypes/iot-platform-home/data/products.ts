@@ -206,12 +206,13 @@ const GATEWAY_EVENTS: EventRow[] = [
 const CATEGORY_THING_MODELS: Record<string, CategoryThingModel> = {
     dabiao: {
         properties: [
-            { id: 'db-p1', identifier: 'flow_rate', name: '瞬时流量', dataType: 'float', accessMode: '只读', description: '当前瞬时流量，单位 m³/h' },
+            { id: 'db-p1', identifier: 'data_time', name: '数据时间', dataType: 'date', accessMode: '只读', description: '本次属性上报的数据采集时间' },
             { id: 'db-p2', identifier: 'total_flow', name: '累计流量', dataType: 'float', accessMode: '只读', description: '累计用水量，单位 m³' },
-            { id: 'db-p3', identifier: 'pressure', name: '管网压力', dataType: 'float', accessMode: '只读', description: '安装点管网压力，单位 MPa' },
-            { id: 'db-p4', identifier: 'valve_status', name: '阀门状态', dataType: 'bool', accessMode: '读写', description: '0-关闭，1-开启' },
-            { id: 'db-p5', identifier: 'battery', name: '电池电量', dataType: 'int', accessMode: '只读', description: '设备电池剩余电量，单位 %' },
-            { id: 'db-p6', identifier: 'signal_strength', name: '信号强度', dataType: 'int', accessMode: '只读', description: '通信信号强度 RSSI，单位 dBm' },
+            { id: 'db-p3', identifier: 'forward_flow', name: '正向流量', dataType: 'float', accessMode: '只读', description: '正向累计流量，单位 m³' },
+            { id: 'db-p4', identifier: 'reverse_flow', name: '反向流量', dataType: 'float', accessMode: '只读', description: '反向累计流量，单位 m³' },
+            { id: 'db-p5', identifier: 'flow_rate', name: '瞬时流量', dataType: 'float', accessMode: '只读', description: '当前瞬时流量，单位 m³/h' },
+            { id: 'db-p6', identifier: 'battery_voltage', name: '电池电压', dataType: 'float', accessMode: '只读', description: '设备电池电压，单位 V' },
+            { id: 'db-p7', identifier: 'signal_strength', name: '信号强度', dataType: 'int', accessMode: '只读', description: '通信信号强度 RSSI，单位 dBm' },
         ],
         functions: [
             { id: 'db-f1', identifier: 'remote_valve', name: '远程开关阀', async: '是', description: '远程控制大表阀门开/关', inputJson: '{"action":"open"}' },
@@ -220,10 +221,12 @@ const CATEGORY_THING_MODELS: Record<string, CategoryThingModel> = {
             { id: 'db-f4', identifier: 'firmware_upgrade', name: '固件升级', async: '是', description: '下发 OTA 固件升级包', inputJson: '{"version":"1.2.0"}' },
         ],
         events: [
-            { id: 'db-e1', identifier: 'leak_alarm', name: '漏水告警', eventType: '告警', jsonObject: '{ "leak": true }', description: '检测到异常漏水时上报' },
-            { id: 'db-e2', identifier: 'flow_abnormal', name: '流量异常', eventType: '告警', jsonObject: '{ "flow_rate": 520 }', description: '瞬时流量超出阈值时上报' },
-            { id: 'db-e3', identifier: 'offline_event', name: '离线事件', eventType: '信息', jsonObject: '{ "status": "offline" }', description: '设备离线时上报' },
-            { id: 'db-e4', identifier: 'low_battery', name: '低电量告警', eventType: '告警', jsonObject: '{ "battery": 18 }', description: '电池电量低于阈值时上报' },
+            { id: 'db-e1', identifier: 'empty_pipe_alarm', name: '空管报警', eventType: '告警', jsonObject: '{ "empty_pipe": true }', description: '检测到管道无水或空管状态时上报' },
+            { id: 'db-e2', identifier: 'low_battery', name: '电量低报警', eventType: '告警', jsonObject: '{ "battery_voltage": 3.2 }', description: '电池电压低于告警阈值时上报' },
+            { id: 'db-e3', identifier: 'offline_alarm', name: '设备离线报警', eventType: '告警', jsonObject: '{ "status": "offline" }', description: '设备与平台通信中断或长时间未上报时触发' },
+            { id: 'db-e4', identifier: 'reverse_flow_alarm', name: '倒流报警', eventType: '告警', jsonObject: '{ "reverse_flow": 0.5 }', description: '检测到反向流量或管网倒流时上报' },
+            { id: 'db-e5', identifier: 'flow_overload_alarm', name: '水量过载报警', eventType: '告警', jsonObject: '{ "flow_rate": 500 }', description: '瞬时流量超出额定上限时上报' },
+            { id: 'db-e6', identifier: 'motherboard_alarm', name: '主板报警', eventType: '故障', jsonObject: '{ "fault_code": "MB001" }', description: '表计主板自检异常或硬件故障时上报' },
         ],
     },
     hubiao: {
@@ -425,10 +428,38 @@ function buildProductSeeds(): ProductSeed[] {
     return seeds;
 }
 
+function buildGatewaySubDeviceSeeds(): ProductSeed[] {
+    const templates = [
+        { categoryId: 'yaliji', category: '压力计', prefix: 'YL-SUB', name: '压力计-网关子设备' },
+        { categoryId: 'shuizhiyi', category: '水质仪', prefix: 'SZY-SUB', name: '水质仪-网关子设备' },
+        { categoryId: 'dabiao', category: '大表', prefix: 'DB-SUB', name: '大表-网关子设备' },
+        { categoryId: 'hubiao', category: '户表', prefix: 'HB-SUB', name: '户表-网关子设备' },
+    ];
+
+    return templates.map((template, index) => {
+        const thingModel = getCategoryThingModel(template.categoryId, false);
+        return {
+            categoryId: template.categoryId,
+            category: template.category,
+            name: template.name,
+            code: `${template.prefix}-${String(index + 1).padStart(3, '0')}`,
+            nodeType: '网关子设备',
+            deviceCount: 0,
+            remark: `挂载在边缘网关下的${template.category}子设备，通过网关代理接入平台。`,
+            vendor: '紫峰装备',
+            protocolId: 'modbus-tcp',
+            protocolLabel: 'Modbus TCP',
+            properties: thingModel.properties,
+            functions: thingModel.functions,
+            events: thingModel.events,
+        };
+    });
+}
+
 const PRODUCT_SEEDS: ProductSeed[] = buildProductSeeds();
 
 export function createInitialProducts(): ProductRecord[] {
-    return PRODUCT_SEEDS.map((seed, index) => ({
+    const baseProducts = PRODUCT_SEEDS.map((seed, index) => ({
         id: String(index + 1),
         code: seed.code,
         name: seed.name,
@@ -444,6 +475,26 @@ export function createInitialProducts(): ProductRecord[] {
         functions: cloneModelRows(seed.functions ?? DEFAULT_FUNCTION_ROWS).map((row) => normalizeFunctionRow(row)),
         events: cloneModelRows(seed.events ?? DEFAULT_EVENT_ROWS),
     }));
+
+    const subDeviceOffset = baseProducts.length;
+    const subDeviceProducts = buildGatewaySubDeviceSeeds().map((seed, index) => ({
+        id: String(subDeviceOffset + index + 1),
+        code: seed.code,
+        name: seed.name,
+        categoryId: seed.categoryId,
+        category: seed.category,
+        nodeType: seed.nodeType ?? '网关子设备',
+        vendor: seed.vendor ?? '紫峰装备',
+        remark: seed.remark ?? '—',
+        protocolId: seed.protocolId ?? 'modbus-tcp',
+        protocolLabel: seed.protocolLabel ?? 'Modbus TCP',
+        deviceCount: seed.deviceCount ?? 0,
+        properties: cloneModelRows(seed.properties ?? DEFAULT_PROPERTY_ROWS),
+        functions: cloneModelRows(seed.functions ?? DEFAULT_FUNCTION_ROWS).map((row) => normalizeFunctionRow(row)),
+        events: cloneModelRows(seed.events ?? DEFAULT_EVENT_ROWS),
+    }));
+
+    return [...baseProducts, ...subDeviceProducts];
 }
 
 export function createEmptyProductForm() {
@@ -467,6 +518,18 @@ export function productToForm(product: ProductRecord) {
         remark: product.remark === '—' ? '' : product.remark,
         protocolId: product.protocolId,
         protocolLabel: product.protocolLabel,
+    };
+}
+
+export function buildProductModelState(product: ProductRecord) {
+    return {
+        form: productToForm(product),
+        properties: product.properties.map((row) => ({ ...row })),
+        functions: product.functions.map((row) => normalizeFunctionRow({
+            ...row,
+            inputJson: row.inputJson ?? '{}',
+        })),
+        events: product.events.map((row) => ({ ...row })),
     };
 }
 

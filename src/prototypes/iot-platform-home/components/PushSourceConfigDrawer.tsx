@@ -9,7 +9,7 @@ import PushSourceConfigItemDrawer, {
 } from './PushSourceConfigItemDrawer';
 import { ConfirmDialog } from './IotDialogs';
 import type { PushSourceConfigItem } from '../data/pushSources';
-import { paginateItems } from '../utils/listPagination';
+import { paginateItems, DEFAULT_LIST_PAGE_SIZE } from '../utils/listPagination';
 import '../product-create.css';
 import '../product-management.css';
 import '../product-category.css';
@@ -31,7 +31,7 @@ export default function PushSourceConfigDrawer({
     onConfirm,
 }: PushSourceConfigDrawerProps) {
     const [items, setItems] = useState<PushSourceConfigItem[]>(configItems);
-    const [pageSize, setPageSize] = useState('10');
+    const [pageSize, setPageSize] = useState('20');
     const [currentPage, setCurrentPage] = useState(1);
     const [jumpPage, setJumpPage] = useState('1');
     const [itemDrawerMode, setItemDrawerMode] = useState<ItemDrawerMode>(null);

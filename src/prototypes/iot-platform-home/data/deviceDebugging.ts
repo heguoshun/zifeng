@@ -12,7 +12,7 @@ export type DebugPropertyField = {
     identifier: string;
     name: string;
     typeLabel: string;
-    dataType: 'float' | 'int' | 'text' | 'enum' | 'bool' | 'struct';
+    dataType: 'float' | 'int' | 'text' | 'enum' | 'bool' | 'struct' | 'date';
     unit?: string;
     enumOptions?: { label: string; value: string }[];
     defaultValue?: string;
@@ -74,6 +74,7 @@ const DATA_TYPE_LABELS: Record<string, string> = {
     bool: '布尔型',
     enum: '枚举型',
     struct: '结构体型',
+    date: '日期型',
 };
 
 function extractUnit(description: string): string | undefined {
@@ -94,6 +95,7 @@ function normalizePropertyDataType(dataType: string): DebugPropertyField['dataTy
     if (dataType === 'enum') return 'enum';
     if (dataType === 'text') return 'text';
     if (dataType === 'struct') return 'struct';
+    if (dataType === 'date') return 'date';
     if (dataType === 'float' || dataType === 'double') return 'float';
     return 'text';
 }
@@ -195,13 +197,9 @@ function buildSubDevices(
     if (!subProductIds.size) return undefined;
 
     const subDevices = devices
-        .filter((item) => item.id !== gatewayDevice.id && subProductIds.has(item.productId))
-        .sort((left, right) => {
-            const leftDemo = left.id.startsWith('demo-sub-') ? 0 : 1;
-            const rightDemo = right.id.startsWith('demo-sub-') ? 0 : 1;
-            return leftDemo - rightDemo || left.name.localeCompare(right.name, 'zh-CN');
-        })
-        .slice(0, 8)
+        .filter((item) => item.gatewayId === gatewayDevice.id)
+        .sort((left, right) => left.name.localeCompare(right.name, 'zh-CN'))
+        .slice(0, 12)
         .map((item) => {
             const subProduct = products.find((product) => product.id === item.productId);
             return {

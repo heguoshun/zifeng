@@ -1,9 +1,9 @@
 import React from 'react';
 import ElSelect from './ElSelect';
-import { getVisiblePages } from '../utils/listPagination';
+import { getVisiblePages, DEFAULT_LIST_PAGE_SIZE } from '../utils/listPagination';
 
 const PAGE_SIZE_OPTIONS = [
-    { label: '10条/页', value: '10' },
+    { label: '10条/页', value: DEFAULT_LIST_PAGE_SIZE },
     { label: '20条/页', value: '20' },
     { label: '50条/页', value: '50' },
 ];
@@ -39,10 +39,11 @@ export default function ListPagination({
 
     return (
         <div className="pm-pagination">
-            <span>共 {total} 条记录 第 {currentPage} / {totalPages} 页</span>
+            <span className="pm-pagination__total">共 {total} 条记录</span>
             <div className="pm-pagination__controls">
                 <button
                     type="button"
+                    className="pm-pagination__btn pm-pagination__btn--nav"
                     disabled={currentPage <= 1}
                     onClick={() => onPageChange(currentPage - 1)}
                 >
@@ -52,7 +53,7 @@ export default function ListPagination({
                     <button
                         key={page}
                         type="button"
-                        className={page === currentPage ? 'is-active' : ''}
+                        className={`pm-pagination__btn ${page === currentPage ? 'pm-pagination__btn--active' : ''}`}
                         onClick={() => onPageChange(page)}
                     >
                         {page}
@@ -60,6 +61,7 @@ export default function ListPagination({
                 ))}
                 <button
                     type="button"
+                    className="pm-pagination__btn pm-pagination__btn--nav"
                     disabled={currentPage >= totalPages}
                     onClick={() => onPageChange(currentPage + 1)}
                 >
@@ -74,11 +76,14 @@ export default function ListPagination({
                         onPageChange(1);
                     }}
                     dropdownAlign="right"
+                    dropdownDirection="up"
+                    usePortal
                 />
                 <label className="pm-pagination__jump">
                     跳至
                     <input
                         type="text"
+                        className="pm-pagination__jump-input"
                         value={jumpPage}
                         onChange={(event) => onJumpPageChange(event.target.value)}
                         onKeyDown={(event) => {

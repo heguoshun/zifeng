@@ -1,10 +1,3 @@
-/* ── Device Log: wider date range picker ── */
-.log-filter-row .pm-filter-field > .el-date-range-picker {
-    width: 320px;
-    min-width: 320px;
-    max-width: 320px;
-}
-
 /* ── Device Log: status code (align with wom-read-status / dai-process-status) ── */
 .device-log-status-code {
     display: inline-flex;

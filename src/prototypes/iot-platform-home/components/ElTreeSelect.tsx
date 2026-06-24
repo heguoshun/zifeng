@@ -1,6 +1,8 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ChevronDown } from 'lucide-react';
 import TreeToggleIcon from './TreeToggleIcon';
+import { useOverlayCoordination } from './useOverlayCoordination';
+import { useDismissOnOutsideMouseDown } from './useDismissOnOutsideMouseDown';
 import {
     DEFAULT_TREE_EXPANDED,
     getTreeNodeLabel,
@@ -19,6 +21,7 @@ type ElTreeSelectProps = {
     showAllOption?: boolean;
     showNoneOption?: boolean;
     noneLabel?: string;
+    filterable?: boolean;
 };
 
 function TreeOptions({
@@ -108,10 +111,13 @@ export default function ElTreeSelect({
     showAllOption = true,
     showNoneOption = false,
     noneLabel = '无',
+    filterable = false,
 }: ElTreeSelectProps) {
     const [open, setOpen] = useState(false);
     const [expanded, setExpanded] = useState(defaultExpanded);
+    const [inputValue, setInputValue] = useState('');
     const wrapRef = useRef<HTMLDivElement>(null);
+    const inputRef = useRef<HTMLInputElement>(null);
 
     const displayLabel = useMemo(() => {
         if (value === '' && showNoneOption) return noneLabel;
@@ -121,76 +127,176 @@ export default function ElTreeSelect({
 
     const isPlaceholder = value === '' ? !showNoneOption : (!value || value === 'all');
 
-    useEffect(() => {
-        if (!open) return undefined;
-
-        const handleClickOutside = (event: MouseEvent) => {
-            if (wrapRef.current && !wrapRef.current.contains(event.target as Node)) {
-                setOpen(false);
+    const flatMatches = useMemo(() => {
+        if (!inputValue.trim()) return [];
+        const keyword = inputValue.trim().toLowerCase();
+        const result: { id: string; label: string }[] = [];
+        const walk = (nodes: TreeSelectNode[]) => {
+            for (const node of nodes) {
+                if (node.label.toLowerCase().includes(keyword) && node.selectable !== false) {
+                    result.push({ id: node.id, label: node.label });
+                }
+                if (node.children?.length) walk(node.children);
             }
         };
+        walk(tree);
+        return result;
+    }, [tree, inputValue]);
 
-        document.addEventListener('mousedown', handleClickOutside);
-        return () => document.removeEventListener('mousedown', handleClickOutside);
-    }, [open]);
+    const isSearching = filterable && inputValue.trim().length > 0;
+
+    const handleClose = useCallback(() => {
+        setOpen(false);
+        setInputValue('');
+    }, []);
+
+    const { claim, release } = useOverlayCoordination('select', open, handleClose, 'el-tree-select');
+
+    const dismissSelect = useCallback(() => {
+        release();
+        handleClose();
+    }, [release, handleClose]);
+
+    const handleOpen = useCallback(() => {
+        claim();
+        setOpen(true);
+    }, [claim]);
+
+    useDismissOnOutsideMouseDown(open, wrapRef, dismissSelect);
+
+    useEffect(() => {
+        if (open && filterable) {
+            requestAnimationFrame(() => {
+                inputRef.current?.focus();
+                inputRef.current?.select();
+            });
+        }
+    }, [open, filterable]);
+
+    const handleWrapperMouseDown = (event: React.MouseEvent<HTMLDivElement>) => {
+        event.stopPropagation();
+
+        const target = event.target as HTMLElement;
+        if (open) {
+            if (filterable && target.closest('.el-select__input')) {
+                return;
+            }
+            return;
+        }
+
+        handleOpen();
+    };
 
     return (
         <div
             className={`el-select el-tree-select ${size === 'medium' ? 'el-select--medium' : ''} ${open ? 'is-open' : ''} ${className}`.trim()}
             ref={wrapRef}
         >
-            <button
-                type="button"
-                className="el-select__wrapper"
-                onClick={() => setOpen((prev) => !prev)}
+            <div
+                className={`el-select__wrapper ${open && filterable ? 'el-select__wrapper--input is-editing' : ''}`.trim()}
+                role="combobox"
+                aria-expanded={open}
+                onMouseDown={handleWrapperMouseDown}
             >
-                <span className={`el-select__selected ${isPlaceholder ? 'is-placeholder' : ''}`.trim()}>
-                    {displayLabel}
-                </span>
-                <ChevronDown size={12} className="el-select__caret" />
-            </button>
+                {open && filterable ? (
+                    <input
+                        ref={inputRef}
+                        type="text"
+                        className="el-select__input"
+                        value={inputValue}
+                        placeholder={isPlaceholder ? placeholder : displayLabel}
+                        onChange={(e) => setInputValue(e.target.value)}
+                        onKeyDown={(e) => {
+                            if (e.key === 'Escape') dismissSelect();
+                            if (e.key === 'Enter' && flatMatches.length > 0) {
+                                onChange(flatMatches[0].id);
+                                dismissSelect();
+                            }
+                        }}
+                        onClick={(event) => event.stopPropagation()}
+                    />
+                ) : (
+                    <span className={`el-select__selected ${isPlaceholder ? 'is-placeholder' : ''}`.trim()}>
+                        {displayLabel}
+                    </span>
+                )}
+                <ChevronDown
+                    size={12}
+                    className="el-select__caret"
+                />
+            </div>
             {open && (
-                <div className={`el-select-dropdown el-tree-select-dropdown ${dropdownAlign === 'left' ? 'el-select-dropdown--left' : ''}`}>
+                <div
+                    className={`el-select-dropdown el-tree-select-dropdown ${dropdownAlign === 'left' ? 'el-select-dropdown--left' : ''}`}
+                    onMouseDown={(event) => {
+                        event.preventDefault();
+                        event.stopPropagation();
+                    }}
+                >
                     <ul className="el-tree-select-list">
-                        {showNoneOption ? (
-                            <li>
-                                <button
-                                    type="button"
-                                    className={`el-tree-select-all ${value === '' ? 'is-selected' : ''}`}
-                                    onClick={() => {
-                                        onChange('');
-                                        setOpen(false);
+                        {isSearching ? (
+                            flatMatches.length === 0 ? (
+                                <li className="el-select-dropdown__empty">无匹配项</li>
+                            ) : (
+                                flatMatches.map((item) => (
+                                    <li key={item.id}>
+                                        <button
+                                            type="button"
+                                            className={`el-tree-select-node__label ${value === item.id ? 'is-selected' : ''}`}
+                                            style={{ paddingLeft: '28px' }}
+                                            onClick={() => {
+                                                onChange(item.id);
+                                                dismissSelect();
+                                            }}
+                                        >
+                                            {item.label}
+                                        </button>
+                                    </li>
+                                ))
+                            )
+                        ) : (
+                            <>
+                                {showNoneOption ? (
+                                    <li>
+                                        <button
+                                            type="button"
+                                            className={`el-tree-select-all ${value === '' ? 'is-selected' : ''}`}
+                                            onClick={() => {
+                                                onChange('');
+                                                dismissSelect();
+                                            }}
+                                        >
+                                            {noneLabel}
+                                        </button>
+                                    </li>
+                                ) : null}
+                                {showAllOption && (
+                                    <li>
+                                        <button
+                                            type="button"
+                                            className={`el-tree-select-all ${value === 'all' ? 'is-selected' : ''}`}
+                                            onClick={() => {
+                                                onChange('all');
+                                                dismissSelect();
+                                            }}
+                                        >
+                                            全部
+                                        </button>
+                                    </li>
+                                )}
+                                <TreeOptions
+                                    nodes={tree}
+                                    depth={0}
+                                    value={value}
+                                    expanded={expanded}
+                                    onToggle={(id) => setExpanded((prev) => ({ ...prev, [id]: !prev[id] }))}
+                                    onSelect={(id) => {
+                                        onChange(id);
+                                        dismissSelect();
                                     }}
-                                >
-                                    {noneLabel}
-                                </button>
-                            </li>
-                        ) : null}
-                        {showAllOption && (
-                            <li>
-                                <button
-                                    type="button"
-                                    className={`el-tree-select-all ${value === 'all' ? 'is-selected' : ''}`}
-                                    onClick={() => {
-                                        onChange('all');
-                                        setOpen(false);
-                                    }}
-                                >
-                                    全部
-                                </button>
-                            </li>
+                                />
+                            </>
                         )}
-                        <TreeOptions
-                            nodes={tree}
-                            depth={0}
-                            value={value}
-                            expanded={expanded}
-                            onToggle={(id) => setExpanded((prev) => ({ ...prev, [id]: !prev[id] }))}
-                            onSelect={(id) => {
-                                onChange(id);
-                                setOpen(false);
-                            }}
-                        />
                     </ul>
                 </div>
             )}
