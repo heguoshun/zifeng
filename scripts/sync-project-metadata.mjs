@@ -266,19 +266,12 @@ function getBooleanPropertyValue(objectLiteral, propertyName) {
   return null;
 }
 
-function extractHashRouteFromCall(callExpression) {
-  const expression = callExpression.expression;
-  if (!ts.isIdentifier(expression) || expression.text !== 'defineHashPageRoute') {
-    return null;
-  }
-
-  const pagesArg = callExpression.arguments[0];
-  if (!pagesArg || !ts.isArrayLiteralExpression(pagesArg)) {
-    return null;
-  }
-
+function extractPagesFromArrayLiteral(arrayNode) {
   const pages = [];
-  for (const element of pagesArg.elements) {
+  if (!arrayNode || !ts.isArrayLiteralExpression(arrayNode)) {
+    return pages;
+  }
+  for (const element of arrayNode.elements) {
     if (!ts.isObjectLiteralExpression(element)) {
       continue;
     }
@@ -293,6 +286,52 @@ function extractHashRouteFromCall(callExpression) {
       pages.push(pageEntry);
     }
   }
+  return pages;
+}
+
+function findVariableArrayInitializer(sourceFile, variableName) {
+  let result = null;
+  const visit = (node) => {
+    if (result) {
+      return;
+    }
+    if (
+      ts.isVariableDeclaration(node)
+      && ts.isIdentifier(node.name)
+      && node.name.text === variableName
+      && node.initializer
+      && ts.isArrayLiteralExpression(node.initializer)
+    ) {
+      result = node.initializer;
+      return;
+    }
+    ts.forEachChild(node, visit);
+  };
+  visit(sourceFile);
+  return result;
+}
+
+function extractHashRouteFromCall(callExpression, sourceFile) {
+  const expression = callExpression.expression;
+  if (!ts.isIdentifier(expression) || expression.text !== 'defineHashPageRoute') {
+    return null;
+  }
+
+  const pagesArg = callExpression.arguments[0];
+  let pagesArrayNode = null;
+  if (pagesArg && ts.isArrayLiteralExpression(pagesArg)) {
+    pagesArrayNode = pagesArg;
+  } else if (
+    pagesArg
+    && ts.isCallExpression(pagesArg)
+    && ts.isPropertyAccessExpression(pagesArg.expression)
+    && pagesArg.expression.name.text === 'map'
+    && ts.isIdentifier(pagesArg.expression.expression)
+  ) {
+    pagesArrayNode = findVariableArrayInitializer(sourceFile, pagesArg.expression.expression.text);
+  }
+
+  const pages = extractPagesFromArrayLiteral(pagesArrayNode);
   if (!pages.length) {
     return null;
   }
@@ -321,7 +360,7 @@ function extractHashRouteFromFile(filePath) {
       return;
     }
     if (ts.isCallExpression(node)) {
-      route = extractHashRouteFromCall(node);
+      route = extractHashRouteFromCall(node, sourceFile);
       if (route) {
         return;
       }
@@ -346,6 +385,50 @@ function extractHashRouteMetadata(prototypeDir) {
     }
   }
   return null;
+}
+
+function getMenuRoutePages(pages, menuPageIds) {
+  const visiblePages = pages.filter((page) => page.showInMenu !== false);
+  if (!menuPageIds?.length) {
+    return visiblePages.map(({ id, title }) => ({ id, title }));
+  }
+  const pageMap = new Map(visiblePages.map((page) => [page.id, page]));
+  return menuPageIds
+    .map((id) => pageMap.get(id))
+    .filter(Boolean)
+    .map(({ id, title }) => ({ id, title }));
+}
+
+function readPrototypeMenuPageIds(prototypeDir) {
+  const menuFile = path.join(prototypeDir, 'prototypeMenuPages.ts');
+  if (!fs.existsSync(menuFile)) {
+    return null;
+  }
+  const source = fs.readFileSync(menuFile, 'utf8');
+  const match = source.match(/export const PROTOTYPE_MENU_PAGE_IDS = \[([\s\S]*?)\] as const/u);
+  if (!match) {
+    return null;
+  }
+  const ids = [];
+  for (const line of match[1].split('\n')) {
+    const idMatch = line.match(/'([^']+)'/u);
+    if (idMatch) {
+      ids.push(idMatch[1]);
+    }
+  }
+  return ids.length ? ids : null;
+}
+
+function applyMenuPageVisibility(pages, menuPageIds) {
+  if (!menuPageIds?.length) {
+    return pages;
+  }
+  const menuSet = new Set(menuPageIds);
+  return pages.map((page) => ({
+    id: page.id,
+    title: page.title,
+    ...(menuSet.has(page.id) ? {} : { showInMenu: false }),
+  }));
 }
 
 function titleFromMarkdown(markdownPath, fallback) {
@@ -509,7 +592,10 @@ function collectPrototypes(projectRoot, clientOrigin, options = {}) {
       const indexFile = path.join(root, entry.name, 'index.tsx');
       if (!fs.existsSync(indexFile)) continue;
       const filePath = toPosix(path.relative(projectRoot, indexFile));
-      const route = extractHashRouteMetadata(path.join(root, entry.name));
+      const prototypeDir = path.join(root, entry.name);
+      const route = extractHashRouteMetadata(prototypeDir);
+      const menuPageIds = readPrototypeMenuPageIds(prototypeDir);
+      const visiblePages = route ? applyMenuPageVisibility(route.pages, menuPageIds) : [];
       const item = {
         id: entry.name,
         name: entry.name,
@@ -520,7 +606,7 @@ function collectPrototypes(projectRoot, clientOrigin, options = {}) {
         updatedAt: DETERMINISTIC_UPDATED_AT,
         filePath,
         ...(options.includeAbsoluteFilePaths === false ? {} : { absoluteFilePath: path.resolve(indexFile) }),
-        ...(route ? { pages: route.pages, defaultPageId: route.defaultPageId } : {}),
+        ...(route ? { pages: getMenuRoutePages(visiblePages, menuPageIds), defaultPageId: route.defaultPageId } : {}),
       };
       const artifacts = {
         ...createFigmaArtifactMetadata(projectRoot, entry.name),

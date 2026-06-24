@@ -18,8 +18,11 @@ import type { DeviceAlarmRecord } from '../data/deviceAlarms';
 import type { WorkOrderRecord } from '../data/workOrders';
 import {
     buildDeviceFormTags,
+    COLLECT_FREQUENCY_UNIT_OPTIONS,
+    DEFAULT_COLLECT_FREQUENCY_UNIT,
     deviceRecordToFormState,
     getGatewaySubDevices,
+    type CollectFrequencyUnit,
     type DeviceGroupFormKey,
     type DeviceRecord,
 } from '../data/devices';
@@ -87,6 +90,7 @@ type DeviceFormState = {
     name: string;
     productId: string;
     collectFrequency: string;
+    collectFrequencyUnit: CollectFrequencyUnit;
     positioning: string;
     registrationCode: string;
     enabled: boolean;
@@ -101,7 +105,8 @@ function createEmptyDeviceForm(defaultProductId = ''): DeviceFormState {
     return {
         name: '',
         productId: defaultProductId,
-        collectFrequency: '1440',
+        collectFrequency: '',
+        collectFrequencyUnit: DEFAULT_COLLECT_FREQUENCY_UNIT,
         positioning: '',
         registrationCode: '',
         enabled: true,
@@ -266,6 +271,7 @@ export default function DeviceCreatePage({
             name: nextForm.name,
             productId: nextForm.productId,
             collectFrequency: nextForm.collectFrequency,
+            collectFrequencyUnit: nextForm.collectFrequencyUnit,
             positioning: nextForm.positioning,
             registrationCode: nextForm.registrationCode,
             enabled: nextForm.enabled,
@@ -540,7 +546,8 @@ export default function DeviceCreatePage({
             onlineDuration: baseDevice?.onlineDuration ?? '0天0小时0分钟',
             longitude,
             latitude,
-            collectFrequency: form.collectFrequency || '1440',
+            collectFrequency: form.collectFrequency.trim(),
+            collectFrequencyUnit: form.collectFrequencyUnit,
             registrationCode: form.registrationCode.trim() || baseDevice?.registrationCode || '',
             mapAddress: form.mapLocation.trim(),
         };
@@ -681,20 +688,33 @@ export default function DeviceCreatePage({
                                     readOnly
                                 />
                             </label>
-                            <label className="dcp-form-field">
-                                <span className="dcp-form-label">采集频率（分钟）</span>
-                                <ClearableInput
-                                    type="text"
-                                    className={`dcp-form-input ${readonly ? 'is-readonly' : ''}`.trim()}
-                                    placeholder="请输入采集频率"
-                                    value={form.collectFrequency}
-                                    readOnly={readonly}
-                                    onChange={(event) => setForm((prev) => ({
-                                        ...prev,
-                                        collectFrequency: event.target.value,
-                                    }))}
-                                />
-                            </label>
+                            <div className="dcp-form-field">
+                                <span className="dcp-form-label">采集频率</span>
+                                <div className="dcp-input-with-suffix">
+                                    <ClearableInput
+                                        type="text"
+                                        className={`dcp-form-input ${readonly ? 'is-readonly' : ''}`.trim()}
+                                        placeholder="请输入采集频率"
+                                        value={form.collectFrequency}
+                                        readOnly={readonly}
+                                        onChange={(event) => setForm((prev) => ({
+                                            ...prev,
+                                            collectFrequency: event.target.value,
+                                        }))}
+                                    />
+                                    <ElSelect
+                                        className="el-select--medium dcp-collect-frequency-unit"
+                                        size="medium"
+                                        value={form.collectFrequencyUnit}
+                                        disabled={readonly}
+                                        options={COLLECT_FREQUENCY_UNIT_OPTIONS}
+                                        onChange={(value) => setForm((prev) => ({
+                                            ...prev,
+                                            collectFrequencyUnit: value as CollectFrequencyUnit,
+                                        }))}
+                                    />
+                                </div>
+                            </div>
                             <div className="dcp-form-field">
                                 <span className="dcp-form-label"><em>*</em>定位方式</span>
                                 <ElSelect

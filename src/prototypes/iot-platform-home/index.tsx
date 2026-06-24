@@ -115,43 +115,45 @@ import {
     parseWaterUsageAnalysisRoute,
     type WaterUsageAnalysisRoute,
 } from './utils/waterUsageAnalysisRoute';
+import { isPrototypeMenuPage, PROTOTYPE_MENU_PAGE_IDS } from './prototypeMenuPages';
+import PrototypeAnnotationLayer from './components/PrototypeAnnotationLayer';
 import './style.css';
 
-const prototypeRoute = defineHashPageRoute([
+const prototypeRoutePages = [
     { id: 'home', title: '设备综合视图' },
     { id: 'access-overview', title: '接入概览' },
     { id: 'product-management', title: '产品管理' },
-    { id: 'product-category', title: '产品分类', showInMenu: false },
-    { id: 'product-create', title: '新增产品', showInMenu: false },
-    { id: 'product-edit', title: '编辑产品', showInMenu: false },
-    { id: 'product-view', title: '查看产品', showInMenu: false },
+    { id: 'product-category', title: '产品分类' },
+    { id: 'product-create', title: '新增产品' },
+    { id: 'product-edit', title: '编辑产品' },
+    { id: 'product-view', title: '查看产品' },
     { id: 'model-library', title: '物模型库' },
-    { id: 'model-library-create', title: '创建物模型', showInMenu: false },
+    { id: 'model-library-create', title: '创建物模型' },
     { id: 'device-management', title: '设备管理' },
-    { id: 'device-create', title: '新增设备', showInMenu: false },
-    { id: 'device-edit', title: '编辑设备', showInMenu: false },
-    { id: 'device-view', title: '查看设备', showInMenu: false },
+    { id: 'device-create', title: '新增设备' },
+    { id: 'device-edit', title: '编辑设备' },
+    { id: 'device-view', title: '查看设备' },
     { id: 'device-group', title: '设备分组' },
     { id: 'device-map', title: '设备地图' },
     { id: 'device-alarm-info', title: '设备告警信息' },
-    { id: 'awo-device-alarm-info', title: '设备告警信息', showInMenu: false },
+    { id: 'awo-device-alarm-info', title: '设备告警信息' },
     { id: 'alarm-rule-config', title: '告警规则配置' },
-    { id: 'awo-alarm-rule-config', title: '告警规则配置', showInMenu: false },
+    { id: 'awo-alarm-rule-config', title: '告警规则配置' },
     { id: 'alarm-level-mgmt', title: '告警等级管理' },
-    { id: 'awo-alarm-level-mgmt', title: '告警等级管理', showInMenu: false },
+    { id: 'awo-alarm-level-mgmt', title: '告警等级管理' },
     { id: 'msg-subscribe', title: '消息订阅' },
     { id: 'push-source-config', title: '推送源配置' },
     { id: 'msg-template', title: '消息模版' },
     { id: 'history-msg', title: '历史消息' },
     { id: 'work-order-management', title: '工单管理' },
-    { id: 'work-order-detail', title: '工单详情', showInMenu: false },
-    { id: 'work-order-create', title: '新增工单', showInMenu: false },
+    { id: 'work-order-detail', title: '工单详情' },
+    { id: 'work-order-create', title: '新增工单' },
     { id: 'protocol-mgmt', title: '协议管理' },
     { id: 'certificate-mgmt', title: '证书管理' },
     { id: 'network-service', title: '网络服务' },
     { id: 'network-protocol', title: '网络协议' },
-    { id: 'network-protocol-create', title: '新增网络协议', showInMenu: false },
-    { id: 'network-protocol-edit', title: '编辑网络协议', showInMenu: false },
+    { id: 'network-protocol-create', title: '新增网络协议' },
+    { id: 'network-protocol-edit', title: '编辑网络协议' },
     { id: 'login-log', title: '登录日志' },
     { id: 'operation-log', title: '操作日志' },
     { id: 'remote-upgrade', title: '远程升级' },
@@ -166,11 +168,27 @@ const prototypeRoute = defineHashPageRoute([
     { id: 'notice-announcement', title: '通知公告' },
     { id: 'file-mgmt', title: '文件管理' },
     { id: 'data-monitor', title: '数据监测' },
-    { id: 'water-usage-analysis', title: '设备数据', showInMenu: false },
+    { id: 'water-usage-analysis', title: '设备数据' },
     { id: 'data-report', title: '数据报表' },
     { id: 'area-config', title: '区域配置' },
     { id: 'device-archive', title: '大表档案' },
-], { defaultPageId: 'home' });
+];
+
+const orderedPrototypeRoutePages = [
+    ...PROTOTYPE_MENU_PAGE_IDS
+        .map((id) => prototypeRoutePages.find((page) => page.id === id))
+        .filter((page): page is typeof prototypeRoutePages[number] => Boolean(page)),
+    ...prototypeRoutePages.filter((page) => !isPrototypeMenuPage(page.id)),
+];
+
+const prototypeRoute = defineHashPageRoute(
+    orderedPrototypeRoutePages.map((page) => (
+        isPrototypeMenuPage(page.id)
+            ? page
+            : { ...page, showInMenu: false }
+    )),
+    { defaultPageId: 'home' },
+);
 
 function HomePage({
     onNavigate,
@@ -219,10 +237,30 @@ export default function IotPlatformHome() {
 
 function IotPlatformHomeApp() {
     const [sessionUser, setSessionUser] = useState<PlatformSessionUser | null>(() => loadPersistedSession());
+    const [annotationPageId, setAnnotationPageId] = useState(() => (
+        typeof window !== 'undefined'
+            ? (parseHashPage(window.location.hash) ?? (loadPersistedSession() ? 'home' : 'login'))
+            : 'home'
+    ));
+
+    useEffect(() => {
+        const syncAnnotationPage = () => {
+            setAnnotationPageId(parseHashPage(window.location.hash) ?? (sessionUser ? 'home' : 'login'));
+        };
+        window.addEventListener('hashchange', syncAnnotationPage);
+        return () => window.removeEventListener('hashchange', syncAnnotationPage);
+    }, [sessionUser]);
+
     const handleLogout = useCallback(() => {
         clearPersistedSession();
         setSessionUser(null);
+        setAnnotationPageId('login');
         window.location.hash = '';
+    }, []);
+
+    const handleNavigateFromAnnotation = useCallback((pageId: string) => {
+        window.location.hash = `page=${pageId}`;
+        setAnnotationPageId(pageId);
     }, []);
 
     if (!sessionUser) {
@@ -230,20 +268,33 @@ function IotPlatformHomeApp() {
             (user) => user.account === PLATFORM_SUPER_ADMIN_ACCOUNT,
         );
         return (
-            <LoginPage
-                users={loginUsers}
-                onLoginSuccess={(user) => {
-                    setSessionUser(user);
-                    window.location.hash = 'page=home';
-                }}
-            />
+            <>
+                <LoginPage
+                    users={loginUsers}
+                    onLoginSuccess={(user) => {
+                        setSessionUser(user);
+                        setAnnotationPageId('home');
+                        window.location.hash = 'page=home';
+                    }}
+                />
+                <PrototypeAnnotationLayer
+                    currentPageId={annotationPageId}
+                    onNavigatePage={handleNavigateFromAnnotation}
+                />
+            </>
         );
     }
 
     return (
-        <PlatformAuthProvider user={sessionUser} onLogout={handleLogout}>
-            <IotPlatformHomeRoutes sessionUser={sessionUser} />
-        </PlatformAuthProvider>
+        <>
+            <PlatformAuthProvider user={sessionUser} onLogout={handleLogout}>
+                <IotPlatformHomeRoutes sessionUser={sessionUser} />
+            </PlatformAuthProvider>
+            <PrototypeAnnotationLayer
+                currentPageId={annotationPageId}
+                onNavigatePage={handleNavigateFromAnnotation}
+            />
+        </>
     );
 }
 

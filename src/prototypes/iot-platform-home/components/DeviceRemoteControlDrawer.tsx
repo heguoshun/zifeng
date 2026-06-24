@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom';
 import ElDateRangePicker from './ElDateRangePicker';
 import ElSelect from './ElSelect';
 import type { IotToastType } from './IotToast';
-import { STATUS_LABEL, type DeviceRecord } from '../data/devices';
+import { STATUS_LABEL, collectFrequencyToMinutes, formatCollectFrequencyDisplay, type DeviceRecord } from '../data/devices';
 import type { DebugPropertyField } from '../data/deviceDebugging';
 import {
     buildServiceInputJson,
@@ -132,9 +132,9 @@ export default function DeviceRemoteControlDrawer({
         () => estimateBackfillRecords(
             backfillStartDate,
             backfillEndDate,
-            Number(device?.collectFrequency) || 1440,
+            collectFrequencyToMinutes(device?.collectFrequency ?? '', device?.collectFrequencyUnit),
         ),
-        [backfillStartDate, backfillEndDate, device?.collectFrequency],
+        [backfillStartDate, backfillEndDate, device?.collectFrequency, device?.collectFrequencyUnit],
     );
 
     const selectedService = useMemo(
@@ -358,7 +358,7 @@ export default function DeviceRemoteControlDrawer({
                     </div>
                     <div className="drc-backfill__timeline-item">
                         <span>采集频率</span>
-                        <strong>{device.collectFrequency || '1440'} 分钟/次</strong>
+                        <strong>{formatCollectFrequencyDisplay(device.collectFrequency, device.collectFrequencyUnit)}</strong>
                     </div>
                 </div>
 

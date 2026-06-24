@@ -68,6 +68,26 @@ function getMenuRoutePages(pages: HashPageRoutePage[]): Array<{ id: string; titl
         .map(({ id, title }) => ({ id, title }));
 }
 
+function isMenuPageId(pageId: string, pages: HashPageRoutePage[]): boolean {
+    const entry = pages.find((page) => page.id === pageId);
+    return entry ? entry.showInMenu !== false : false;
+}
+
+function resolveHostActivePageId(
+    pageId: string,
+    pages: HashPageRoutePage[],
+    defaultPageId: string,
+): string {
+    if (isMenuPageId(pageId, pages)) {
+        return pageId;
+    }
+    const menuPages = getMenuRoutePages(pages);
+    if (menuPages.some((page) => page.id === defaultPageId)) {
+        return defaultPageId;
+    }
+    return menuPages[0]?.id ?? defaultPageId;
+}
+
 export function parseHashPage(hash: string): string | null {
     const rawHash = String(hash || '').replace(/^#/, '');
     const pageId = new URLSearchParams(rawHash).get('page');
@@ -127,19 +147,23 @@ function notifyHostPrototypeRouteInfo(
     ) {
         return;
     }
+    const menuPages = getMenuRoutePages(pages);
     window.parent.postMessage({
         type: 'AXHUB_PROTOTYPE_ROUTE_INFO',
-        pages: getHostRoutePages(pages),
-        menuPages: getMenuRoutePages(pages),
+        // Make 页面目录读取 pages / menuPages，仅同步菜单导航项
+        pages: menuPages,
+        menuPages,
+        // 完整路由表供后续扩展；子页面跳转在 iframe 内完成，不通知宿主以避免被重置
+        routePages: getHostRoutePages(pages),
         defaultPageId,
-        activePageId,
+        activePageId: resolveHostActivePageId(activePageId, pages, defaultPageId),
     }, '*');
 }
 
 export function useHashPage(routeOrDefault: HashPageRoute | string = 'home') {
     const route = normalizeRouteInput(routeOrDefault);
     const { pages, defaultPageId } = route;
-    const routeSignature = `${defaultPageId}:${pages.map((routePage) => `${routePage.id}=${routePage.title}`).join('|')}`;
+    const routeSignature = `${defaultPageId}:${pages.map((routePage) => `${routePage.id}=${routePage.title}:${routePage.showInMenu === false ? '0' : '1'}`).join('|')}`;
     const [page, setPageState] = useState<string>(() => {
         if (typeof window === 'undefined') {
             return defaultPageId;
@@ -149,7 +173,15 @@ export function useHashPage(routeOrDefault: HashPageRoute | string = 'home') {
 
     useEffect(() => {
         notifyHostPrototypeRouteInfo(pages, defaultPageId, page);
-    }, [routeSignature, page]);
+    }, [routeSignature]);
+
+    useEffect(() => {
+        if (!isMenuPageId(page, pages)) {
+            return;
+        }
+        notifyHostPrototypeRouteInfo(pages, defaultPageId, page);
+        notifyHostPrototypePageChange(page);
+    }, [page, pages, defaultPageId]);
 
     useEffect(() => {
         if (typeof window === 'undefined') {
@@ -160,7 +192,6 @@ export function useHashPage(routeOrDefault: HashPageRoute | string = 'home') {
             const next = parseHashPage(window.location.hash) ?? parseSearchPage(window.location.search);
             const nextPageId = next ?? defaultPageId;
             setPageState(nextPageId);
-            notifyHostPrototypePageChange(nextPageId);
         };
 
         window.addEventListener('hashchange', onHashChange);

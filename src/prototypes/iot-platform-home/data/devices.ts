@@ -47,6 +47,8 @@ export type DeviceRecord = {
     installAddress?: string;
     /** 设备管理地图选点生成的位置描述 */
     mapAddress?: string;
+    /** 采集频率单位，默认秒；历史数据未设置时按分钟理解 */
+    collectFrequencyUnit?: CollectFrequencyUnit;
     /** 安装阶段补充的表具厂家 */
     manufacturer?: string;
     /** 安装阶段补充的远传厂家 */
@@ -58,6 +60,49 @@ export type DeviceRecord = {
     /** 通讯码 */
     communicationNo?: string;
 };
+
+export type CollectFrequencyUnit = 'second' | 'minute' | 'hour';
+
+export const COLLECT_FREQUENCY_UNIT_OPTIONS: { label: string; value: CollectFrequencyUnit }[] = [
+    { label: '秒', value: 'second' },
+    { label: '分钟', value: 'minute' },
+    { label: '小时', value: 'hour' },
+];
+
+export const DEFAULT_COLLECT_FREQUENCY_UNIT: CollectFrequencyUnit = 'second';
+
+export function resolveCollectFrequencyUnit(unit?: CollectFrequencyUnit | string): CollectFrequencyUnit {
+    if (unit === 'second' || unit === 'minute' || unit === 'hour') {
+        return unit;
+    }
+    return 'minute';
+}
+
+export function collectFrequencyToMinutes(value: string, unit?: CollectFrequencyUnit | string): number {
+    const numeric = Number(value);
+    if (!Number.isFinite(numeric) || numeric <= 0) {
+        return 1440;
+    }
+    const resolved = resolveCollectFrequencyUnit(unit);
+    if (resolved === 'second') {
+        return numeric / 60;
+    }
+    if (resolved === 'hour') {
+        return numeric * 60;
+    }
+    return numeric;
+}
+
+export function formatCollectFrequencyDisplay(value: string, unit?: CollectFrequencyUnit | string): string {
+    const trimmed = value.trim();
+    if (!trimmed) {
+        return '—';
+    }
+    const label = COLLECT_FREQUENCY_UNIT_OPTIONS.find(
+        (option) => option.value === resolveCollectFrequencyUnit(unit),
+    )?.label ?? '分钟';
+    return `${trimmed}${label}/次`;
+}
 
 const LOCATIONS = ['主管网', '配水站', '泵站', '小区一号', '小区二号', '工业园区', '商业区', '供水厂', '二供泵房', '监测点'];
 
@@ -202,7 +247,8 @@ export function deviceRecordToFormState(device: DeviceRecord) {
     return {
         name: device.name,
         productId: device.productId,
-        collectFrequency: device.collectFrequency || '1440',
+        collectFrequency: device.collectFrequency || '',
+        collectFrequencyUnit: resolveCollectFrequencyUnit(device.collectFrequencyUnit),
         positioning: hasCoords ? 'manual' : 'auto',
         registrationCode: device.registrationCode || '',
         enabled: device.enabled,
@@ -256,6 +302,7 @@ export function createInitialDevices(products: ProductRecord[], now = new Date()
             longitude,
             latitude,
             collectFrequency: '1440',
+            collectFrequencyUnit: 'minute',
             registrationCode: `reg${String(index + 1).padStart(3, '0')}`,
             userNo: `YH2026${String(index + 1).padStart(5, '0')}`,
             userName: MOCK_USER_NAMES[index % MOCK_USER_NAMES.length],
@@ -331,6 +378,7 @@ function createGatewaySubDevices(
                 longitude,
                 latitude,
                 collectFrequency: '60',
+                collectFrequencyUnit: 'minute',
                 registrationCode: `sub-reg${String(subIndex).padStart(3, '0')}`,
                 userNo: `YH2026${String(1000 + subIndex).padStart(5, '0')}`,
                 userName: MOCK_USER_NAMES[subIndex % MOCK_USER_NAMES.length],

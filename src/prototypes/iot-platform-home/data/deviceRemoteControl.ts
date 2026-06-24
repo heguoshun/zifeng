@@ -1,4 +1,5 @@
 import type { DeviceRecord } from './devices';
+import { collectFrequencyToMinutes } from './devices';
 import {
     mapProductFunction,
     mapProductProperty,
@@ -374,7 +375,7 @@ export function simulateHistoricalBackfill(
     const estimatedRecords = estimateBackfillRecords(
         startDate,
         endDate,
-        Number(device.collectFrequency) || 1440,
+        collectFrequencyToMinutes(device.collectFrequency, device.collectFrequencyUnit),
     );
 
     const payload = {

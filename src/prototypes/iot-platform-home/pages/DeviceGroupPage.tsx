@@ -17,6 +17,7 @@ import {
 } from '../data/orgHierarchy';
 import {
     STATUS_LABEL,
+    formatCollectFrequencyDisplay,
     resolveDeviceOrg,
     resolveDeviceProduct,
     type DeviceRecord,
@@ -886,7 +887,7 @@ export default function DeviceGroupPage({
                                 { label: '所属产品', value: viewDevice.productName },
                                 { label: '当前状态', value: STATUS_LABEL[viewDevice.status as DeviceStatus] ?? viewDevice.status },
                                 { label: '所属部门', value: viewDevice.department },
-                                { label: '采集频率', value: viewDevice.collectFrequency },
+                                { label: '采集频率', value: formatCollectFrequencyDisplay(viewDevice.collectFrequency, viewDevice.collectFrequencyUnit) },
                                 { label: '经度', value: String(viewDevice.longitude) },
                                 { label: '纬度', value: String(viewDevice.latitude) },
                                 { label: '注册码', value: viewDevice.registrationCode },

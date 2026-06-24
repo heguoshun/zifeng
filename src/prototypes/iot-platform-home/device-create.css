@@ -149,6 +149,15 @@
     min-width: 0;
 }
 
+.dcp-collect-frequency-unit {
+    width: 88px;
+    flex-shrink: 0;
+}
+
+.dcp-collect-frequency-unit .el-select__wrapper {
+    min-width: 88px;
+}
+
 .dcp-input-suffix {
     font-size: 13px;
     color: var(--text-secondary);
