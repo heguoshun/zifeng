@@ -1,0 +1,354 @@
+/* ── Model Library Page ── */
+
+.ml-page {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    min-height: 100%;
+}
+
+/* ── Tab bar ── */
+
+.ml-tab-bar {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    padding: 0 14px;
+    height: 72px;
+    min-height: 72px;
+    border-bottom: 1px solid #e8e8e8;
+    background: #fff;
+}
+
+.ml-tab {
+    border: 0;
+    background: transparent;
+    height: 72px;
+    padding: 0 18px;
+    font-size: 16px;
+    font-family: inherit;
+    color: #666;
+    cursor: pointer;
+    position: relative;
+    white-space: nowrap;
+    transition: color 0.15s;
+    margin-right: 2px;
+}
+
+.ml-tab:hover {
+    color: #1890ff;
+}
+
+.ml-tab.is-active {
+    color: #1890ff;
+    font-weight: 600;
+}
+
+.ml-tab.is-active::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 12px;
+    right: 12px;
+    height: 2px;
+    background: #1890ff;
+}
+
+.ml-tab-spacer {
+    flex: 1;
+}
+
+/* ── Search ── */
+
+.ml-search-box {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    border: 1px solid #d9d9d9;
+    border-radius: 4px;
+    padding: 0 8px;
+    height: 34px;
+    background: #fff;
+    transition: border-color 0.2s;
+}
+
+.ml-search-box:focus-within {
+    border-color: #1890ff;
+    box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.1);
+}
+
+.ml-search-box svg {
+    color: #bbb;
+    flex-shrink: 0;
+}
+
+.ml-search-box input {
+    border: 0;
+    outline: 0;
+    width: 180px;
+    font-size: 12px;
+    font-family: inherit;
+    color: #333;
+    background: transparent;
+}
+
+.ml-search-box input::placeholder {
+    color: #ccc;
+}
+
+/* ── Body (left tree + right grid) ── */
+
+.ml-body {
+    display: grid;
+    grid-template-columns: 220px 1fr;
+    gap: 0;
+    flex: 1;
+    min-height: 0;
+    align-items: stretch;
+    padding: 0;
+    background: #fff;
+}
+
+/* ── Left category tree ── */
+
+.ml-left-tree {
+    padding: 0;
+    overflow: auto;
+    max-height: calc(100vh - 260px);
+    position: sticky;
+    top: 0;
+    background: #fff;
+    border-right: 1px solid #f0f0f0;
+}
+
+.ml-left-tree__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 12px 14px 10px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #333;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.ml-left-tree__add {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    border: 0;
+    background: transparent;
+    color: #1890ff;
+    font-size: 12px;
+    font-family: inherit;
+    cursor: pointer;
+    padding: 0;
+}
+
+.ml-left-tree__add:hover {
+    color: #40a9ff;
+}
+
+/* ── Tree ── */
+
+.ml-tree-body {
+    padding: 4px 0 8px;
+}
+
+/* 场景目录树列表样式见 iot-side-menu.css */
+
+/* ── Right cards area ── */
+
+.ml-right-cards {
+    min-height: 400px;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    padding: 14px 16px 16px;
+    background: #fff;
+}
+
+.ml-section .ml-section__title {
+    margin: 0 0 24px;
+    font-size: 14px;
+    font-weight: 600;
+    color: #303133;
+    line-height: 1.3;
+}
+
+.ml-card-grid {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 16px;
+    align-content: flex-start;
+}
+
+/* ── Card ── */
+
+.ml-card {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+    width: 100%;
+    min-height: 156px;
+    padding: 20px 14px 16px;
+    border: 1px solid #e8e8e8;
+    border-radius: 6px;
+    background: #fff;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.ml-card:hover {
+    border-color: #b3d8ff;
+    box-shadow: 0 1px 6px rgba(24, 144, 255, 0.08);
+}
+
+.ml-card-menu-btn {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    width: 22px;
+    height: 22px;
+    border: 0;
+    border-radius: 4px;
+    background: transparent;
+    color: #909399;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    cursor: pointer;
+    transition: opacity 0.15s, background 0.15s;
+}
+
+.ml-card:hover .ml-card-menu-btn {
+    opacity: 1;
+}
+
+.ml-card-menu-btn:hover {
+    background: #f5f7fa;
+    color: #606266;
+}
+
+.ml-card__icon {
+    width: 80px;
+    height: 80px;
+    border-radius: 8px;
+    overflow: hidden;
+    flex-shrink: 0;
+    background: var(--icon-bg, #f4f9ff);
+}
+
+.ml-card__name {
+    font-size: 14px;
+    font-weight: 500;
+    color: #303133;
+    text-align: center;
+    line-height: 1.4;
+    word-break: break-all;
+}
+
+.ml-card--add {
+    border-style: dashed;
+    border-color: #d9d9d9;
+    background: #fff;
+    color: #8c8c8c;
+    cursor: pointer;
+    font-family: inherit;
+    gap: 10px;
+}
+
+.ml-card--add:hover {
+    border-color: #1890ff;
+    color: #1890ff;
+    box-shadow: none;
+}
+
+.ml-card--add svg {
+    color: #bfbfbf;
+}
+
+.ml-card--add:hover svg {
+    color: #1890ff;
+}
+
+.ml-card--add span {
+    font-size: 13px;
+    line-height: 1.4;
+    text-align: center;
+    padding: 0 8px;
+    color: #8c8c8c;
+}
+
+.ml-card--add:hover span {
+    color: #1890ff;
+}
+
+/* ── Context menus ── */
+
+.ml-context-menu {
+    position: fixed;
+    z-index: 140;
+    min-width: 108px;
+    background: #fff;
+    border: 1px solid #ebeef5;
+    border-radius: 4px;
+    box-shadow: 0 4px 16px rgba(15, 35, 65, 0.12);
+    padding: 4px 0;
+}
+
+.ml-context-menu button {
+    display: block;
+    width: 100%;
+    border: 0;
+    background: transparent;
+    text-align: left;
+    font-size: 13px;
+    color: #303133;
+    font-family: inherit;
+    padding: 8px 14px;
+    cursor: pointer;
+}
+
+.ml-context-menu button:hover {
+    background: #f5f7fa;
+    color: #1890ff;
+}
+
+.ml-context-menu button.is-danger:hover {
+    color: #f56c6c;
+}
+
+.ml-context-menu--dark {
+    background: rgba(48, 49, 51, 0.96);
+    border-color: rgba(48, 49, 51, 0.96);
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.18);
+}
+
+.ml-context-menu--dark button {
+    color: #fff;
+}
+
+.ml-context-menu--dark button:hover {
+    background: rgba(255, 255, 255, 0.08);
+    color: #fff;
+}
+
+.ml-context-menu--dark button.is-danger:hover {
+    color: #ff9f9f;
+}
+
+/* ── Empty state ── */
+
+.ml-empty {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 300px;
+    color: #999;
+    font-size: 13px;
+}

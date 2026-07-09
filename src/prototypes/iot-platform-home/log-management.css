@@ -1,0 +1,110 @@
+.log-page .pm-list-panel {
+    flex: 1;
+}
+
+.log-filter-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: 12px 16px;
+}
+
+.log-filter-row .pm-filter-field {
+    min-width: 220px;
+}
+
+.log-status-tag {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 44px;
+    height: 22px;
+    padding: 0 8px;
+    border-radius: 3px;
+    font-size: 12px;
+    line-height: 1;
+}
+
+.log-status-tag--success {
+    color: var(--blue);
+    background: #e8f4ff;
+    border: 1px solid #b3d8ff;
+}
+
+.log-status-tag--fail {
+    color: #f56c6c;
+    background: #fef0f0;
+    border: 1px solid #fbc4c4;
+}
+
+.log-table-actions button {
+    border: 0;
+    background: transparent;
+    color: var(--blue);
+    font-size: 13px;
+    font-family: inherit;
+    cursor: pointer;
+    padding: 0;
+}
+
+.log-table-actions button:hover {
+    text-decoration: underline;
+}
+
+.log-os-cell {
+    max-width: 220px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.log-detail-drawer {
+    width: min(760px, 100%);
+}
+
+.log-detail-drawer__body {
+    padding: 20px 24px 24px;
+}
+
+.log-detail-dialog__grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 18px 32px;
+}
+
+.log-detail-field {
+    min-width: 0;
+    font-size: 14px;
+    line-height: 1.7;
+    color: var(--text);
+}
+
+.log-detail-field--full {
+    grid-column: 1 / -1;
+}
+
+.log-detail-field__label {
+    font-weight: 600;
+    color: var(--text);
+}
+
+.log-detail-field__value {
+    display: inline;
+    color: var(--text-secondary);
+    word-break: break-word;
+}
+
+.log-detail-field--full .log-detail-field__value {
+    display: block;
+    margin-top: 4px;
+}
+
+.log-detail-code {
+    margin: 0;
+    font-family: inherit;
+    font-size: 13px;
+    line-height: 1.7;
+    color: var(--text-secondary);
+    white-space: pre-wrap;
+    word-break: break-all;
+}

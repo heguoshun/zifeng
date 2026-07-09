@@ -1,0 +1,155 @@
+.psc-page > .pm-list-panel {
+    flex: 1;
+}
+
+.psc-page .pm-table-wrap {
+    overflow-x: auto;
+}
+
+.psc-main-table {
+    table-layout: auto;
+    min-width: 1180px;
+    width: max(100%, 1180px);
+}
+
+.psc-main-table th,
+.psc-main-table td {
+    overflow: visible;
+    text-overflow: clip;
+}
+
+.psc-main-table th:last-child,
+.psc-main-table td:last-child {
+    min-width: 260px;
+}
+
+.psc-main-table .pm-table-actions {
+    gap: 16px;
+    flex-wrap: nowrap;
+}
+
+.psc-table-head-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+}
+
+.psc-main-table .psc-table__check {
+    width: 44px;
+    padding-left: 12px;
+    padding-right: 28px;
+    text-align: right;
+    overflow: visible;
+    text-overflow: clip;
+}
+
+.psc-main-table .psc-table__index {
+    width: 48px;
+    min-width: 48px;
+    padding-left: 0;
+    padding-right: 8px;
+    text-align: left;
+}
+
+.psc-field-error {
+    font-size: 12px;
+    color: #f5222d;
+    line-height: 1.4;
+}
+
+.psc-form-drawer .pcp-drawer-field .pcp-form-input,
+.psc-form-drawer .pcp-drawer-field .el-select {
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+    box-sizing: border-box;
+}
+
+.psc-config-drawer,
+.psc-config-item-drawer,
+.psc-recipient-drawer {
+    --blue: #1890ff;
+    --blue-dark: #1677d8;
+    --blue-light: #e6f4ff;
+    --text: #1f2d3d;
+    --text-secondary: #5c6b7a;
+    --text-muted: #8c9bab;
+    --border: #e8edf3;
+    --panel: #ffffff;
+}
+
+.psc-config-drawer {
+    width: min(960px, 100%);
+}
+
+.psc-config-drawer__body {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    min-height: 0;
+    overflow: hidden;
+}
+
+.psc-config-drawer__toolbar {
+    display: flex;
+    justify-content: flex-start;
+    flex-shrink: 0;
+}
+
+.psc-config-drawer__table-wrap {
+    flex: 1;
+    min-height: 280px;
+    overflow-x: auto;
+}
+
+.psc-config-drawer__table-wrap .pm-table {
+    table-layout: auto;
+    min-width: 880px;
+    width: max(100%, 880px);
+}
+
+.psc-config-drawer__table-wrap .pm-table th,
+.psc-config-drawer__table-wrap .pm-table td {
+    overflow: visible;
+    text-overflow: clip;
+}
+
+.psc-config-item-drawer {
+    width: min(480px, 100%);
+    max-width: 100vw;
+    overflow: hidden;
+}
+
+.psc-config-item-drawer .pcp-drawer__body {
+    overflow-x: hidden;
+    overflow-y: auto;
+}
+
+.psc-config-item-drawer .pcp-drawer-field {
+    width: 100%;
+    min-width: 0;
+}
+
+.psc-config-item-drawer .pcp-drawer-field .pcp-form-input {
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+    box-sizing: border-box;
+}
+
+.psc-recipient-drawer {
+    width: min(760px, 100%);
+}
+
+.psc-recipient-body {
+    overflow: auto;
+}
+
+.psc-nested-drawer-mask {
+    z-index: 120;
+}
+
+.psc-drawer-mask {
+    z-index: 110;
+}

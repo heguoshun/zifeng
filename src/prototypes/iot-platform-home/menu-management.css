@@ -1,0 +1,353 @@
+.mm-page {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    min-height: 100%;
+}
+
+.mm-table-panel {
+    padding: 14px 18px 18px;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.mm-table-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 12px;
+    flex-shrink: 0;
+}
+
+.mm-table-head h3 {
+    margin: 0;
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.mm-table-head h3::before {
+    content: "";
+    width: 3px;
+    height: 14px;
+    border-radius: 2px;
+    background: var(--blue);
+}
+
+.mm-table-wrap {
+    flex: none;
+    min-width: 0;
+    overflow-x: auto;
+    overflow-y: auto;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+}
+
+.mm-table {
+    width: max(100%, 1080px);
+    min-width: 1080px;
+    margin: 0;
+    table-layout: auto;
+    border-collapse: collapse;
+    font-size: 13px;
+}
+
+.mm-table th,
+.mm-table td {
+    min-width: 104px;
+    padding: 11px 18px;
+    border-bottom: 1px solid var(--border);
+    text-align: left;
+    vertical-align: middle;
+}
+
+.mm-table th:first-child,
+.mm-table td:first-child {
+    padding-left: 24px;
+}
+.mm-table th:last-child,
+.mm-table td:last-child {
+    padding-right: 24px;
+}
+
+.mm-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+.mm-table thead th {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    background-color: #fafbfd;
+    color: var(--text-secondary);
+    font-weight: 500;
+    white-space: nowrap;
+    border-bottom: none;
+    box-shadow: inset 0 -1px 0 var(--border);
+}
+
+.mm-table th:nth-child(1),
+.mm-table td:nth-child(1) {
+    width: 44px;
+    text-align: center;
+}
+
+.mm-table th:nth-child(2),
+.mm-table td:nth-child(2) {
+    width: 56px;
+    text-align: center;
+}
+
+.mm-table th:nth-child(4),
+.mm-table td:nth-child(4) {
+    width: 120px;
+}
+
+.mm-table th:nth-child(5),
+.mm-table td:nth-child(5) {
+    width: 220px;
+}
+
+.mm-table th:nth-child(6),
+.mm-table td:nth-child(6) {
+    width: 200px;
+}
+
+.mm-table th:nth-child(7),
+.mm-table td:nth-child(7) {
+    width: 160px;
+}
+
+.mm-table td:nth-child(3),
+.mm-table td:nth-child(5),
+.mm-table td:nth-child(6) {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.mm-table tbody tr:hover {
+    background: #f5f9ff;
+}
+
+.mm-table tbody tr.is-selected {
+    background: #e6f4ff;
+}
+
+.mm-tree-cell {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    min-width: 0;
+}
+
+.mm-tree-toggle {
+    width: 18px;
+    height: 18px;
+    border: 0;
+    background: transparent;
+    color: var(--text-muted);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    padding: 0;
+    flex-shrink: 0;
+}
+
+.mm-tree-spacer {
+    width: 18px;
+    flex-shrink: 0;
+}
+
+.mm-table-actions {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    flex-wrap: nowrap;
+    white-space: nowrap;
+}
+
+.mm-table-actions button {
+    border: 0;
+    background: transparent;
+    color: var(--blue);
+    font-size: 13px;
+    font-family: inherit;
+    cursor: pointer;
+    padding: 0;
+}
+
+.mm-table-actions button:hover {
+    text-decoration: underline;
+}
+
+.mm-more-wrap {
+    position: relative;
+    display: inline-flex;
+}
+
+.mm-more-menu {
+    position: absolute;
+    top: calc(100% + 4px);
+    right: 0;
+    z-index: 20;
+    min-width: 120px;
+    padding: 4px 0;
+    background: #fff;
+    border: 1px solid #e4e7ed;
+    border-radius: 4px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.mm-more-menu button {
+    display: block;
+    width: 100%;
+    border: 0;
+    background: transparent;
+    color: #303133;
+    font-size: 13px;
+    font-family: inherit;
+    text-align: left;
+    padding: 8px 16px;
+    cursor: pointer;
+}
+
+.mm-more-menu button:hover {
+    background: #f5f7fa;
+    text-decoration: none;
+}
+
+.mm-form-drawer {
+    width: min(520px, 100%);
+}
+
+.mm-form-body {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.mm-form-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    min-height: 32px;
+}
+
+.mm-form-label {
+    width: 120px;
+    flex-shrink: 0;
+    text-align: right;
+    font-size: 13px;
+    color: var(--text-secondary);
+    line-height: 32px;
+}
+
+.mm-form-label .mm-required {
+    color: #f5222d;
+    font-style: normal;
+    margin-right: 2px;
+}
+
+.mm-form-control {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.mm-form-control .el-tree-select {
+    width: 100%;
+}
+
+.mm-form-input {
+    height: 34px;
+    border: 1px solid #dcdfe6;
+    border-radius: 4px;
+    padding: 0 12px;
+    font-size: 13px;
+    font-family: inherit;
+    color: var(--text);
+    background: #fff;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.mm-form-input:focus {
+    outline: none;
+    border-color: var(--blue);
+}
+
+.mm-form-input--sort {
+    width: 120px;
+}
+
+.mm-field-error {
+    font-size: 12px;
+    color: #f5222d;
+    line-height: 1.4;
+}
+
+.mm-type-radio,
+.mm-bool-radio {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+    min-height: 32px;
+}
+
+.mm-type-radio__item,
+.mm-bool-radio__item {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    color: var(--text);
+    cursor: pointer;
+}
+
+.mm-type-radio__item input,
+.mm-bool-radio__item input {
+    accent-color: var(--blue);
+}
+
+.mm-icon-field {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    width: 100%;
+}
+
+.mm-icon-field .mm-form-input {
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
+    border-right: 0;
+}
+
+.mm-icon-btn {
+    width: 32px;
+    height: 32px;
+    flex-shrink: 0;
+    border: 1px solid #dcdfe6;
+    border-radius: 0 4px 4px 0;
+    background: #f5f7fa;
+    color: var(--text-secondary);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    padding: 0;
+}
+
+.mm-icon-btn:hover {
+    color: var(--blue);
+    border-color: var(--blue);
+}

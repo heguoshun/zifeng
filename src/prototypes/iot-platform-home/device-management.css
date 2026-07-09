@@ -1,0 +1,343 @@
+.dm-status-summary {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-right: auto;
+    font-size: 13px;
+    color: var(--text-secondary);
+}
+
+.dm-status-summary span {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.dm-status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.dm-status-dot--online { background: #389e0d; }
+.dm-status-dot--offline { background: #f56c6c; }
+.dm-status-dot--fault { background: #e6a23c; }
+.dm-status-dot--disabled { background: #909399; }
+
+.dm-product-search {
+    margin-bottom: 10px;
+}
+
+.dm-product-search input {
+    width: 100%;
+    height: 34px;
+    border: 1px solid #dcdfe6;
+    border-radius: 4px;
+    padding: 0 12px;
+    font-size: 13px;
+    font-family: inherit;
+    color: var(--text);
+}
+
+.dm-list-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 12px;
+    flex-wrap: wrap;
+}
+
+.dm-list-head-left {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+    min-width: 0;
+}
+
+.dm-section-head--compact {
+    margin-bottom: 0;
+}
+
+.dm-list-head-right {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+}
+
+.dm-card-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+    flex: 1;
+    align-content: start;
+}
+
+.dm-device-card {
+    position: relative;
+    display: grid;
+    grid-template-columns: 72px minmax(0, 1fr);
+    gap: 12px;
+    padding: 14px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: #fff;
+    overflow: hidden;
+}
+
+.dm-device-card__overlay {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(15, 23, 42, 0.45);
+    border-radius: 6px;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease;
+    z-index: 1;
+}
+
+.dm-device-card:hover .dm-device-card__overlay {
+    opacity: 1;
+}
+
+.dm-device-card__actions {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 20px;
+    padding: 0 20px;
+    pointer-events: auto;
+}
+
+.dm-device-card__actions button {
+    min-width: 72px;
+    height: 32px;
+    padding: 0 12px;
+    border: 0;
+    border-radius: 4px;
+    background: #fff;
+    color: #303133;
+    font-size: 13px;
+    font-family: inherit;
+    box-shadow: 0 2px 8px rgba(15, 35, 65, 0.12);
+    cursor: pointer;
+    white-space: nowrap;
+    pointer-events: auto;
+}
+
+.dm-device-card__actions button:hover {
+    color: var(--blue);
+}
+
+.dm-device-card__aside {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+}
+
+.dm-device-card__icon {
+    width: 52px;
+    height: 52px;
+    border-radius: 6px;
+    overflow: hidden;
+    background: var(--icon-bg);
+}
+
+.dm-device-card__body {
+    min-width: 0;
+}
+
+.dm-device-card__top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 8px;
+}
+
+.dm-device-card__title {
+    margin: 0;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text);
+    line-height: 1.4;
+}
+
+.dm-device-card__tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 10px;
+}
+
+.dm-device-card__meta {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px 16px;
+}
+
+.dm-device-card__meta div {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+}
+
+.dm-device-card__meta span {
+    font-size: 12px;
+    color: var(--text-muted);
+}
+
+.dm-device-card__meta strong {
+    font-size: 13px;
+    color: var(--text-secondary);
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.dm-device-card__meta strong.is-highlight {
+    color: var(--blue);
+}
+
+.dm-enable-switch {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    color: var(--text-muted);
+    flex-shrink: 0;
+    position: relative;
+    z-index: 2;
+    transition: color 0.2s ease;
+}
+
+.dm-device-card:hover .dm-enable-switch {
+    color: #fff;
+}
+
+.dm-enable-switch input {
+    appearance: none;
+    width: 36px;
+    height: 20px;
+    border-radius: 10px;
+    background: #dcdfe6;
+    position: relative;
+    cursor: pointer;
+    transition: background 0.2s ease;
+}
+
+.dm-enable-switch input::after {
+    content: "";
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: #fff;
+    transition: transform 0.2s ease;
+}
+
+.dm-enable-switch input:checked {
+    background: var(--blue);
+}
+
+.dm-enable-switch input:checked::after {
+    transform: translateX(16px);
+}
+
+.dm-enable-switch input:disabled {
+    cursor: default;
+    opacity: 0.75;
+}
+
+.dm-status-tag {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 44px;
+    height: 22px;
+    padding: 0 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: 400;
+}
+
+.dm-status-tag--online {
+    background: #e8f7ef;
+    color: #389e0d;
+}
+
+.dm-status-tag--offline {
+    background: #f4f4f5;
+    color: #909399;
+}
+
+.dm-status-tag--fault {
+    background: #fdf6ec;
+    color: #e6a23c;
+}
+
+.dm-status-tag--disabled {
+    background: #fef0f0;
+    color: #f56c6c;
+}
+
+.dm-group-tags {
+    display: flex;
+    flex-wrap: nowrap;
+    gap: 4px;
+    overflow: hidden;
+    white-space: nowrap;
+}
+
+.dm-group-tag {
+    display: inline-flex;
+    align-items: center;
+    flex: 0 0 auto;
+    height: 22px;
+    padding: 0 8px;
+    border-radius: 3px;
+    background: #f4f4f5;
+    color: var(--text-secondary);
+    font-size: 12px;
+    white-space: nowrap;
+}
+
+.dm-group-tag--more,
+.dm-card-tag.dm-group-tag--more {
+    color: var(--text-muted);
+    cursor: help;
+}
+
+.dm-card-tag {
+    display: inline-flex;
+    align-items: center;
+    height: 22px;
+    padding: 0 8px;
+    border-radius: 3px;
+    border: 1px solid #dcdfe6;
+    background: #fff;
+    color: var(--text-secondary);
+    font-size: 12px;
+}
+
+.dm-filter-row--device {
+    flex-wrap: nowrap;
+}
+
+@media (max-width: 1280px) {
+    .dm-card-grid {
+        grid-template-columns: 1fr;
+    }
+}

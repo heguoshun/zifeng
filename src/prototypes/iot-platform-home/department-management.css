@@ -1,0 +1,342 @@
+.dm-page {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    min-height: 100%;
+    height: 100%;
+}
+
+/* ── Split layout ── */
+.dm-split {
+    display: flex;
+    gap: 12px;
+    flex: 1;
+}
+
+/* ── Left: Tree panel ── */
+.dm-tree-panel {
+    width: 280px;
+    flex-shrink: 0;
+    padding: 14px 14px 18px;
+    display: flex;
+    flex-direction: column;
+}
+
+.dm-tree-search {
+    position: relative;
+    margin-bottom: 12px;
+    flex-shrink: 0;
+}
+
+.dm-tree-search input {
+    width: 100%;
+    height: 34px;
+    border: 1px solid #dcdfe6;
+    border-radius: 4px;
+    padding: 0 32px 0 12px;
+    font-size: 13px;
+    font-family: inherit;
+    color: var(--text);
+    background: #fff;
+}
+
+.dm-tree-search input:focus {
+    outline: none;
+    border-color: var(--blue);
+}
+
+.dm-tree-search input::placeholder {
+    color: var(--placeholder);
+}
+
+.dm-tree-search-icon {
+    position: absolute;
+    right: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-muted);
+    pointer-events: none;
+}
+
+.dm-tree-toolbar {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 10px;
+    flex-shrink: 0;
+}
+
+.dm-tree-toolbar .pm-btn {
+    flex: 1;
+    justify-content: center;
+}
+
+.dm-tree-body {
+    flex: 1;
+    min-height: 200px;
+    overflow: auto;
+    scrollbar-gutter: stable;
+}
+
+.dm-tree-empty {
+    text-align: center;
+    color: var(--text-muted);
+    padding: 24px 0;
+    font-size: 13px;
+}
+
+/* ── Tree node ── */
+.dm-tree-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.dm-tree-node {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    min-height: 36px;
+    padding: 0 4px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 13px;
+    color: var(--text);
+    user-select: none;
+}
+
+.dm-tree-node:hover {
+    background: #f5f7fa;
+}
+
+.dm-tree-node.is-active {
+    background: var(--blue-light);
+    color: var(--blue);
+    font-weight: 500;
+}
+
+.dm-tree-toggle {
+    width: 20px;
+    height: 20px;
+    border: 0;
+    background: transparent;
+    color: var(--text-muted);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    padding: 0;
+    flex-shrink: 0;
+}
+
+.dm-tree-spacer {
+    width: 20px;
+    flex-shrink: 0;
+}
+
+.dm-tree-name {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* ── Right: Details panel ── */
+.dm-detail-panel {
+    flex: 1;
+    min-width: 0;
+    padding: 18px 24px 24px;
+    display: flex;
+    flex-direction: column;
+}
+
+.panel.dm-detail-panel h3 {
+    margin: 0 0 20px;
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text);
+}
+
+.dm-detail-empty {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-muted);
+    font-size: 13px;
+}
+
+.dm-form {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.dm-form-fields {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+.dm-form-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-height: 32px;
+}
+
+.dm-form-label {
+    width: 100px;
+    flex-shrink: 0;
+    text-align: right;
+    font-size: 13px;
+    color: var(--text-secondary);
+    line-height: 1.5;
+}
+
+.dm-form-label .dm-required {
+    color: #f5222d;
+    margin-right: 2px;
+}
+
+.dm-form-control {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.dm-form-control input[type="text"] {
+    height: 34px;
+    border: 1px solid #dcdfe6;
+    border-radius: 4px;
+    padding: 0 12px;
+    font-size: 13px;
+    font-family: inherit;
+    color: var(--text);
+    background: #fff;
+    width: 320px;
+    max-width: 100%;
+}
+
+.dm-form-control input[type="text"]:focus {
+    outline: none;
+    border-color: var(--blue);
+}
+
+.dm-form-control input.is-readonly,
+.dm-form-control input:disabled {
+    background: #f5f7fa;
+    color: var(--text-muted);
+    cursor: not-allowed;
+}
+
+.dm-form-control .el-tree-select {
+    width: 320px;
+}
+
+/* ── Head picker ── */
+.dm-head-picker {
+    display: flex;
+    gap: 8px;
+    width: 320px;
+    max-width: 100%;
+}
+
+.dm-head-picker input {
+    flex: 1;
+    min-width: 0;
+    height: 34px;
+    border: 1px solid #dcdfe6;
+    border-radius: 4px;
+    padding: 0 12px;
+    font-size: 13px;
+    font-family: inherit;
+    color: var(--text);
+    background: #fff;
+}
+
+.dm-head-picker .dm-select-btn {
+    flex-shrink: 0;
+}
+
+/* ── User picker drawer ── */
+.dm-picker-drawer {
+    width: min(800px, 100%);
+    max-width: 100vw;
+}
+
+.dm-picker-drawer .iot-view-drawer__body {
+    overflow-x: hidden;
+    overflow-y: auto;
+}
+
+.dm-picker-search {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 4px;
+    flex-wrap: wrap;
+}
+
+.dm-picker-row {
+    cursor: pointer;
+}
+
+.dm-picker-row:hover {
+    background: #f5f7fa;
+}
+
+/* ── Radio group ── */
+.dm-radio-group {
+    display: flex;
+    gap: 20px;
+}
+
+.dm-radio {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+    font-size: 13px;
+    color: var(--text);
+}
+
+.dm-radio input[type="radio"] {
+    margin: 0;
+    accent-color: var(--blue);
+}
+
+.dm-form-hint {
+    font-size: 12px;
+    color: var(--text-muted);
+}
+
+/* ── Form actions ── */
+.dm-form-actions {
+    margin-top: 32px;
+    padding-top: 18px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    gap: 12px;
+}
+
+/* ── Select button ── */
+.dm-select-btn {
+    height: 34px;
+    border: 1px solid var(--blue);
+    background: transparent;
+    color: var(--blue);
+    border-radius: 4px;
+    padding: 0 12px;
+    font-size: 13px;
+    font-family: inherit;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+.dm-select-btn:hover {
+    background: var(--blue-light);
+}

@@ -1,0 +1,1001 @@
+.dai-filter-row {
+    --dai-filter-label-width: 56px;
+    --dai-filter-date-width: 240px;
+    --dai-filter-control-width: var(--dai-filter-date-width);
+    --dai-filter-field-gap: 8px;
+    --dai-filter-col-width: calc(var(--dai-filter-label-width) + var(--dai-filter-field-gap) + var(--dai-filter-control-width));
+    --pm-filter-control-width: var(--dai-filter-control-width);
+    --pm-filter-date-width: var(--dai-filter-date-width);
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    width: 100%;
+    min-width: 0;
+    overflow: visible;
+}
+
+.dai-filter-main-row,
+.dai-filter-second-row {
+    display: flex;
+    flex-wrap: nowrap;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    min-width: 0;
+    overflow: visible;
+}
+
+.dai-filter-main-row .pm-filter-field,
+.dai-filter-second-row .pm-filter-field {
+    display: flex;
+    align-items: center;
+    gap: var(--dai-filter-field-gap);
+    flex: 0 1 auto;
+    min-width: 0;
+}
+
+.dai-filter-row .pm-filter-label {
+    width: var(--dai-filter-label-width);
+    text-align: right;
+    flex-shrink: 0;
+}
+
+.dai-filter-row .pm-filter-field > .el-select.el-select--medium,
+.dai-filter-row .pm-filter-field > .el-tree-select.el-select--medium {
+    width: var(--pm-filter-control-width);
+    min-width: 0;
+    max-width: var(--pm-filter-control-width);
+}
+
+.dai-filter-row .pm-filter-field > .el-date-range-picker.el-select--medium {
+    width: var(--pm-filter-date-width);
+    min-width: 0;
+    max-width: var(--pm-filter-date-width);
+}
+
+.dai-filter-search {
+    flex: 1 1 120px;
+    min-width: 0;
+}
+
+.dai-filter-date {
+    flex: 0 0 auto;
+}
+
+.dai-filter-search > .iot-clearable-input {
+    width: 100%;
+    min-width: 0;
+    max-width: none;
+}
+
+.dai-filter-search > .iot-clearable-input > .pm-filter-input {
+    width: 100%;
+    min-width: 0;
+}
+
+.dai-filter-row .dai-filter-actions,
+.dai-filter-second-row .dai-filter-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex: 0 0 auto;
+    flex-shrink: 0;
+    flex-wrap: nowrap;
+    margin-left: auto;
+}
+
+.dai-alarm-page .pm-filter-panel {
+    min-width: 0;
+    overflow: visible;
+}
+
+.dcp-alarm-panel .dai-filter-row {
+    --dai-filter-date-width: 240px;
+    --dai-filter-control-width: var(--dai-filter-date-width);
+}
+
+.dai-filter-expand {
+    border: 0;
+    background: transparent;
+    color: var(--blue);
+    font-size: 13px;
+    font-family: inherit;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 0;
+    white-space: nowrap;
+}
+
+.dai-alarm-page > .pm-list-panel {
+    flex: 1;
+    min-width: 0;
+}
+
+.dai-alarm-page {
+    scrollbar-gutter: stable;
+    min-width: 0;
+}
+
+.pm-table-wrap:has(.pm-table--device-alarm-page),
+.pm-table-wrap:has(.pm-table--device-alarm),
+.pcp-table-wrap:has(.pm-table--device-alarm),
+.wua-alarm-table-wrap,
+.wua-page .wua-alarm-table-wrap {
+    overflow-x: auto;
+    overflow-y: visible;
+    min-width: 0;
+    max-width: 100%;
+    -webkit-overflow-scrolling: touch;
+}
+
+.pm-table--device-alarm-page,
+.pm-table--device-alarm {
+    --dai-alarm-col-shift: 40px;
+    --dai-alarm-op-col-width: 148px;
+}
+
+/* 设备编号及之后列（不含操作）右移 40px */
+.pm-table--device-alarm-page:not(.pm-table--device-alarm-page--selectable) th:nth-child(n+5):not(:last-child),
+.pm-table--device-alarm-page:not(.pm-table--device-alarm-page--selectable) td:nth-child(n+5):not(:last-child),
+.pm-table--device-alarm th:nth-child(n+5):not(:last-child),
+.pm-table--device-alarm td:nth-child(n+5):not(:last-child) {
+    padding-left: calc(20px + var(--dai-alarm-col-shift));
+}
+
+.pm-table--device-alarm-page--selectable th:nth-child(n+6):not(:last-child),
+.pm-table--device-alarm-page--selectable td:nth-child(n+6):not(:last-child) {
+    padding-left: calc(20px + var(--dai-alarm-col-shift));
+}
+
+/* 操作列固定右侧 */
+.pm-table--device-alarm-page th:last-child,
+.pm-table--device-alarm-page td:last-child,
+.pm-table--device-alarm th:last-child,
+.pm-table--device-alarm td:last-child {
+    position: sticky;
+    right: 0;
+    z-index: 2;
+    width: var(--dai-alarm-op-col-width);
+    min-width: var(--dai-alarm-op-col-width);
+    max-width: var(--dai-alarm-op-col-width);
+    padding-left: 20px;
+    padding-right: 20px;
+    background: #fff;
+    border-bottom: 1px solid #f0f2f5;
+    box-shadow: -8px 0 14px rgba(15, 23, 42, 0.06);
+    overflow: visible;
+    text-overflow: clip;
+    vertical-align: middle;
+}
+
+.pm-table--device-alarm-page thead th:last-child,
+.pm-table--device-alarm thead th:last-child {
+    z-index: 3;
+    background: #fafbfd;
+}
+
+.pm-table--device-alarm-page tbody tr:hover td:last-child,
+.pm-table--device-alarm tbody tr:hover td:last-child {
+    background: #fafcff;
+}
+
+.dai-alarm-page .pm-table-wrap {
+    overflow-x: auto;
+    overflow-y: visible;
+}
+
+.dcp-alarm-panel .pcp-table-wrap {
+    flex: 1;
+    min-height: 0;
+    min-width: 0;
+    overflow-x: auto;
+    overflow-y: auto;
+}
+
+/* ── 设备详情 Tab：告警列表（10 列）── */
+
+.pm-table--device-alarm {
+    width: max(100%, 1480px);
+    min-width: 1480px;
+    table-layout: fixed;
+}
+
+.pm-table--device-alarm th,
+.pm-table--device-alarm td {
+    overflow: visible;
+    text-overflow: clip;
+    white-space: nowrap;
+    padding-left: 20px;
+    padding-right: 20px;
+}
+
+.pm-table--device-alarm th:first-child,
+.pm-table--device-alarm td:first-child,
+.pm-table--device-alarm th:last-child,
+.pm-table--device-alarm td:last-child {
+    padding-left: 20px;
+    padding-right: 20px;
+}
+
+.pm-table--device-alarm th:nth-child(1),
+.pm-table--device-alarm td:nth-child(1) {
+    width: 56px;
+    min-width: 56px;
+}
+
+.pm-table--device-alarm th:nth-child(2),
+.pm-table--device-alarm td:nth-child(2) {
+    width: 14%;
+}
+
+.pm-table--device-alarm th:nth-child(3),
+.pm-table--device-alarm td:nth-child(3) {
+    width: 80px;
+}
+
+.pm-table--device-alarm th:nth-child(4),
+.pm-table--device-alarm td:nth-child(4) {
+    width: 12%;
+}
+
+.pm-table--device-alarm th:nth-child(5),
+.pm-table--device-alarm td:nth-child(5) {
+    width: 12%;
+}
+
+.pm-table--device-alarm th:nth-child(6),
+.pm-table--device-alarm td:nth-child(6) {
+    width: 12%;
+}
+
+.pm-table--device-alarm th:nth-child(7),
+.pm-table--device-alarm td:nth-child(7) {
+    width: 180px;
+    min-width: 180px;
+}
+
+.pm-table--device-alarm th:nth-child(8),
+.pm-table--device-alarm td:nth-child(8) {
+    width: 96px;
+    min-width: 96px;
+}
+
+.pm-table--device-alarm th:nth-child(9),
+.pm-table--device-alarm td:nth-child(9) {
+    width: 150px;
+}
+
+.pm-table--device-alarm td:last-child .dai-table-actions {
+    flex-wrap: nowrap;
+}
+
+/* ── 设备告警信息页：告警列表（12 列）── */
+
+.pm-table--device-alarm-page {
+    width: max(100%, 1960px);
+    min-width: 1960px;
+    table-layout: fixed;
+}
+
+.pm-table--device-alarm-page th,
+.pm-table--device-alarm-page td {
+    overflow: visible;
+    text-overflow: clip;
+    white-space: nowrap;
+    padding-left: 20px;
+    padding-right: 20px;
+}
+
+.pm-table--device-alarm-page th:first-child,
+.pm-table--device-alarm-page td:first-child,
+.pm-table--device-alarm-page th:last-child,
+.pm-table--device-alarm-page td:last-child {
+    padding-left: 20px;
+    padding-right: 20px;
+}
+
+.pm-table--device-alarm-page th:nth-child(1),
+.pm-table--device-alarm-page td:nth-child(1) {
+    width: 72px;
+    min-width: 72px;
+    max-width: 72px;
+}
+
+.pm-table--device-alarm-page th:nth-child(2),
+.pm-table--device-alarm-page td:nth-child(2) {
+    width: 11%;
+}
+
+.pm-table--device-alarm-page th:nth-child(3),
+.pm-table--device-alarm-page td:nth-child(3) {
+    width: 96px;
+    min-width: 96px;
+    max-width: 96px;
+}
+
+.pm-table--device-alarm-page th:nth-child(4),
+.pm-table--device-alarm-page td:nth-child(4) {
+    width: 9%;
+}
+
+.pm-table--device-alarm-page th:nth-child(5),
+.pm-table--device-alarm-page td:nth-child(5) {
+    width: 9%;
+}
+
+.pm-table--device-alarm-page th:nth-child(6),
+.pm-table--device-alarm-page td:nth-child(6) {
+    width: 9%;
+}
+
+.pm-table--device-alarm-page th:nth-child(7),
+.pm-table--device-alarm-page td:nth-child(7) {
+    width: 180px;
+    min-width: 180px;
+}
+
+.pm-table--device-alarm-page th:nth-child(8),
+.pm-table--device-alarm-page td:nth-child(8) {
+    width: 96px;
+    min-width: 96px;
+}
+
+.pm-table--device-alarm-page th:nth-child(9),
+.pm-table--device-alarm-page td:nth-child(9) {
+    width: 150px;
+    min-width: 150px;
+}
+
+.pm-table--device-alarm-page th:nth-child(10),
+.pm-table--device-alarm-page td:nth-child(10) {
+    width: 420px;
+    min-width: 420px;
+    max-width: 420px;
+    vertical-align: middle;
+}
+
+.pm-table--device-alarm-page th:nth-child(11),
+.pm-table--device-alarm-page td:nth-child(11) {
+    width: 112px;
+    min-width: 112px;
+}
+
+.pm-table--device-alarm-page td:nth-child(11) .dai-process-status {
+    min-width: 0;
+}
+
+.pm-table--device-alarm-page td:last-child .dai-table-actions {
+    flex-wrap: nowrap;
+    white-space: nowrap;
+}
+
+/* ── 设备告警信息页：带复选框（13 列）── */
+
+.pm-table--device-alarm-page--selectable {
+    width: max(100%, 2004px);
+    min-width: 2004px;
+}
+
+.pm-table--device-alarm-page--selectable th:first-child,
+.pm-table--device-alarm-page--selectable td:first-child {
+    padding-left: 12px;
+    padding-right: 28px;
+}
+
+.pm-table--device-alarm-page--selectable th:nth-child(1),
+.pm-table--device-alarm-page--selectable td:nth-child(1) {
+    width: 44px;
+    min-width: 44px;
+    max-width: 44px;
+}
+
+.pm-table--device-alarm-page--selectable th:nth-child(2),
+.pm-table--device-alarm-page--selectable td:nth-child(2) {
+    width: 72px;
+    min-width: 72px;
+    max-width: 72px;
+}
+
+.pm-table--device-alarm-page--selectable th:nth-child(3),
+.pm-table--device-alarm-page--selectable td:nth-child(3) {
+    width: 11%;
+}
+
+.pm-table--device-alarm-page--selectable th:nth-child(4),
+.pm-table--device-alarm-page--selectable td:nth-child(4) {
+    width: 96px;
+    min-width: 96px;
+    max-width: 96px;
+}
+
+.pm-table--device-alarm-page--selectable th:nth-child(5),
+.pm-table--device-alarm-page--selectable td:nth-child(5) {
+    width: 9%;
+}
+
+.pm-table--device-alarm-page--selectable th:nth-child(6),
+.pm-table--device-alarm-page--selectable td:nth-child(6) {
+    width: 9%;
+}
+
+.pm-table--device-alarm-page--selectable th:nth-child(7),
+.pm-table--device-alarm-page--selectable td:nth-child(7) {
+    width: 9%;
+}
+
+.pm-table--device-alarm-page--selectable th:nth-child(8),
+.pm-table--device-alarm-page--selectable td:nth-child(8) {
+    width: 180px;
+    min-width: 180px;
+}
+
+.pm-table--device-alarm-page--selectable th:nth-child(9),
+.pm-table--device-alarm-page--selectable td:nth-child(9) {
+    width: 96px;
+    min-width: 96px;
+}
+
+.pm-table--device-alarm-page--selectable th:nth-child(10),
+.pm-table--device-alarm-page--selectable td:nth-child(10) {
+    width: 150px;
+    min-width: 150px;
+}
+
+.pm-table--device-alarm-page--selectable th:nth-child(11),
+.pm-table--device-alarm-page--selectable td:nth-child(11) {
+    width: 420px;
+    min-width: 420px;
+    max-width: 420px;
+    vertical-align: middle;
+}
+
+.pm-table--device-alarm-page--selectable th:nth-child(12),
+.pm-table--device-alarm-page--selectable td:nth-child(12) {
+    width: 112px;
+    min-width: 112px;
+}
+
+.pm-table--device-alarm-page--selectable td:nth-child(12) .dai-process-status {
+    min-width: 0;
+}
+
+.dai-level-tag {
+    font-size: 13px;
+    font-weight: 400;
+    color: var(--text);
+}
+
+.dai-status-dot {
+    display: inline-block;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    margin-right: 6px;
+    vertical-align: middle;
+}
+
+.dai-status-dot--unread {
+    background: #FFB167;
+}
+
+.dai-status-dot--read {
+    background: #67c23a;
+}
+
+.dai-status-dot--pending {
+    background: #f7d149;
+}
+
+.dai-status-dot--processing {
+    background: #f6a54b;
+}
+
+.dai-status-dot--done {
+    background: #67c23a;
+}
+
+.dai-trigger-content {
+    display: inline;
+    white-space: nowrap;
+}
+
+.dai-process-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    color: var(--text-secondary);
+    white-space: nowrap;
+    min-width: 72px;
+}
+
+.dai-process-status__icon {
+    display: inline-flex;
+    width: 16px;
+    height: 16px;
+    flex-shrink: 0;
+}
+
+.dai-process-status__icon svg {
+    width: 16px;
+    height: 16px;
+}
+
+.dai-process-status--pending .dai-process-status__icon {
+    color: #f7d149;
+}
+
+.dai-process-status--processing .dai-process-status__icon {
+    color: #f6a54b;
+}
+
+.dai-process-status--done .dai-process-status__icon {
+    color: #67c23a;
+}
+
+.dai-table-actions {
+    display: inline-flex;
+    align-items: center;
+    gap: 16px;
+    min-height: 22px;
+    white-space: nowrap;
+}
+
+.dai-table-actions button {
+    border: 0;
+    background: transparent;
+    color: var(--blue);
+    font-size: 13px;
+    font-family: inherit;
+    cursor: pointer;
+    padding: 0;
+}
+
+.dai-table-actions button.is-disabled {
+    color: #c0c4cc;
+    cursor: not-allowed;
+}
+
+.dai-table-actions span.is-disabled {
+    color: #c0c4cc;
+}
+
+.dai-alarm-detail-drawer {
+    width: min(720px, 100vw);
+    max-width: 100vw;
+}
+
+.dai-alarm-detail-body {
+    padding: 20px;
+}
+
+.dai-detail-section + .dai-detail-section {
+    margin-top: 20px;
+}
+
+.dai-detail-section-title {
+    margin: 0 0 12px;
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.dai-detail-section-title::before {
+    content: "";
+    width: 3px;
+    height: 14px;
+    border-radius: 2px;
+    background: var(--blue);
+}
+
+.dai-detail-table {
+    border: 1px solid #ebeef5;
+    border-radius: 2px;
+    overflow: hidden;
+}
+
+.dai-detail-row {
+    display: grid;
+    grid-template-columns: 140px 1fr;
+    border-bottom: 1px solid #ebeef5;
+    font-size: 13px;
+    line-height: 1.6;
+}
+
+.dai-detail-row:last-child {
+    border-bottom: 0;
+}
+
+.dai-detail-label {
+    padding: 10px 16px;
+    background: #f5f7fa;
+    color: var(--text-secondary);
+    border-right: 1px solid #ebeef5;
+}
+
+.dai-detail-value {
+    padding: 10px 16px;
+    color: var(--text);
+    min-width: 0;
+    word-break: break-word;
+}
+
+.dai-detail-table--nested {
+    border: 0;
+    border-radius: 0;
+}
+
+.dai-detail-table--nested .dai-detail-row {
+    border-bottom: 1px solid #ebeef5;
+}
+
+.dai-detail-table--nested .dai-detail-row:last-child {
+    border-bottom: 0;
+}
+
+.dai-detail-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+}
+
+.dai-level-tag--urgent {
+    color: #f56c6c;
+    font-weight: 500;
+}
+
+.dai-trigger-info {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    width: 100%;
+}
+
+.dai-detail-value .dai-trigger-info {
+    padding: 0;
+}
+
+.dai-condition-block {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.dai-trigger-method {
+    font-size: 13px;
+    color: var(--text);
+    line-height: 1.6;
+}
+
+.dai-condition-table {
+    border: 1px solid #ebeef5;
+    font-size: 13px;
+    line-height: 1.6;
+}
+
+.dai-condition-table__head,
+.dai-condition-table__row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    border-bottom: 1px solid #ebeef5;
+}
+
+.dai-condition-table__head {
+    background: #f5f7fa;
+    color: var(--text-secondary);
+}
+
+.dai-condition-table__row {
+    background: #fff;
+    color: var(--text);
+}
+
+.dai-condition-table__row:last-child {
+    border-bottom: 0;
+}
+
+.dai-condition-table__head span,
+.dai-condition-table__row span {
+    padding: 10px 16px;
+}
+
+.dai-condition-table__row span:first-child {
+    color: var(--text-secondary);
+}
+
+.dai-upload-wrap {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+}
+
+.dai-upload-tip {
+    max-width: 100%;
+}
+
+.dai-process-form {
+    width: 100%;
+    min-width: 0;
+}
+
+.dai-textarea-wrap {
+    position: relative;
+    width: 100%;
+    min-width: 0;
+}
+
+.dai-process-textarea {
+    box-sizing: border-box;
+    width: 100%;
+    max-width: 100%;
+    min-height: 120px;
+    padding-bottom: 28px;
+}
+
+.dai-textarea-counter {
+    position: absolute;
+    right: 10px;
+    bottom: 8px;
+    font-size: 12px;
+    color: #c0c4cc;
+    pointer-events: none;
+}
+
+.dai-work-order-id {
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.dai-link-btn {
+    border: 0;
+    background: transparent;
+    color: var(--blue);
+    font-size: 13px;
+    font-family: inherit;
+    cursor: pointer;
+    padding: 0;
+}
+
+.dai-attachment-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.dai-attachment-thumb {
+    width: 72px;
+    height: 72px;
+    border: 1px solid #ebeef5;
+    border-radius: 4px;
+    background: #f5f7fa;
+    color: #c0c4cc;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* ── 转为工单侧拉抽屉 ── */
+.dai-convert-work-order-mask {
+    z-index: 120;
+}
+
+.dai-convert-work-order-drawer {
+    width: min(480px, 100%);
+}
+
+.dai-convert-work-order-body {
+    gap: 16px;
+}
+
+.dai-convert-textarea {
+    box-sizing: border-box;
+    width: 100%;
+    max-width: 100%;
+    min-height: 96px;
+    padding-bottom: 28px;
+}
+
+.dai-assignee-field {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.dai-assignee-display {
+    flex: 1;
+    min-width: 0;
+    cursor: default;
+    background: #f5f7fa;
+}
+
+.dai-assignee-btn {
+    flex-shrink: 0;
+    height: 32px;
+    padding: 0 14px;
+}
+
+.dai-convert-work-order-tip {
+    margin: 0;
+    font-size: 12px;
+    line-height: 1.6;
+    color: #f56c6c;
+}
+
+.dai-list-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+}
+
+.dai-list-selection {
+    margin-left: 4px;
+    font-size: 13px;
+    font-weight: 400;
+    color: var(--text-secondary);
+}
+
+.dai-batch-summary {
+    margin: 0;
+    font-size: 13px;
+    line-height: 1.6;
+    color: var(--text-secondary);
+}
+
+.dai-batch-summary strong {
+    color: var(--blue);
+    font-weight: 600;
+}
+
+.pm-table--device-alarm-page--selectable .dai-table__check {
+    width: 44px;
+    min-width: 44px;
+    max-width: 44px;
+    padding-left: 12px;
+    padding-right: 28px;
+    text-align: right;
+    overflow: visible;
+    text-overflow: clip;
+}
+
+.pm-table--device-alarm-page--selectable .dai-table__check input[type="checkbox"]:disabled {
+    cursor: not-allowed;
+    opacity: 0.45;
+}
+
+/* ── 选择指派人侧拉抽屉 ── */
+.dai-assignee-picker-mask {
+    z-index: 130;
+}
+
+.dai-assignee-picker-drawer {
+    width: min(720px, 100vw);
+    max-width: 100vw;
+}
+
+.dai-assignee-picker-body {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 16px 20px;
+    min-width: 0;
+    overflow-x: hidden;
+}
+
+.dai-assignee-picker-filter {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+}
+
+.dai-assignee-picker-filter .pm-filter-field {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.dai-assignee-picker-filter .pm-filter-label {
+    flex-shrink: 0;
+    white-space: nowrap;
+}
+
+.dai-assignee-dept-select,
+.dai-assignee-picker-filter .pm-filter-input {
+    width: 200px;
+    min-width: 200px;
+}
+
+.dai-assignee-picker-table-wrap {
+    flex: 1;
+    min-height: 0;
+    min-width: 0;
+    overflow-x: hidden;
+    overflow-y: auto;
+    border: 1px solid #ebeef5;
+    border-radius: 2px;
+}
+
+.dai-assignee-picker-table-wrap .pm-table {
+    width: 100%;
+    min-width: 0;
+    table-layout: fixed;
+}
+
+.dai-assignee-picker-table-wrap .pm-table th,
+.dai-assignee-picker-table-wrap .pm-table td {
+    min-width: 0;
+    padding: 11px 12px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.dai-assignee-picker-table-wrap .pm-table th:first-child,
+.dai-assignee-picker-table-wrap .pm-table td:first-child {
+    width: 72px;
+    min-width: 72px;
+    max-width: 72px;
+    padding-left: 16px;
+    overflow: visible;
+    text-overflow: clip;
+}
+
+.dai-assignee-picker-table-wrap .pm-table th:nth-child(2),
+.dai-assignee-picker-table-wrap .pm-table td:nth-child(2) {
+    width: 18%;
+}
+
+.dai-assignee-picker-table-wrap .pm-table th:nth-child(3),
+.dai-assignee-picker-table-wrap .pm-table td:nth-child(3) {
+    width: 22%;
+}
+
+.dai-assignee-picker-table-wrap .pm-table th:nth-child(4),
+.dai-assignee-picker-table-wrap .pm-table td:nth-child(4) {
+    width: 18%;
+}
+
+.dai-assignee-picker-table-wrap .pm-table th:last-child,
+.dai-assignee-picker-table-wrap .pm-table td:last-child {
+    width: auto;
+    min-width: 0;
+    padding-right: 16px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.dai-assignee-picker-check-col {
+    width: 72px;
+}
+
+.dai-assignee-picker-check-all {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-weight: 400;
+    cursor: pointer;
+}
+
+.dai-assignee-picker-check-all input,
+.dai-assignee-picker-table-wrap tbody input[type="checkbox"] {
+    margin: 0;
+    accent-color: var(--blue);
+}
+
+.dai-assignee-picker-empty {
+    text-align: center;
+    color: var(--text-muted);
+    padding: 32px 16px !important;
+}
+
+.dai-assignee-picker-drawer .pm-pagination {
+    margin-top: auto;
+    padding-top: 4px;
+}

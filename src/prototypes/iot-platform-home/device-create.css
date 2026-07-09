@@ -1,0 +1,1959 @@
+.dcp-page {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    min-height: 100%;
+}
+
+.dcp-tabs {
+    display: flex;
+    gap: 0;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-bottom: none;
+    border-radius: 6px 6px 0 0;
+    padding: 0 8px;
+    box-shadow: 0 1px 3px rgba(15, 35, 65, 0.04);
+    margin-bottom: -12px;
+}
+
+.dcp-tabs + .dcp-panel,
+.dcp-tabs + .ru-placeholder-panel,
+.dcp-tabs + .dcp-prop-data-panel,
+.dcp-tabs + .dcp-alarm-panel,
+.dcp-tabs + .dcp-file-panel,
+.dcp-tabs + .dcp-shadow-panel,
+.dcp-tabs + .sdm-panel,
+.dcp-tabs + .dlm-panel {
+    border-top-left-radius: 0;
+    border-top-right-radius: 0;
+}
+
+.dcp-tab {
+    border: 0;
+    background: transparent;
+    padding: 20px 18px 22px;
+    font-size: 14px;
+    color: var(--text-secondary);
+    font-family: inherit;
+    cursor: pointer;
+    position: relative;
+    white-space: nowrap;
+}
+
+.dcp-tab:hover {
+    color: var(--blue);
+}
+
+.dcp-tab.is-active {
+    color: var(--blue);
+    font-weight: 600;
+}
+
+.dcp-tab.is-active::after {
+    content: '';
+    position: absolute;
+    left: 10px;
+    right: 10px;
+    bottom: 0;
+    height: 2px;
+    background: var(--blue);
+    border-radius: 1px;
+}
+
+.dcp-panel {
+    padding: 20px 20px 24px;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 28px;
+}
+
+.dcp-section {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.dcp-form-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 18px 24px;
+}
+
+.dcp-form-field {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    min-width: 0;
+}
+
+.dcp-form-field--span-2 {
+    grid-column: span 2;
+}
+
+.dcp-form-label {
+    font-size: 13px;
+    color: var(--text-secondary);
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.dcp-form-label em {
+    color: #f56c6c;
+    font-style: normal;
+    margin-right: 2px;
+}
+
+.dcp-form-label__info {
+    color: #e6a23c;
+    display: inline-flex;
+    align-items: center;
+}
+
+.dcp-form-input,
+.dcp-form-textarea {
+    width: 100%;
+    border: 1px solid #dcdfe6;
+    border-radius: 4px;
+    padding: 0 12px;
+    font-size: 13px;
+    color: var(--text);
+    font-family: inherit;
+    background: #fff;
+}
+
+.dcp-form-input {
+    height: 34px;
+}
+
+.dcp-form-input.is-readonly {
+    background: #f5f7fa;
+    color: var(--text-muted);
+}
+
+.dcp-form-select {
+    width: 100%;
+    min-width: 0;
+}
+
+.dcp-input-with-suffix {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.dcp-input-with-suffix .dcp-form-input {
+    flex: 1;
+    min-width: 0;
+}
+
+.dcp-collect-frequency-unit {
+    width: 88px;
+    flex-shrink: 0;
+}
+
+.dcp-collect-frequency-unit .el-select__wrapper {
+    min-width: 88px;
+}
+
+.dcp-input-suffix {
+    font-size: 13px;
+    color: var(--text-secondary);
+    flex-shrink: 0;
+}
+
+.dcp-geo-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 20px;
+}
+
+.dcp-geo-panel {
+    border: 1px solid #ebeef5;
+    border-radius: 4px;
+    padding: 16px;
+    background: #fafbfd;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    min-height: 160px;
+}
+
+.dcp-geo-panel__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.dcp-geo-panel__title {
+    margin: 0;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    gap: 2px;
+}
+
+.dcp-geo-panel__title em {
+    color: #f56c6c;
+    font-style: normal;
+}
+
+.dcp-geo-panel__actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.dcp-geo-panel__actions .pm-btn {
+    height: 28px;
+    padding: 0 12px;
+    font-size: 12px;
+}
+
+.dcp-geo-panel__hint {
+    margin: 0;
+    font-size: 12px;
+    line-height: 1.6;
+    color: var(--text-muted);
+}
+
+.dcp-geo-panel__fields {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.dcp-geo-field {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    color: var(--text-secondary);
+}
+
+.dcp-geo-field span:first-child {
+    color: var(--text-muted);
+    min-width: 64px;
+}
+
+.dcp-geo-field strong {
+    font-weight: 400;
+    color: var(--text-secondary);
+}
+
+.dcp-enable-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-height: 32px;
+}
+
+.dcp-enable-label {
+    font-size: 13px;
+    color: var(--text-secondary);
+}
+
+.dcp-enable-switch {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    color: var(--text-secondary);
+}
+
+.dcp-enable-switch input {
+    appearance: none;
+    width: 40px;
+    height: 22px;
+    border-radius: 11px;
+    background: #dcdfe6;
+    position: relative;
+    cursor: pointer;
+    transition: background 0.2s ease;
+}
+
+.dcp-enable-switch input::after {
+    content: "";
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: #fff;
+    transition: transform 0.2s ease;
+}
+
+.dcp-enable-switch input:checked {
+    background: var(--blue);
+}
+
+.dcp-enable-switch input:checked::after {
+    transform: translateX(18px);
+}
+
+.dcp-group-panel {
+    border: 1px solid #ebeef5;
+    border-radius: 4px;
+    padding: 16px 18px;
+    background: #fff;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.dcp-group-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+}
+
+.dcp-group-row__label {
+    min-width: 72px;
+    font-size: 13px;
+    color: var(--text-secondary);
+    line-height: 28px;
+    flex-shrink: 0;
+}
+
+.dcp-group-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.dcp-group-tag {
+    height: 28px;
+    padding: 0 14px;
+    border: 1px solid #dcdfe6;
+    border-radius: 4px;
+    background: #fff;
+    color: var(--text-secondary);
+    font-size: 13px;
+    font-family: inherit;
+    cursor: pointer;
+    transition: border-color 0.2s, color 0.2s, background 0.2s;
+}
+
+.dcp-group-tag:hover {
+    border-color: var(--blue);
+    color: var(--blue);
+}
+
+.dcp-group-tag.is-selected {
+    border-color: var(--blue);
+    background: #ecf5ff;
+    color: var(--blue);
+}
+
+.dcp-group-dialog-mask {
+    overflow: hidden;
+}
+
+.dcp-group-dialog {
+    --blue: #1890ff;
+    --text: #1f2d3d;
+    --text-secondary: #5c6b7a;
+    --text-muted: #8c9bab;
+    --placeholder: #b2b2b2;
+    --font: "Helvetica Neue", Helvetica, Arial, "PingFang SC", "Microsoft YaHei", sans-serif;
+    width: min(480px, 100vw);
+    max-width: 100vw;
+    overflow: hidden;
+    font-family: var(--font);
+    color: var(--text);
+}
+
+.dcp-group-dialog .pcp-drawer__head h3 {
+    color: #1f2d3d;
+}
+
+.dcp-group-dialog .pcp-form-label {
+    color: #606266;
+}
+
+.dcp-group-dialog .pcp-drawer__foot {
+    flex-shrink: 0;
+    background: #fff;
+    box-shadow: 0 -1px 0 #ebeef5;
+}
+
+.dcp-group-dialog .pcp-drawer__foot .pm-btn {
+    min-width: 88px;
+    height: 36px;
+    justify-content: center;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.dcp-group-dialog .pcp-drawer__foot .pm-btn-primary {
+    border: 1px solid #1890ff;
+    background: #1890ff;
+    color: #fff;
+}
+
+.dcp-group-dialog .pcp-drawer__foot .pm-btn-primary:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+}
+
+.dcp-group-dialog .pcp-drawer__foot .pm-btn-ghost {
+    border: 1px solid #dcdfe6;
+    background: #fff;
+    color: #303133;
+}
+
+.dcp-group-dialog .pcp-drawer__body {
+    overflow-x: hidden;
+    overflow-y: auto;
+}
+
+.dcp-group-dialog .pcp-drawer-field {
+    width: 100%;
+    min-width: 0;
+}
+
+.dcp-group-dialog .pcp-drawer-field .pcp-form-input,
+.dcp-group-dialog .pcp-drawer-field .el-select,
+.dcp-group-dialog .pcp-drawer-field .pcp-form-select,
+.dcp-group-dialog .pcp-drawer-field .pcp-form-textarea,
+.dcp-group-dialog .pcp-drawer-field .dai-textarea-wrap,
+.dcp-group-dialog .pcp-drawer-field .dai-assignee-field {
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+    box-sizing: border-box;
+}
+
+.dcp-group-dialog.wom-create-drawer {
+    width: min(580px, 100vw);
+    max-width: 100vw;
+}
+
+.dcp-group-dialog.wom-detail-drawer {
+    width: min(720px, 100vw);
+    max-width: 100vw;
+}
+
+.dcp-footer {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    padding-top: 8px;
+    border-top: 1px solid #f0f2f5;
+    margin-top: auto;
+}
+
+.dcp-footer .pm-btn {
+    min-width: 120px;
+    height: 36px;
+    justify-content: center;
+}
+
+.dcp-map-dialog {
+    --blue: #1890ff;
+    --text: #1f2d3d;
+    --text-secondary: #5c6b7a;
+    --font: "Helvetica Neue", Helvetica, Arial, "PingFang SC", "Microsoft YaHei", sans-serif;
+    font-family: var(--font);
+    color: var(--text);
+}
+
+.dcp-map-dialog .iot-dialog__head,
+.dcp-map-dialog .iot-dialog__foot {
+    flex-shrink: 0;
+    position: relative;
+    z-index: 4;
+    background: #fff;
+}
+
+.dcp-map-dialog .iot-dialog__foot {
+    box-shadow: 0 -1px 0 #ebeef5, 0 -4px 12px rgba(15, 35, 65, 0.06);
+}
+
+.dcp-map-dialog .iot-dialog__foot .pm-btn {
+    min-width: 96px;
+    height: 36px;
+    justify-content: center;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.dcp-map-dialog .iot-dialog__foot .pm-btn-primary {
+    border: 1px solid #1890ff;
+    background: #1890ff;
+    color: #fff;
+}
+
+.dcp-map-dialog .iot-dialog__foot .pm-btn-primary:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+}
+
+.dcp-map-dialog .iot-dialog__foot .pm-btn-ghost {
+    border: 1px solid #dcdfe6;
+    background: #fff;
+    color: #303133;
+}
+
+.dcp-map-dialog__body {
+    padding: 16px 20px;
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    overflow: hidden;
+}
+
+.dcp-map-dialog__map-wrap {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    flex: 1;
+    min-height: 0;
+    border: 1px solid #ebeef5;
+    border-radius: 4px;
+    overflow: hidden;
+    background: #dfe6ee;
+}
+
+.dcp-map-dialog__toolbar {
+    position: absolute;
+    top: 16px;
+    left: 16px;
+    right: 16px;
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 8px;
+    background: rgba(255, 255, 255, 0.96);
+    border-radius: 4px;
+    box-shadow: 0 2px 8px rgba(15, 35, 65, 0.12);
+}
+
+.dcp-map-dialog__input--address {
+    width: min(240px, 100%);
+    flex: 1 1 200px;
+}
+
+.dcp-map-dialog__field {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 13px;
+    color: #606266;
+    white-space: nowrap;
+}
+
+.dcp-map-dialog__input--coord {
+    width: 108px;
+}
+
+.dcp-map-dialog__search-error {
+    flex: 1 1 100%;
+    margin: 0;
+    font-size: 12px;
+    color: #f56c6c;
+    line-height: 1.4;
+}
+
+.dcp-map-dialog__input {
+    width: 140px;
+    height: 34px;
+    border: 1px solid #dcdfe6;
+    border-radius: 4px;
+    padding: 0 12px;
+    font-size: 13px;
+    color: var(--text);
+    font-family: inherit;
+    background: #fff;
+}
+
+.dcp-map-dialog__toolbar-btn {
+    height: 32px;
+    padding: 0 16px;
+    flex-shrink: 0;
+    border: 1px solid #1890ff;
+    background: #1890ff;
+    color: #fff;
+}
+
+.dcp-map-dialog__toolbar-btn:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+}
+
+.dcp-map-dialog__map {
+    position: relative;
+    flex: 1;
+    min-height: 320px;
+    width: 100%;
+    overflow: hidden;
+    background: #dfe6ee;
+}
+
+.dcp-map-dialog__bmap {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+}
+
+.dcp-map-dialog__status {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    background: rgba(255, 255, 255, 0.92);
+    color: var(--text-secondary);
+    font-size: 14px;
+    z-index: 3;
+    text-align: center;
+    padding: 24px;
+}
+
+.dcp-map-dialog__status--error {
+    color: #f56c6c;
+}
+
+.dcp-map-dialog__status-tip {
+    margin: 0;
+    font-size: 12px;
+    color: var(--text-muted);
+}
+
+.dcp-map-dialog__tile-warning {
+    position: absolute;
+    top: 72px;
+    left: 16px;
+    right: 16px;
+    z-index: 4;
+    padding: 10px 12px;
+    border-radius: 4px;
+    background: rgba(255, 251, 230, 0.96);
+    border: 1px solid #f5d061;
+    color: #8a6d1d;
+    font-size: 12px;
+    line-height: 1.5;
+    box-shadow: 0 2px 8px rgba(15, 35, 65, 0.12);
+}
+
+.dcp-space-dialog {
+    --blue: #1890ff;
+    --text: #1f2d3d;
+    --text-secondary: #5c6b7a;
+    --font: "Helvetica Neue", Helvetica, Arial, "PingFang SC", "Microsoft YaHei", sans-serif;
+    font-family: var(--font);
+    color: var(--text);
+}
+
+.dcp-space-dialog .iot-dialog__head,
+.dcp-space-dialog .iot-dialog__foot {
+    flex-shrink: 0;
+    position: relative;
+    z-index: 4;
+    background: #fff;
+}
+
+.dcp-space-dialog .iot-dialog__foot {
+    box-shadow: 0 -1px 0 #ebeef5, 0 -4px 12px rgba(15, 35, 65, 0.06);
+}
+
+.dcp-space-dialog .iot-dialog__foot .pm-btn {
+    min-width: 96px;
+    height: 36px;
+    justify-content: center;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.dcp-space-dialog .iot-dialog__foot .pm-btn-primary {
+    border: 1px solid #1890ff;
+    background: #1890ff;
+    color: #fff;
+}
+
+.dcp-space-dialog .iot-dialog__foot .pm-btn-primary:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+}
+
+.dcp-space-dialog .iot-dialog__foot .pm-btn-ghost {
+    border: 1px solid #dcdfe6;
+    background: #fff;
+    color: #303133;
+}
+
+.dcp-space-dialog__toolbar {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+    padding: 12px 20px;
+    border-bottom: 1px solid #ebeef5;
+    background: #fff;
+}
+
+.dcp-space-dialog__coord {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    color: #606266;
+    white-space: nowrap;
+}
+
+.dcp-space-dialog__coord-input {
+    width: 88px;
+    height: 34px;
+    border: 1px solid #dcdfe6;
+    border-radius: 4px;
+    padding: 0 10px;
+    font-size: 13px;
+    color: var(--text);
+    font-family: inherit;
+    background: #fff;
+}
+
+.dcp-space-dialog__edit-btn {
+    margin-left: auto;
+    height: 32px;
+    padding: 0 16px;
+    flex-shrink: 0;
+}
+
+.dcp-space-dialog__body {
+    flex: 1;
+    min-height: 0;
+    padding: 0;
+    overflow: hidden;
+    background: #dfe6ee;
+}
+
+.dcp-space-cascade {
+    position: relative;
+    min-width: 220px;
+}
+
+.dcp-space-cascade__trigger {
+    display: flex;
+    align-items: center;
+    min-width: 220px;
+    max-width: 360px;
+    height: 34px;
+    padding: 0 12px;
+    border: 1px solid #dcdfe6;
+    border-radius: 4px;
+    background: #fff;
+    font-size: 13px;
+    color: var(--text);
+    text-align: left;
+    cursor: pointer;
+}
+
+.dcp-space-cascade__panel {
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0;
+    z-index: 20;
+    display: flex;
+    max-width: min(720px, 90vw);
+    border: 1px solid #e4e7ed;
+    border-radius: 4px;
+    background: #fff;
+    box-shadow: 0 4px 16px rgba(15, 35, 65, 0.14);
+    overflow: hidden;
+}
+
+.dcp-space-cascade__column {
+    list-style: none;
+    margin: 0;
+    padding: 6px 0;
+    min-width: 140px;
+    max-height: 280px;
+    overflow-y: auto;
+    border-right: 1px solid #f0f2f5;
+}
+
+.dcp-space-cascade__column:last-child {
+    border-right: none;
+}
+
+.dcp-space-cascade__option {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    width: 100%;
+    padding: 8px 14px;
+    border: none;
+    background: transparent;
+    font-size: 13px;
+    color: #303133;
+    text-align: left;
+    cursor: pointer;
+}
+
+.dcp-space-cascade__option:hover,
+.dcp-space-cascade__option.is-selected {
+    background: #ecf5ff;
+    color: #1890ff;
+}
+
+.dcp-space-map {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    min-height: 420px;
+    background-color: #c8d4dc;
+    background-size: cover;
+    background-position: center;
+    cursor: crosshair;
+    overflow: hidden;
+}
+
+.dcp-space-map__pin {
+    position: absolute;
+    transform: translate(-50%, -100%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    padding: 0;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    z-index: 2;
+}
+
+.dcp-space-map__pin-label {
+    padding: 2px 8px;
+    border-radius: 2px;
+    background: rgba(255, 255, 255, 0.92);
+    color: #1890ff;
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 1.4;
+    white-space: nowrap;
+    box-shadow: 0 1px 4px rgba(15, 35, 65, 0.15);
+}
+
+.dcp-space-map__pin-icon {
+    color: #1890ff;
+    filter: drop-shadow(0 1px 2px rgba(255, 255, 255, 0.8));
+}
+
+.dcp-space-map__pin.is-active .dcp-space-map__pin-label {
+    background: #1890ff;
+    color: #fff;
+}
+
+.dcp-space-map__pin.is-active .dcp-space-map__pin-icon {
+    color: #096dd9;
+}
+
+@media (max-width: 1200px) {
+    .dcp-form-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .dcp-form-field--span-2 {
+        grid-column: span 2;
+    }
+
+    .dcp-geo-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 860px) {
+    .dcp-form-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .dcp-form-field--span-2 {
+        grid-column: span 1;
+    }
+}
+
+/* ── 属性数据 ── */
+
+.dcp-prop-data-panel {
+    padding: 20px 20px 24px;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    background: #fff;
+}
+
+.dcp-prop-data-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: nowrap;
+}
+
+.dcp-prop-data-toolbar__left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: nowrap;
+    flex: 0 0 auto;
+}
+
+.dcp-prop-data-search {
+    width: 280px;
+    flex-shrink: 0;
+    height: 34px;
+    border: 1px solid #dcdfe6;
+    border-radius: 4px;
+    padding: 0 12px;
+    font-size: 13px;
+    color: var(--text);
+    font-family: inherit;
+    background: #fff;
+}
+
+.dcp-prop-data-toolbar .pm-btn {
+    min-width: 72px;
+    height: 34px;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.dcp-prop-data-migrate {
+    margin-left: auto;
+    flex-shrink: 0;
+    white-space: nowrap;
+}
+
+.dcp-prop-data-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 16px;
+}
+
+.dcp-prop-data-card {
+    border: 1px solid #ebeef5;
+    border-radius: 4px;
+    background: #fff;
+    padding: 16px 18px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    min-height: 168px;
+}
+
+.dcp-prop-data-card__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+}
+
+.dcp-prop-data-card__head h4 {
+    margin: 0;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text);
+}
+
+.dcp-prop-data-card__refresh {
+    border: 0;
+    background: transparent;
+    color: var(--text-muted);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 4px;
+    cursor: pointer;
+    border-radius: 4px;
+    transition: color 0.15s, background 0.15s;
+}
+
+.dcp-prop-data-card__refresh:hover:not(:disabled) {
+    color: var(--blue);
+    background: #ecf5ff;
+}
+
+.dcp-prop-data-card__refresh:disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+.dcp-prop-data-card__refresh.is-spinning svg {
+    animation: dcp-prop-refresh-spin 0.8s linear infinite;
+}
+
+@keyframes dcp-prop-refresh-spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+.dcp-prop-data-card__value {
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+    min-height: 40px;
+}
+
+.dcp-prop-data-card__value strong {
+    font-size: 28px;
+    line-height: 1.2;
+    font-weight: 600;
+    color: var(--text);
+}
+
+.dcp-prop-data-card__value span {
+    font-size: 14px;
+    color: var(--text-secondary);
+}
+
+.dcp-prop-data-card__time {
+    margin: 0;
+    font-size: 12px;
+    color: var(--text-muted);
+}
+
+.dcp-prop-data-card__actions {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 40px;
+    margin-top: auto;
+    padding-top: 4px;
+}
+
+.dcp-prop-data-card__actions .pm-link-btn {
+    font-size: 13px;
+}
+
+.dcp-prop-data-empty {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 200px;
+    color: var(--text-muted);
+    font-size: 14px;
+}
+
+@media (max-width: 1400px) {
+    .dcp-prop-data-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 1100px) {
+    .dcp-prop-data-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 720px) {
+    .dcp-prop-data-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .dcp-prop-data-toolbar {
+        flex-wrap: wrap;
+    }
+
+    .dcp-prop-data-toolbar__left {
+        flex-wrap: wrap;
+        width: 100%;
+    }
+
+    .dcp-prop-data-search {
+        width: 100%;
+    }
+
+    .dcp-prop-data-migrate {
+        margin-left: 0;
+    }
+}
+
+/* ── 属性数据抽屉 ── */
+
+.dcp-prop-drawer {
+    width: min(960px, 100%);
+}
+
+.dcp-prop-drawer__body {
+    gap: 18px;
+}
+
+.dcp-prop-drawer-filter {
+    display: flex;
+    align-items: flex-end;
+    gap: 12px 16px;
+    flex-wrap: wrap;
+    padding-bottom: 4px;
+    border-bottom: 1px solid #f0f2f5;
+}
+
+.dcp-prop-drawer-filter__field {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 13px;
+    color: var(--text-secondary);
+}
+
+.dcp-prop-drawer-filter__field > span {
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.dcp-prop-drawer-filter__actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.dcp-prop-drawer-filter__actions .pm-btn {
+    min-width: 72px;
+    height: 34px;
+    justify-content: center;
+}
+
+.dcp-prop-drawer-empty {
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 50vh;
+    max-height: 50vh;
+    min-height: 180px;
+    color: var(--text-muted);
+    font-size: 14px;
+}
+
+.dcp-prop-chart {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    flex: 0 0 auto;
+}
+
+.dcp-prop-chart__unit {
+    font-size: 13px;
+    color: var(--text-secondary);
+    flex-shrink: 0;
+    line-height: 1.4;
+}
+
+.dcp-prop-chart__canvas {
+    width: 100%;
+    flex: 0 0 auto;
+}
+
+.dcp-prop-chart__plot {
+    cursor: crosshair;
+    position: relative;
+    width: 100%;
+    aspect-ratio: 880 / 260;
+    max-height: calc(50vh - 28px);
+}
+
+.dcp-prop-chart__svg {
+    width: 100%;
+    height: 100%;
+    display: block;
+}
+
+.dcp-prop-chart__axis-label {
+    fill: #8c9bab;
+    font-size: 11px;
+    font-family: inherit;
+}
+
+.dcp-prop-history-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 12px;
+}
+
+.dcp-prop-history-pagination {
+    flex-shrink: 0;
+    padding-top: 4px;
+}
+
+.dcp-prop-history-pagination .pm-pagination {
+    margin-top: 0;
+    flex-wrap: wrap;
+    gap: 8px 12px;
+}
+
+.dcp-prop-history-export {
+    height: 32px;
+    padding: 0 12px;
+    flex-shrink: 0;
+}
+
+.dcp-prop-history-table {
+    flex: 0 0 auto;
+    max-height: calc(100vh - 280px);
+    overflow-x: hidden;
+    overflow-y: auto;
+    border: 1px solid #ebeef5;
+    border-radius: 4px;
+    background: #fff;
+}
+
+.dcp-prop-history-table .pm-table {
+    width: 100%;
+    min-width: 0;
+    table-layout: fixed;
+}
+
+.dcp-prop-history-table .pm-table th,
+.dcp-prop-history-table .pm-table td {
+    min-width: 0;
+    padding: 10px 12px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.dcp-prop-history-table .pm-table th:first-child,
+.dcp-prop-history-table .pm-table td:first-child {
+    width: 48%;
+    padding-left: 16px;
+}
+
+.dcp-prop-history-table .pm-table th:nth-child(2),
+.dcp-prop-history-table .pm-table td:nth-child(2) {
+    width: 30%;
+}
+
+.dcp-prop-history-table .pm-table th:last-child,
+.dcp-prop-history-table .pm-table td:last-child {
+    width: 22%;
+    padding-right: 16px;
+}
+
+/* ── 数据迁移 ── */
+
+.dcp-migrate-drawer {
+    width: min(580px, 100vw);
+}
+
+.dcp-migrate-drawer__body {
+    gap: 20px;
+}
+
+.dcp-migrate-notice {
+    padding: 10px 14px;
+    border-radius: 4px;
+    background: #e8f4ff;
+    border: 1px solid #b3d8ff;
+    color: #1890ff;
+    font-size: 13px;
+    line-height: 1.5;
+}
+
+.dcp-migrate-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.dcp-migrate-date-range-picker {
+    width: 100%;
+    max-width: var(--pm-filter-date-width, 240px);
+}
+
+.dcp-migrate-hint {
+    margin: 0;
+    padding: 10px 12px;
+    border-left: 3px solid #1890ff;
+    background: #f5f7fa;
+    font-size: 12px;
+    line-height: 1.6;
+    color: var(--text-secondary);
+}
+
+.dcp-migrate-empty {
+    font-size: 12px;
+    color: var(--text-muted);
+}
+
+/* ── 设备定时 ── */
+
+.dcs-panel {
+    gap: 16px;
+}
+
+.dcs-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: nowrap;
+}
+
+.dcs-toolbar__left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: nowrap;
+}
+
+.dcs-search {
+    width: 200px;
+    height: 34px;
+    flex-shrink: 0;
+}
+
+.dcs-status-select {
+    width: 120px;
+    flex-shrink: 0;
+}
+
+.dcs-toolbar > .pm-btn {
+    flex-shrink: 0;
+    min-width: 72px;
+    height: 34px;
+    justify-content: center;
+}
+
+.dcs-toolbar .pm-btn {
+    min-width: 72px;
+    height: 34px;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.dcs-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+}
+
+.dcs-status--on {
+    color: #67c23a;
+}
+
+.dcs-status--off {
+    color: #909399;
+}
+
+.dcs-status-dot {
+    display: inline-block;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: currentColor;
+    flex-shrink: 0;
+}
+
+.pcp-table--schedule {
+    width: 100%;
+    min-width: 0;
+    table-layout: fixed;
+}
+
+.pcp-table--schedule th,
+.pcp-table--schedule td {
+    min-width: 0;
+    padding: 10px 12px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.pcp-table--schedule th:first-child,
+.pcp-table--schedule td:first-child {
+    width: 56px;
+    padding-left: 16px;
+    padding-right: 8px;
+    text-align: center;
+}
+
+.pcp-table--schedule th:nth-child(2),
+.pcp-table--schedule td:nth-child(2) {
+    width: 18%;
+    min-width: 110px;
+}
+
+.pcp-table--schedule th:nth-child(3),
+.pcp-table--schedule td:nth-child(3) {
+    width: 120px;
+}
+
+.pcp-table--schedule th:nth-child(4),
+.pcp-table--schedule td:nth-child(4) {
+    width: 120px;
+}
+
+.pcp-table--schedule th:nth-child(5),
+.pcp-table--schedule td:nth-child(5) {
+    width: 80px;
+}
+
+.pcp-table--schedule th:last-child,
+.pcp-table--schedule td:last-child {
+    width: 248px;
+    padding-right: 24px;
+    overflow: visible;
+    text-overflow: clip;
+}
+
+.pcp-table--schedule .dcs-ops-col__inner {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    width: 220px;
+    max-width: 100%;
+    margin-left: auto;
+}
+
+.dcs-actions {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 24px;
+}
+
+.dcs-actions .pm-link-btn {
+    font-size: 13px;
+    padding: 0;
+    white-space: nowrap;
+}
+
+.pm-link-btn--danger {
+    color: #f56c6c !important;
+}
+
+.pm-link-btn--danger:hover {
+    color: #f78989 !important;
+}
+
+/* 周选择器 */
+.dcs-week-days {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.dcs-week-day {
+    min-width: 56px;
+    height: 34px;
+    padding: 0 12px;
+    border: 1px solid #dcdfe6;
+    border-radius: 4px;
+    background: #fff;
+    color: var(--text-secondary);
+    font-size: 13px;
+    font-family: inherit;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.dcs-week-day:hover {
+    border-color: var(--blue);
+    color: var(--blue);
+}
+
+.dcs-week-day.is-selected {
+    border: 1px dashed var(--blue);
+    background: var(--blue);
+    color: #fff;
+}
+
+/* 月日期选择 */
+.dcs-month-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.dcs-month-day {
+    min-width: 48px;
+    height: 34px;
+    padding: 0 8px;
+    border: 1px solid #dcdfe6;
+    border-radius: 4px;
+    background: #fff;
+    color: var(--text-secondary);
+    font-size: 13px;
+    font-family: inherit;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.dcs-month-day:hover {
+    border-color: var(--blue);
+    color: var(--blue);
+}
+
+.dcs-month-day.is-selected {
+    border: 1px dashed var(--blue);
+    background: var(--blue);
+    color: #fff;
+}
+
+/* 执行动作行 */
+.dcs-action-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+}
+
+.dcs-action-row:last-of-type {
+    margin-bottom: 0;
+}
+
+.dcs-action-select {
+    flex: 1;
+    min-width: 0;
+}
+
+.dcs-action-remove {
+    width: 28px;
+    height: 28px;
+    border: 1px solid #dcdfe6;
+    border-radius: 4px;
+    background: #fff;
+    color: #909399;
+    font-size: 16px;
+    line-height: 1;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    transition: all 0.2s;
+}
+
+.dcs-action-remove:hover {
+    border-color: #f56c6c;
+    color: #f56c6c;
+    background: #fef0f0;
+}
+
+.dcs-add-action-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    border: 0;
+    background: transparent;
+    color: var(--blue);
+    font-size: 13px;
+    font-family: inherit;
+    cursor: pointer;
+    padding: 4px 0 0;
+}
+
+.dcs-add-action-link:hover {
+    color: var(--blue-dark, #1677d8);
+}
+
+/* ── 设备告警信息（结构对齐 dcs-panel + DeviceAlarmInfoPage）── */
+
+.dcp-alarm-panel {
+    gap: 16px;
+}
+
+.dcp-alarm-summary {
+    display: flex;
+    align-items: center;
+    gap: 40px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--border);
+    min-height: 132px;
+}
+
+.dcp-alarm-summary__chart {
+    flex: 0 0 auto;
+}
+
+.dcp-alarm-summary__chart-empty {
+    width: 104px;
+    height: 104px;
+    border-radius: 50%;
+    background: #f3f5f8;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+}
+
+.dcp-alarm-summary__chart-empty strong {
+    font-size: 22px;
+    line-height: 1;
+    color: var(--text);
+}
+
+.dcp-alarm-summary__chart-empty span {
+    font-size: 12px;
+    color: var(--text-muted);
+}
+
+.dcp-alarm-summary__stats {
+    display: flex;
+    align-items: center;
+    gap: 48px;
+    flex: 1;
+    min-width: 0;
+}
+
+.dcp-alarm-summary__stat {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    min-width: 56px;
+}
+
+.dcp-alarm-summary__stat-value {
+    font-size: 28px;
+    font-weight: 600;
+    color: var(--text);
+    line-height: 1;
+}
+
+.dcp-alarm-summary__stat-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    color: var(--text-secondary);
+    white-space: nowrap;
+}
+
+.dcp-alarm-summary__stat-label i {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.dcp-alarm-summary__empty {
+    margin: 0;
+    font-size: 13px;
+    color: var(--text-muted);
+}
+
+/* ── 设备文件管理（结构对齐 dcs-panel + DeviceAlarmInfoPage 操作列）── */
+
+.dcp-file-panel {
+    gap: 16px;
+}
+
+.dcp-file-toolbar {
+    align-items: center;
+}
+
+.dcp-file-quota {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin: 0;
+    font-size: 13px;
+    color: var(--blue);
+    line-height: 1.5;
+}
+
+.dcp-file-upload-drawer {
+    width: min(480px, 100vw);
+}
+
+.dcp-file-input {
+    display: none;
+}
+
+.dcp-file-upload-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    height: 36px;
+    padding: 0 16px;
+    border: 0;
+    border-radius: 4px;
+    background: var(--blue);
+    color: #fff;
+    font-size: 13px;
+    font-family: inherit;
+    cursor: pointer;
+}
+
+.dcp-file-upload-btn:hover {
+    background: #1677d8;
+}
+
+.dcp-file-upload-name {
+    margin-top: 10px;
+    font-size: 13px;
+    color: var(--text-secondary);
+}
+
+.pcp-table--device-file {
+    width: 100%;
+    min-width: 920px;
+    table-layout: fixed;
+}
+
+.pcp-table--device-file th,
+.pcp-table--device-file td {
+    min-width: 0;
+}
+
+.pcp-table--device-file th:nth-child(1),
+.pcp-table--device-file td:nth-child(1) {
+    width: 56px;
+}
+
+.pcp-table--device-file th:nth-child(2),
+.pcp-table--device-file td:nth-child(2) {
+    width: 18%;
+}
+
+.pcp-table--device-file th:nth-child(3),
+.pcp-table--device-file td:nth-child(3) {
+    width: 24%;
+}
+
+.pcp-table--device-file th:nth-child(4),
+.pcp-table--device-file td:nth-child(4) {
+    width: 12%;
+}
+
+.pcp-table--device-file th:nth-child(5),
+.pcp-table--device-file td:nth-child(5) {
+    width: 22%;
+}
+
+.pcp-table--device-file th:last-child,
+.pcp-table--device-file td:last-child {
+    width: 148px;
+}
+
+/* ── 设备影子 ── */
+
+.dcp-shadow-panel {
+    gap: 0;
+    padding: 0;
+    overflow: hidden;
+}
+
+.dcp-shadow-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 14px 20px;
+    border-bottom: 1px solid #ebeef5;
+    background: #fafbfd;
+    flex-shrink: 0;
+}
+
+.dcp-shadow-updated {
+    font-size: 13px;
+    color: var(--text-secondary);
+}
+
+.dcp-shadow-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.dcp-shadow-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    height: 32px;
+    padding: 0 14px;
+    font-size: 13px;
+    font-family: inherit;
+    border-radius: 4px;
+    cursor: pointer;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.dcp-shadow-btn.is-refreshing svg {
+    animation: dcs-shadow-spin 0.8s linear infinite;
+}
+
+@keyframes dcs-shadow-spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+.dcp-shadow-json-wrap {
+    flex: 1;
+    overflow: auto;
+    background: #fafbfd;
+    border: 1px solid #ebeef5;
+    border-top: none;
+    border-radius: 0 0 6px 6px;
+}
+
+.dcp-shadow-json {
+    margin: 0;
+    padding: 20px 24px;
+    background: transparent;
+    color: #303133;
+    font-family: 'SF Mono', 'Menlo', 'Monaco', 'Courier New', monospace;
+    font-size: 13px;
+    line-height: 1.75;
+    white-space: pre;
+    overflow-x: auto;
+    tab-size: 2;
+    min-height: 200px;
+}
+
+.dcp-shadow-json code {
+    font-family: inherit;
+    font-size: inherit;
+}
+
+.dcs-json-key {
+    color: #0550ae;
+}
+
+.dcs-json-string {
+    color: #cf222e;
+}
+
+.dcs-json-number {
+    color: #1a7f37;
+}
+
+/* 编辑抽屉：左右对比 */
+
+.dcs-edit-drawer {
+    width: min(720px, 94vw);
+    font-family: var(--font);
+    color: var(--text);
+}
+
+.dcs-edit-drawer__body {
+    gap: 16px;
+}
+
+/* 左右对比列 */
+.dcs-edit-compare {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+}
+
+.dcs-edit-compare__col {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    min-width: 0;
+}
+
+.dcs-edit-compare__label {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    flex-shrink: 0;
+}
+
+/* 行号 + 代码区域 */
+.dcs-edit-compare__code {
+    display: flex;
+    border: 1px solid #dcdfe6;
+    border-radius: 4px;
+    background: #fafbfd;
+    overflow: hidden;
+    min-height: 160px;
+}
+
+.dcs-edit-compare__lines {
+    display: flex;
+    flex-direction: column;
+    padding: 12px 0;
+    background: #f0f2f5;
+    border-right: 1px solid #e4e7ed;
+    text-align: right;
+    flex-shrink: 0;
+    user-select: none;
+    min-width: 36px;
+}
+
+.dcs-edit-compare__lines span {
+    padding: 0 10px;
+    font-size: 12px;
+    line-height: 22px;
+    color: #8c9bab;
+    font-family: 'SF Mono', 'Menlo', 'Monaco', 'Courier New', monospace;
+}
+
+.dcs-edit-compare__json {
+    flex: 1;
+    margin: 0;
+    padding: 12px 14px;
+    background: transparent;
+    font-family: 'SF Mono', 'Menlo', 'Monaco', 'Courier New', monospace;
+    font-size: 13px;
+    line-height: 22px;
+    color: #303133;
+    white-space: pre;
+    overflow: auto;
+    min-width: 0;
+}
+
+.dcs-edit-compare__json code {
+    font-family: inherit;
+    font-size: inherit;
+}
+
+.dcs-edit-compare__textarea {
+    flex: 1;
+    margin: 0;
+    padding: 12px 14px;
+    border: none;
+    outline: none;
+    background: transparent;
+    font-family: 'SF Mono', 'Menlo', 'Monaco', 'Courier New', monospace;
+    font-size: 13px;
+    line-height: 22px;
+    color: #303133;
+    white-space: pre;
+    overflow: auto;
+    resize: none;
+    min-width: 0;
+    tab-size: 2;
+}
+
+.dcs-edit-compare__error {
+    margin: 0;
+    padding: 8px 12px;
+    border-radius: 4px;
+    background: #fef0f0;
+    border: 1px solid #fde2e2;
+    color: #f56c6c;
+    font-size: 12px;
+    line-height: 1.5;
+}
+
+.dcp-shadow-reset-link {
+    font-size: 12px;
+    align-self: flex-start;
+}

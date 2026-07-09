@@ -1,0 +1,71 @@
+.alm-page {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    min-height: 100%;
+}
+
+.alm-list-panel {
+    padding: 14px 18px 18px;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.alm-color-swatch {
+    display: inline-block;
+    width: 48px;
+    height: 20px;
+    border-radius: 2px;
+    border: 1px solid rgba(0, 0, 0, 0.06);
+    vertical-align: middle;
+}
+
+.alm-desc-cell {
+    max-width: 420px;
+    line-height: 1.5;
+}
+
+.alm-color-picker {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+}
+
+.alm-color-option {
+    width: 28px;
+    height: 28px;
+    border-radius: 4px;
+    border: 2px solid transparent;
+    cursor: pointer;
+    padding: 0;
+    box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.08);
+}
+
+.alm-color-option.is-active {
+    border-color: var(--blue);
+    box-shadow: 0 0 0 1px var(--blue);
+}
+
+.alm-color-custom {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    color: var(--text-secondary);
+}
+
+.alm-color-custom input[type="color"] {
+    width: 34px;
+    height: 34px;
+    border: 1px solid #dcdfe6;
+    border-radius: 4px;
+    padding: 2px;
+    cursor: pointer;
+    background: #fff;
+}
+
+.alm-form-drawer .alm-color-picker {
+    padding: 4px 0;
+}

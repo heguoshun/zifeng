@@ -1,0 +1,256 @@
+/* ── Parameter Management ── */
+
+.sp-page {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    min-height: 100%;
+}
+
+/* ── Filter ── */
+
+.sp-filter-panel {
+    padding: 14px 18px;
+    --pm-filter-control-width: 198px;
+}
+
+.sp-filter-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+/* ── Table Panel ── */
+
+.sp-table-panel {
+    padding: 14px 18px 18px;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.sp-table-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 12px;
+    flex-shrink: 0;
+}
+
+.sp-table-head h3 {
+    margin: 0;
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.sp-table-head h3::before {
+    content: "";
+    width: 3px;
+    height: 14px;
+    border-radius: 2px;
+    background: var(--blue);
+}
+
+.sp-table-head-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.sp-table-wrap {
+    flex: none;
+    min-width: 0;
+    overflow-x: auto;
+    overflow-y: auto;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+}
+
+.sp-table {
+    width: max(100%, 1080px);
+    min-width: 1080px;
+    margin: 0;
+    table-layout: auto;
+    border-collapse: collapse;
+    font-size: 13px;
+}
+
+.sp-table th,
+.sp-table td {
+    min-width: 104px;
+    padding: 11px 18px;
+    border-bottom: 1px solid var(--border);
+    text-align: left;
+    vertical-align: middle;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.sp-table th:first-child,
+.sp-table td:first-child {
+    padding-left: 24px;
+}
+
+.sp-table th:last-child,
+.sp-table td:last-child {
+    padding-right: 24px;
+}
+
+.sp-table td:has(.sp-table-actions),
+.sp-table th:last-child {
+    min-width: 120px;
+    overflow: visible;
+    text-overflow: clip;
+    white-space: normal;
+}
+
+.sp-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+.sp-table thead tr {
+    background-color: #fafbfd;
+}
+
+.sp-table thead th {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    background-color: #fafbfd;
+    color: var(--text-secondary);
+    font-weight: 500;
+    white-space: nowrap;
+    border-bottom: none;
+    box-shadow: inset 0 -1px 0 var(--border);
+}
+
+.sp-table-actions {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    flex-wrap: nowrap;
+    white-space: nowrap;
+}
+
+.sp-table-actions button {
+    border: 0;
+    background: transparent;
+    color: var(--blue);
+    font-size: 13px;
+    font-family: inherit;
+    cursor: pointer;
+    padding: 0;
+}
+
+.sp-table-actions button:hover {
+    text-decoration: underline;
+}
+
+/* ── Form Drawer ── */
+
+.sp-form-drawer {
+    width: min(520px, 100%);
+    max-width: 100vw;
+    overflow: hidden;
+}
+
+.sp-form-drawer .pcp-drawer__body {
+    overflow-x: hidden;
+    overflow-y: auto;
+}
+
+.sp-form-drawer .pcp-drawer-field {
+    width: 100%;
+    min-width: 0;
+}
+
+.sp-form-drawer .pcp-drawer-field .pcp-form-input,
+.sp-form-drawer .pcp-drawer-field .el-select {
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+    box-sizing: border-box;
+}
+
+.sp-form-error {
+    margin: 6px 0 0;
+    font-size: 12px;
+    color: #f56c6c;
+    line-height: 1.4;
+}
+
+.sp-radio-group {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    padding: 4px 0;
+}
+
+.sp-radio {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+    font-size: 14px;
+    color: var(--text);
+}
+
+.sp-radio__input {
+    appearance: none;
+    width: 16px;
+    height: 16px;
+    border: 2px solid #c0c4cc;
+    border-radius: 50%;
+    cursor: pointer;
+    position: relative;
+    margin: 0;
+    padding: 0;
+    flex-shrink: 0;
+    transition: border-color 0.15s;
+}
+
+.sp-radio__input:checked {
+    border-color: var(--blue, #1890ff);
+}
+
+.sp-radio__input:checked::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--blue, #1890ff);
+}
+
+.sp-textarea {
+    width: 100%;
+    min-height: 80px;
+    padding: 8px 12px;
+    border: 1px solid var(--border, #e8edf3);
+    border-radius: 4px;
+    font-size: 14px;
+    font-family: inherit;
+    color: var(--text, #1f2d3d);
+    resize: vertical;
+    box-sizing: border-box;
+    line-height: 1.5;
+}
+
+.sp-textarea::placeholder {
+    color: var(--placeholder, #b2b2b2);
+}
+
+.sp-textarea:focus {
+    outline: none;
+    border-color: var(--blue, #1890ff);
+}

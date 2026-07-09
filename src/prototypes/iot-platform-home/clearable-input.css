@@ -1,0 +1,92 @@
+.iot-clearable-input {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    width: 100%;
+    min-width: 0;
+    vertical-align: middle;
+}
+
+.iot-clearable-input > input {
+    width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+}
+
+.iot-clearable-input.is-clearable > input {
+    padding-right: 28px !important;
+}
+
+.iot-clearable-input__clear {
+    position: absolute;
+    right: 6px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 20px;
+    height: 20px;
+    border: 0;
+    border-radius: 50%;
+    background: transparent;
+    color: var(--text-muted);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    cursor: pointer;
+    flex-shrink: 0;
+}
+
+.iot-clearable-input__clear:hover {
+    color: var(--text-secondary);
+    background: #f0f2f5;
+}
+
+.pm-filter-field > .iot-clearable-input {
+    width: var(--pm-filter-control-width);
+    min-width: var(--pm-filter-control-width);
+    max-width: var(--pm-filter-control-width);
+}
+
+.pm-filter-field > .iot-clearable-input > .pm-filter-input {
+    width: 100%;
+    min-width: 0;
+}
+
+.dm-tree-search > .iot-clearable-input > input {
+    padding-right: 32px !important;
+}
+
+.dm-tree-search > .iot-clearable-input.is-clearable > input {
+    padding-right: 52px !important;
+}
+
+.dm-tree-search > .iot-clearable-input.is-clearable .iot-clearable-input__clear {
+    right: 30px;
+}
+
+.lac-tree-panel__search > .iot-clearable-input > input {
+    width: 100%;
+}
+
+.dm-product-search > .iot-clearable-input {
+    width: 100%;
+}
+
+.pcp-drawer-field > .iot-clearable-input,
+.dm-form-control > .iot-clearable-input {
+    width: 100%;
+}
+
+.iot-pagination__jump .iot-clearable-input {
+    width: 48px;
+}
+
+.iot-pagination__jump .iot-clearable-input.is-clearable > input {
+    padding-right: 22px !important;
+}
+
+.iot-pagination__jump .iot-clearable-input__clear {
+    right: 2px;
+    width: 16px;
+    height: 16px;
+}

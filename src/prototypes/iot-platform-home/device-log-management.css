@@ -1,0 +1,207 @@
+/* ── Device Log Management: page layout ── */
+.dlm-page {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    min-height: 100%;
+}
+
+.dlm-panel {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    gap: 16px;
+}
+
+.dlm-panel .pcp-model-tabs {
+    margin-bottom: 0;
+}
+
+/* ── Tabs ── */
+.dlm-tabs {
+    display: flex;
+    gap: 0;
+    border-bottom: 1px solid var(--border, #e4e7ed);
+    margin-bottom: 0;
+}
+
+.dlm-tab {
+    position: relative;
+    padding: 12px 24px;
+    font-size: 14px;
+    font-family: inherit;
+    font-weight: 500;
+    color: var(--text-secondary, #606266);
+    background: transparent;
+    border: 0;
+    cursor: pointer;
+    transition: color 0.15s;
+    white-space: nowrap;
+}
+
+.dlm-tab:hover {
+    color: var(--blue, #409eff);
+}
+
+.dlm-tab.is-active {
+    color: var(--blue, #409eff);
+    font-weight: 600;
+}
+
+.dlm-tab.is-active::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: -1px;
+    height: 2px;
+    background: var(--blue, #409eff);
+    border-radius: 1px 1px 0 0;
+}
+
+/* ── Filter bar ── */
+.dlm-filter-bar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px 16px;
+    padding: 0;
+}
+
+.dlm-filter-field {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    white-space: nowrap;
+}
+
+.dlm-filter-label {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text, #303133);
+    flex-shrink: 0;
+}
+
+.dlm-filter-input {
+    height: 32px;
+    min-width: 180px;
+    padding: 0 12px;
+    font-size: 13px;
+    font-family: inherit;
+    color: var(--text, #303133);
+    background: #fff;
+    border: 1px solid var(--border, #dcdfe6);
+    border-radius: 4px;
+    outline: none;
+    transition: border-color 0.15s;
+}
+
+.dlm-filter-input:focus {
+    border-color: var(--blue, #409eff);
+}
+
+.dlm-filter-input::placeholder {
+    color: var(--text-placeholder, #c0c4cc);
+}
+
+.dlm-filter-actions {
+    display: flex;
+    gap: 8px;
+}
+
+/* ── Table wrapper ── */
+.dlm-table-wrap {
+    flex: none;
+    overflow-x: auto;
+}
+
+.dlm-table-wrap .pm-table {
+    width: 100%;
+}
+
+/* ── Empty state ── */
+.dlm-empty {
+    text-align: center;
+    padding: 40px 0;
+    color: var(--text-secondary, #909399);
+    font-size: 14px;
+}
+
+/* ── Code inline ── */
+.dlm-code {
+    display: inline-block;
+    padding: 1px 6px;
+    font-family: "SF Mono", "Menlo", "Consolas", monospace;
+    font-size: 12px;
+    color: var(--text-secondary, #606266);
+    background: var(--bg-fill, #f5f7fa);
+    border-radius: 3px;
+    line-height: 1.6;
+}
+
+/* ── Reply status ── */
+.dlm-reply {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 24px;
+    height: 22px;
+    padding: 0 6px;
+    border-radius: 3px;
+    font-size: 12px;
+    font-weight: 500;
+    line-height: 1;
+}
+
+.dlm-reply--ok {
+    color: #67c23a;
+    background: #f0f9eb;
+    border: 1px solid #e1f3d8;
+}
+
+.dlm-reply--fail {
+    color: #f56c6c;
+    background: #fef0f0;
+    border: 1px solid #fde2e2;
+}
+
+/* ── Event type tags ── */
+.dlm-event-tag {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 40px;
+    height: 22px;
+    padding: 0 8px;
+    border-radius: 3px;
+    font-size: 12px;
+    font-weight: 500;
+    line-height: 1;
+}
+
+.dlm-event-tag--info {
+    color: var(--blue, #409eff);
+    background: #ecf5ff;
+    border: 1px solid #d9ecff;
+}
+
+.dlm-event-tag--warn {
+    color: #e6a23c;
+    background: #fdf6ec;
+    border: 1px solid #faecd8;
+}
+
+.dlm-event-tag--fail {
+    color: #f56c6c;
+    background: #fef0f0;
+    border: 1px solid #fde2e2;
+}
+
+/* ── Detail drawer ── */
+.dlm-detail-drawer {
+    width: min(680px, 100%);
+}
+
+.dlm-detail-drawer__body {
+    padding: 20px 24px 24px;
+}

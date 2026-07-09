@@ -1,0 +1,347 @@
+.dg-filter-row {
+    flex-wrap: wrap;
+}
+
+.dg-type-panel .pm-section-head {
+    margin-bottom: 8px;
+}
+
+.dg-type-add-btn {
+    border: 0;
+    background: transparent;
+    color: var(--blue);
+    font-size: 13px;
+    font-family: inherit;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    padding: 0;
+    white-space: nowrap;
+}
+
+.dg-type-add-btn:hover {
+    opacity: 0.85;
+}
+
+/* 分组类型列表样式见 iot-side-menu.css */
+
+.dg-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.dg-toolbar .pm-btn-primary:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+}
+
+.dg-table-wrap {
+    flex: none;
+    min-width: 0;
+    overflow-x: auto;
+}
+
+.dg-code-tip {
+    cursor: help;
+    border-bottom: 1px dashed #c0c4cc;
+}
+
+.dg-table-empty {
+    text-align: center;
+    color: var(--text-secondary);
+    padding: 48px 16px !important;
+}
+
+.dg-device-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    height: 28px;
+    padding: 0 10px 0 6px;
+    margin-bottom: 12px;
+    border-radius: 4px;
+    background: #ecf5ff;
+    color: var(--blue);
+    font-size: 13px;
+}
+
+.dg-device-tag__close {
+    width: 18px;
+    height: 18px;
+    border: 0;
+    background: transparent;
+    color: inherit;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    padding: 0;
+    border-radius: 2px;
+}
+
+.dg-device-tag__close:hover {
+    background: rgba(64, 158, 255, 0.15);
+}
+
+.dg-device-filter {
+    margin-bottom: 12px;
+    padding: 12px 16px;
+}
+
+.dg-device-filter .pm-filter-row {
+    flex-wrap: nowrap;
+    gap: 12px;
+    overflow-x: auto;
+}
+
+.dg-device-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 8px;
+    margin-bottom: 12px;
+}
+
+.dg-device-toolbar__danger {
+    color: #f56c6c;
+}
+
+.dg-device-toolbar__danger:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+}
+
+.dg-type-dialog {
+    width: min(480px, 92vw);
+}
+
+.dg-type-dialog__body {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.dg-type-dialog__row {
+    display: flex;
+    align-items: flex-end;
+    gap: 8px;
+}
+
+.dg-type-dialog__field {
+    flex: 1;
+    margin: 0;
+}
+
+.dg-type-dialog__remove {
+    width: 32px;
+    height: 32px;
+    border: 1px solid #dcdfe6;
+    border-radius: 4px;
+    background: #fff;
+    color: #909399;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    padding: 0;
+    flex-shrink: 0;
+}
+
+.dg-type-dialog__remove:hover {
+    color: #f56c6c;
+    border-color: #fbc4c4;
+}
+
+.dg-type-dialog__add {
+    align-self: flex-start;
+    border: 0;
+    background: transparent;
+    color: var(--blue);
+    font-size: 13px;
+    font-family: inherit;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    cursor: pointer;
+    padding: 4px 0;
+}
+
+@media (max-width: 960px) {
+    .dg-toolbar {
+        flex-wrap: wrap;
+        justify-content: flex-end;
+    }
+}
+
+.dg-add-device-mask {
+    overflow: hidden;
+}
+
+.dg-add-device-drawer {
+    --blue: #1890ff;
+    --text: #1f2d3d;
+    --text-secondary: #5c6b7a;
+    width: min(820px, 100vw);
+    max-width: 100vw;
+    font-family: "Helvetica Neue", Helvetica, Arial, "PingFang SC", "Microsoft YaHei", sans-serif;
+    color: var(--text);
+}
+
+.dg-add-device-drawer .pcp-drawer__head h3 {
+    color: #1f2d3d;
+}
+
+.dg-add-device-drawer .pcp-drawer__foot {
+    background: #fff;
+    box-shadow: 0 -1px 0 #ebeef5;
+}
+
+.dg-add-device-drawer .pcp-drawer__foot .pm-btn {
+    min-width: 88px;
+    height: 36px;
+    justify-content: center;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.dg-add-device-body {
+    padding: 16px 20px !important;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+}
+
+.dg-transfer {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 48px minmax(0, 1fr);
+    gap: 12px;
+    align-items: stretch;
+    padding: 12px;
+    border: 1px solid #dcdfe6;
+    border-radius: 4px;
+    background: #fafafa;
+    flex: 1;
+    min-height: 0;
+}
+
+.dg-transfer-panel {
+    min-width: 0;
+    border: 1px solid #dcdfe6;
+    border-radius: 4px;
+    background: #fff;
+    display: flex;
+    flex-direction: column;
+    min-height: 360px;
+    overflow: hidden;
+}
+
+.dg-transfer-panel__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 12px;
+    border-bottom: 1px solid #dcdfe6;
+    font-size: 13px;
+    color: var(--text);
+    font-weight: 500;
+    background: #f5f7fa;
+}
+
+.dg-transfer-panel__count {
+    color: var(--text-secondary);
+    font-weight: 400;
+}
+
+.dg-transfer-panel__filter {
+    padding: 10px 12px;
+    border-bottom: 1px solid #dcdfe6;
+    background: #fff;
+}
+
+.dg-transfer-product-select {
+    width: 100%;
+}
+
+.dg-transfer-panel__list {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.dg-transfer-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    font-size: 13px;
+    color: var(--text);
+    cursor: pointer;
+}
+
+.dg-transfer-item--all {
+    border-bottom: 1px solid #dcdfe6;
+    font-weight: 500;
+    background: #fafafa;
+}
+
+.dg-transfer-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    overflow-y: auto;
+    flex: 1;
+}
+
+.dg-transfer-empty {
+    padding: 24px 12px;
+    text-align: center;
+    color: var(--text-secondary);
+    font-size: 13px;
+}
+
+.dg-transfer-actions {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.dg-transfer-actions__btn {
+    width: 32px;
+    height: 32px;
+    border: 1px solid #dcdfe6;
+    border-radius: 4px;
+    background: #fff;
+    color: var(--text-secondary);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    padding: 0;
+}
+
+.dg-transfer-actions__btn:hover:not(:disabled) {
+    border-color: var(--blue);
+    color: var(--blue);
+}
+
+.dg-transfer-actions__btn:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+}
+
+@media (max-width: 720px) {
+    .dg-transfer {
+        grid-template-columns: 1fr;
+    }
+
+    .dg-transfer-actions {
+        flex-direction: row;
+        justify-content: center;
+    }
+}
