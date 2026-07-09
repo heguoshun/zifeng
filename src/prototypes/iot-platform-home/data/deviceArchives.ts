@@ -3,6 +3,7 @@ import { isLargeMeterDevice } from './devices';
 import type { ProductRecord } from './products';
 
 export type DeviceArchiveType =
+    | 'access'
     | 'installation'
     | 'accessory'
     | 'user-change'
@@ -30,6 +31,7 @@ export type DeviceArchiveRecord = {
 };
 
 export const DEVICE_ARCHIVE_TYPE_LABELS: Record<DeviceArchiveType, string> = {
+    access: '设备接入',
     installation: '安装投运',
     accessory: '配件更换',
     'user-change': '用户变更',
@@ -68,6 +70,16 @@ function buildUser(device: DeviceRecord) {
     return [device.userName, device.userNo].filter(Boolean).join('（') + (device.userName && device.userNo ? '）' : '');
 }
 
+function hasInstallationInfo(device: DeviceRecord) {
+    return Boolean(
+        device.largeMeterAreaId
+        && device.userName?.trim()
+        && device.userNo?.trim()
+        && device.installTime?.trim()
+        && device.installAddress?.trim(),
+    );
+}
+
 export function createDeviceArchiveRecord(
     input: Omit<DeviceArchiveRecord, 'id'> & { id?: string },
 ): DeviceArchiveRecord {
@@ -77,6 +89,24 @@ export function createDeviceArchiveRecord(
     };
 }
 
+export function createDeviceAccessArchiveRecord(
+    device: DeviceRecord,
+    operator = '系统管理员',
+    id?: string,
+): DeviceArchiveRecord {
+    return createDeviceArchiveRecord({
+        id,
+        deviceId: device.id,
+        type: 'access',
+        occurredAt: formatArchiveDate(device.enabledAt),
+        title: '设备接入建档',
+        summary: '设备已接入平台，生成基础设备档案，待绑定区域后完善安装和用户信息。',
+        afterValue: `设备编号：${device.code}`,
+        operator,
+        source: '系统自动',
+    });
+}
+
 export function createInitialDeviceArchiveRecords(
     devices: DeviceRecord[],
     products: ProductRecord[],
@@ -84,6 +114,14 @@ export function createInitialDeviceArchiveRecords(
     return devices
         .filter((device) => isLargeMeterDevice(device, products))
         .flatMap((device, index) => {
+            const access = createDeviceAccessArchiveRecord(
+                device,
+                '系统管理员',
+                `archive-seed-${device.id}-access`,
+            );
+            if (!hasInstallationInfo(device)) {
+                return [access];
+            }
             const installation: DeviceArchiveRecord = createDeviceArchiveRecord({
                 id: `archive-seed-${device.id}-installation`,
                 deviceId: device.id,
@@ -96,7 +134,7 @@ export function createInitialDeviceArchiveRecords(
                 source: '系统自动',
             });
 
-            const records = [installation];
+            const records = [access, installation];
             if (index % 4 === 0) {
                 records.push(createDeviceArchiveRecord({
                     id: `archive-seed-${device.id}-maintenance`,
@@ -144,7 +182,7 @@ export function createArchiveRecordsFromDeviceChange(
     const operator = options.operator ?? 'superadmin';
     const records: DeviceArchiveRecord[] = [];
 
-    if (options.includeInstallation) {
+    if (options.includeInstallation && hasInstallationInfo(after)) {
         records.push(createDeviceArchiveRecord({
             deviceId: after.id,
             type: 'installation',

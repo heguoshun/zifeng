@@ -1,0 +1,116 @@
+meta:
+  title: 设备管理 App 信息架构
+  description: 现场运维移动端 5 Tab 导航与页面层级
+  theme: tech-blue
+  layout: hierarchical
+  profile: engineering-review
+  canvas: 1100x800
+
+modules:
+  - id: app
+    label: 设备管理 App
+    position: { x: 400, y: 20 }
+    size: { width: 300, height: 60 }
+
+nodes:
+  - id: login
+    label: 登录页
+    type: process
+    module: app
+    position: { x: 480, y: 100 }
+
+  - id: home
+    label: 首页\n待办摘要 + 快捷入口
+    type: service
+    module: app
+    position: { x: 80, y: 220 }
+
+  - id: devices
+    label: 设备 Tab
+    type: service
+    module: app
+    position: { x: 280, y: 220 }
+
+  - id: alarms
+    label: 告警 Tab
+    type: service
+    module: app
+    position: { x: 480, y: 220 }
+
+  - id: workorders
+    label: 工单 Tab
+    type: service
+    module: app
+    position: { x: 680, y: 220 }
+
+  - id: profile
+    label: 我的 Tab
+    type: service
+    module: app
+    position: { x: 880, y: 220 }
+
+  - id: home_summary
+    label: 待办摘要\n告警/工单/异常设备
+    type: document
+    position: { x: 40, y: 360 }
+
+  - id: device_list
+    label: 设备列表\n筛选/搜索
+    type: document
+    position: { x: 220, y: 360 }
+
+  - id: device_detail
+    label: 设备详情\n实时读数/状态
+    type: document
+    position: { x: 220, y: 500 }
+
+  - id: alarm_list
+    label: 告警列表\n待处理/处理中/已处理
+    type: document
+    position: { x: 420, y: 360 }
+
+  - id: alarm_detail
+    label: 告警详情\n确认/关闭/转工单
+    type: document
+    position: { x: 420, y: 500 }
+
+  - id: wo_list
+    label: 工单列表\n我的待办
+    type: document
+    position: { x: 620, y: 360 }
+
+  - id: wo_detail
+    label: 工单详情\n接单/处理/完结
+    type: document
+    position: { x: 620, y: 500 }
+
+  - id: notifications
+    label: 消息通知列表
+    type: document
+    position: { x: 820, y: 360 }
+
+  - id: settings
+    label: 账号与设置
+    type: document
+    position: { x: 920, y: 360 }
+
+  - id: pc_platform
+    label: PC 管理平台\niot-platform-home
+    type: cloud
+    position: { x: 480, y: 680 }
+
+edges:
+  - { from: login, to: home, type: primary, label: 登录成功 }
+  - { from: home, to: home_summary, type: data }
+  - { from: devices, to: device_list, type: data }
+  - { from: device_list, to: device_detail, type: primary, label: 点击设备 }
+  - { from: alarms, to: alarm_list, type: data }
+  - { from: alarm_list, to: alarm_detail, type: primary, label: 点击告警 }
+  - { from: workorders, to: wo_list, type: data }
+  - { from: wo_list, to: wo_detail, type: primary, label: 点击工单 }
+  - { from: profile, to: notifications, type: data }
+  - { from: profile, to: settings, type: data }
+  - { from: alarm_detail, to: wo_detail, type: optional, label: 转工单 }
+  - { from: alarm_detail, to: device_detail, type: optional, label: 查看设备 }
+  - { from: wo_detail, to: device_detail, type: optional, label: 关联设备 }
+  - { from: app, to: pc_platform, type: dependency, label: 数据同源 }

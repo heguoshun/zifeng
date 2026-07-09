@@ -1,7 +1,7 @@
 import type { ProductRecord } from './products';
-import { isLargeMeterProduct, productMatchesCategory } from './productCategories';
+import { isLargeMeterProduct } from './productCategories';
 import type { LargeMeterArea, LargeMeterDevice } from './largeMeters';
-import { getAreaScopeIds, METER_MANUFACTURERS, REMOTE_MANUFACTURERS } from './largeMeters';
+import { getAreaScopeIds, LARGE_METER_AREA_IDS, METER_MANUFACTURERS, REMOTE_MANUFACTURERS } from './largeMeters';
 import {
     createInitialDeviceGroups,
     createInitialGroupTypes,
@@ -449,7 +449,7 @@ export function ensureDeviceCoordinates(device: DeviceRecord, index = 0): Device
 export function isLargeMeterDevice(device: DeviceRecord, products: ProductRecord[]): boolean {
     const product = products.find((entry) => entry.id === device.productId);
     if (!product) return false;
-    return productMatchesCategory('dabiao', product);
+    return isLargeMeterProduct(product);
 }
 
 type GroupAreaSeedRule = {
@@ -461,15 +461,34 @@ type GroupAreaSeedRule = {
 
 /** 预置片区绑定，演示分组内「大表设备」与「可绑定大表」数量差异 */
 const LARGE_METER_AREA_SEED_RULES: GroupAreaSeedRule[] = [
-    { groupId: 'group-area-east', areaId: 'area-jb-camera', every: 2 },
-    { groupId: 'group-area-east', areaId: 'area-gaochun', every: 5, offset: 1 },
-    { groupId: 'group-area-west', areaId: 'area-banqiao', every: 2, offset: 1 },
-    { groupId: 'group-area-south', areaId: 'area-tangshan', every: 3 },
-    { groupId: 'group-area-north', areaId: 'area-jb-ultrasonic', every: 2 },
-    { groupId: 'group-pipeline-main', areaId: 'area-jb-em', every: 3, offset: 1 },
-    { groupId: 'group-pipeline-dist', areaId: 'area-jb-pressure', every: 4 },
-    { groupId: 'group-type-dabiao', areaId: 'area-csgls', every: 4, offset: 2 },
+    { groupId: 'group-area-east', areaId: LARGE_METER_AREA_IDS.jbCamera, every: 2 },
+    { groupId: 'group-area-east', areaId: LARGE_METER_AREA_IDS.gaochun, every: 5, offset: 1 },
+    { groupId: 'group-area-west', areaId: LARGE_METER_AREA_IDS.banqiao, every: 2, offset: 1 },
+    { groupId: 'group-area-south', areaId: LARGE_METER_AREA_IDS.tangshan, every: 3 },
+    { groupId: 'group-area-north', areaId: LARGE_METER_AREA_IDS.jbUltrasonic, every: 2 },
+    { groupId: 'group-pipeline-main', areaId: LARGE_METER_AREA_IDS.jbEm, every: 3, offset: 1 },
+    { groupId: 'group-pipeline-dist', areaId: LARGE_METER_AREA_IDS.jbPressure, every: 4 },
+    { groupId: 'group-type-dabiao', areaId: LARGE_METER_AREA_IDS.csgls, every: 4, offset: 2 },
 ];
+
+function clearLargeMeterInstallationInfo(device: DeviceRecord): DeviceRecord {
+    const {
+        largeMeterAreaId,
+        userNo,
+        userName,
+        bodyNo,
+        installTime,
+        installAddress,
+        mapAddress,
+        manufacturer,
+        remoteManufacturer,
+        deviceFunction,
+        caliber,
+        communicationNo,
+        ...rest
+    } = device;
+    return rest;
+}
 
 export function seedInitialLargeMeterAreaBindings(
     devices: DeviceRecord[],
@@ -506,7 +525,7 @@ export function seedInitialLargeMeterAreaBindings(
             break;
         }
 
-        return device;
+        return clearLargeMeterInstallationInfo(device);
     });
 }
 

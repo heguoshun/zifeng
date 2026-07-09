@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 1,
+  "kind": "prototype-edit-comments",
+  "resource": {
+    "id": "iot-platform-home",
+    "targetPath": "prototypes/iot-platform-home",
+    "filePath": "src/prototypes/iot-platform-home/.spec/prototype-comments.json"
+  },
+  "comments": [],
+  "tasks": {},
+  "images": []
+}

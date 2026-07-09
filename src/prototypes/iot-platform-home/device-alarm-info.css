@@ -356,13 +356,13 @@
     vertical-align: middle;
 }
 
-.pm-table--device-alarm-page th:nth-child(11),
-.pm-table--device-alarm-page td:nth-child(11) {
-    width: 112px;
-    min-width: 112px;
+.pm-table--device-alarm-page th:nth-child(12),
+.pm-table--device-alarm-page td:nth-child(12) {
+    width: 128px;
+    min-width: 128px;
 }
 
-.pm-table--device-alarm-page td:nth-child(11) .dai-process-status {
+.pm-table--device-alarm-page td:nth-child(12) .dai-process-status {
     min-width: 0;
 }
 
@@ -451,13 +451,13 @@
     vertical-align: middle;
 }
 
-.pm-table--device-alarm-page--selectable th:nth-child(12),
-.pm-table--device-alarm-page--selectable td:nth-child(12) {
-    width: 112px;
-    min-width: 112px;
+.pm-table--device-alarm-page--selectable th:nth-child(13),
+.pm-table--device-alarm-page--selectable td:nth-child(13) {
+    width: 128px;
+    min-width: 128px;
 }
 
-.pm-table--device-alarm-page--selectable td:nth-child(12) .dai-process-status {
+.pm-table--device-alarm-page--selectable td:nth-child(13) .dai-process-status {
     min-width: 0;
 }
 

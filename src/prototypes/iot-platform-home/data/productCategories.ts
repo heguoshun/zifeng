@@ -4,9 +4,12 @@ import type { TreeSelectNode } from './orgHierarchy';
 export type ProductCategoryNode = {
     id: string;
     label: string;
+    businessType?: string;
     count?: number;
     children?: ProductCategoryNode[];
 };
+
+export const LARGE_METER_BUSINESS_TYPE = 'large_meter';
 
 /** 大表产品供应商（厂家）顺序，与产品列表分组一致 */
 export const LARGE_METER_VENDOR_ORDER = [
@@ -43,12 +46,13 @@ export const PRODUCT_CATEGORY_TREE: ProductCategoryNode[] = [
             {
                 id: 'dabiao',
                 label: '大表',
+                businessType: LARGE_METER_BUSINESS_TYPE,
                 children: LARGE_METER_TYPE_NODES,
             },
-            { id: 'hubiao', label: '户表' },
-            { id: 'yaliji', label: '压力计' },
-            { id: 'shuizhiyi', label: '水质仪' },
-            { id: 'zhihuishuizhan', label: '智慧水站' },
+            { id: 'hubiao', label: '户表', businessType: 'household_meter' },
+            { id: 'yaliji', label: '压力计', businessType: 'pressure_gauge' },
+            { id: 'shuizhiyi', label: '水质仪', businessType: 'water_quality' },
+            { id: 'zhihuishuizhan', label: '智慧水站', businessType: 'smart_station' },
         ],
     },
 ];
@@ -110,11 +114,11 @@ walkCategoryTree(PRODUCT_CATEGORY_TREE, (node) => {
 });
 
 export function isLargeMeterCategory(categoryId: string): boolean {
-    return categoryId === 'dabiao' || LARGE_METER_TYPE_IDS.includes(categoryId);
+    return getProductCategoryBusinessType(categoryId) === LARGE_METER_BUSINESS_TYPE;
 }
 
 export function isLargeMeterProduct(product: ProductRecord): boolean {
-    return LARGE_METER_TYPE_IDS.includes(product.categoryId);
+    return isLargeMeterCategory(product.categoryId);
 }
 
 export function formatProductSelectorLabel(product: ProductRecord): string {
@@ -296,6 +300,16 @@ export function getProductCategoryLabel(categoryId: string): string {
 export function getProductCategoryAncestors(categoryId: string): string[] {
     const path = findCategoryPath(PRODUCT_CATEGORY_TREE, categoryId);
     return path ?? [categoryId];
+}
+
+export function getProductCategoryBusinessType(categoryId: string): string {
+    const path = findCategoryPath(PRODUCT_CATEGORY_TREE, categoryId);
+    if (!path) return '';
+    for (let index = path.length - 1; index >= 0; index -= 1) {
+        const node = findCategoryNode(PRODUCT_CATEGORY_TREE, path[index]);
+        if (node?.businessType) return node.businessType;
+    }
+    return '';
 }
 
 function mapProductPickerNode(node: ProductCategoryNode, products: ProductRecord[]): TreeSelectNode {

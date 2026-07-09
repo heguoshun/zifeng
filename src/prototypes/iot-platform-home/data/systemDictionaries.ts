@@ -53,14 +53,15 @@ export function createInitialDictionaries(): DictTypeRecord[] {
         },
         {
             id: 'dict-product-type',
-            name: '产品类型',
-            code: 'pt_type',
-            description: '',
+            name: '业务类型',
+            code: 'business_type',
+            description: '产品分类所属业务类型',
             items: [
                 { id: 'item-pt-1', name: '大表', dataValue: 'large_meter', description: '', sort: 1, enabled: true },
                 { id: 'item-pt-2', name: '户表', dataValue: 'household_meter', description: '', sort: 2, enabled: true },
                 { id: 'item-pt-3', name: '压力计', dataValue: 'pressure_gauge', description: '', sort: 3, enabled: true },
                 { id: 'item-pt-4', name: '水质仪', dataValue: 'water_quality', description: '', sort: 4, enabled: true },
+                { id: 'item-pt-5', name: '智慧水站', dataValue: 'smart_station', description: '', sort: 5, enabled: true },
             ],
         },
         {

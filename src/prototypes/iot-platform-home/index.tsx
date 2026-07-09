@@ -81,7 +81,13 @@ import {
 } from './data/messageSubscriptions';
 import { createInitialPushSources } from './data/pushSources';
 import { createInitialMessageTemplates } from './data/messageTemplates';
-import { createInitialAreas, createInitialLargeMeters, type LargeMeterArea, type LargeMeterDevice } from './data/largeMeters';
+import {
+    createInitialAreas,
+    createInitialLargeMeters,
+    normalizeLargeMeterAreaId,
+    type LargeMeterArea,
+    type LargeMeterDevice,
+} from './data/largeMeters';
 import { createInitialNightlyWaterUsageConfig, type NightlyWaterUsageConfig } from './data/nightlyWaterUsageConfig';
 import { parseNetworkProtocolFormRoute } from './utils/networkProtocolRoute';
 import { createInitialAlarmLevels } from './data/alarmLevels';
@@ -90,6 +96,7 @@ import { createInitialProducts, type ProductRecord } from './data/products';
 import { createInitialDevices, isLargeMeterDevice, seedInitialLargeMeterAreaBindings, syncLargeMeterDeviceCodes, type DeviceRecord } from './data/devices';
 import {
     createArchiveRecordsFromDeviceChange,
+    createDeviceAccessArchiveRecord,
     createInitialDeviceArchiveRecords,
     type DeviceArchiveRecord,
 } from './data/deviceArchives';
@@ -366,6 +373,41 @@ function IotPlatformHomeRoutes({ sessionUser }: { sessionUser: PlatformSessionUs
     const [nightlyWaterUsageConfig, setNightlyWaterUsageConfig] = useState<NightlyWaterUsageConfig>(
         () => createInitialNightlyWaterUsageConfig(),
     );
+    useEffect(() => {
+        setAreas((previous) => {
+            let changed = false;
+            const next = previous.map((area) => {
+                const id = normalizeLargeMeterAreaId(area.id);
+                const parentId = area.parentId ? normalizeLargeMeterAreaId(area.parentId) : area.parentId;
+                if (id === area.id && parentId === area.parentId) return area;
+                changed = true;
+                return { ...area, id, parentId };
+            });
+            return changed ? next : previous;
+        });
+        setDevices((previous) => {
+            let changed = false;
+            const next = previous.map((device) => {
+                if (!device.largeMeterAreaId) return device;
+                const largeMeterAreaId = normalizeLargeMeterAreaId(device.largeMeterAreaId);
+                if (largeMeterAreaId === device.largeMeterAreaId) return device;
+                changed = true;
+                return { ...device, largeMeterAreaId };
+            });
+            return changed ? next : previous;
+        });
+        setLargeMeters((previous) => {
+            let changed = false;
+            const next = previous.map((meter) => {
+                if (!meter.areaId) return meter;
+                const areaId = normalizeLargeMeterAreaId(meter.areaId);
+                if (areaId === meter.areaId) return meter;
+                changed = true;
+                return { ...meter, areaId };
+            });
+            return changed ? next : previous;
+        });
+    }, []);
     const [analysisMeterId, setAnalysisMeterId] = useState<string | null>(null);
     const [waterUsageAnalysisRoute, setWaterUsageAnalysisRoute] = useState<WaterUsageAnalysisRoute>(() => (
         parseWaterUsageAnalysisRoute(window.location.hash)
@@ -596,6 +638,13 @@ function IotPlatformHomeRoutes({ sessionUser }: { sessionUser: PlatformSessionUs
 
     const handleSaveDevice = (device: DeviceRecord, saveMode: 'create' | 'edit') => {
         if (saveMode === 'create') {
+            if (isLargeMeterDevice(device, products)) {
+                const archiveRecord = createDeviceAccessArchiveRecord(
+                    device,
+                    platformSession.displayName || platformSession.account,
+                );
+                setDeviceArchiveRecords((previous) => [archiveRecord, ...previous]);
+            }
             setDevices((prev) => [...prev, device]);
             return;
         }
@@ -1239,6 +1288,7 @@ function IotPlatformHomeRoutes({ sessionUser }: { sessionUser: PlatformSessionUs
     if (activePage === 'product-category') {
         return (
             <ProductCategoryPage
+                dictionaries={dictionaries}
                 onNavigateHome={() => setPage('home')}
                 onNavigate={navigateDeviceAccess}
             />

@@ -35,6 +35,7 @@ import {
     getAreaPath,
     getChildAreas,
     getDefaultAreaTreeExpanded,
+    normalizeLargeMeterAreaId,
 } from '../data/largeMeters';
 import { paginateItems, DEFAULT_LIST_PAGE_SIZE } from '../utils/listPagination';
 import '../device-access.css';
@@ -86,8 +87,22 @@ const DETAIL_TABS: { id: DetailTab; label: string }[] = [
     { id: 'devices', label: '关联设备' },
 ];
 
-function generateId(): string {
-    return `area-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+function formatDateIdPart(date: Date): string {
+    const year = String(date.getFullYear());
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}${month}${day}`;
+}
+
+function generateAreaId(areas: LargeMeterArea[]): string {
+    const datePart = formatDateIdPart(new Date());
+    const prefix = `AREA-${datePart}-`;
+    const maxSequence = areas.reduce((max, area) => {
+        if (!area.id.startsWith(prefix)) return max;
+        const sequence = Number(area.id.slice(prefix.length));
+        return Number.isFinite(sequence) ? Math.max(max, sequence) : max;
+    }, 0);
+    return `${prefix}${String(maxSequence + 1).padStart(3, '0')}`;
 }
 
 function DeviceStatusTag({ status }: { status: DeviceStatus }) {
@@ -179,6 +194,7 @@ export default function AreaConfigPage({
     const [activeTab, setActiveTab] = useState<DetailTab>('basic');
     const [dialogMode, setDialogMode] = useState<'add' | 'edit' | null>(null);
     const [dialogParentId, setDialogParentId] = useState('');
+    const [pendingAreaId, setPendingAreaId] = useState('');
     const [editingArea, setEditingArea] = useState<LargeMeterArea | null>(null);
     const [deleteTarget, setDeleteTarget] = useState<LargeMeterArea | null>(null);
     const [unbindTarget, setUnbindTarget] = useState<DeviceRecord | null>(null);
@@ -205,6 +221,10 @@ export default function AreaConfigPage({
         () => filterAreaConfigTree(areaTree, treeKeyword),
         [areaTree, treeKeyword],
     );
+
+    useEffect(() => {
+        setSelectedId((previous) => (previous ? normalizeLargeMeterAreaId(previous) : previous));
+    }, []);
 
     useEffect(() => {
         if (!selectedId && areas.length > 0) {
@@ -313,6 +333,7 @@ export default function AreaConfigPage({
     const openAddRoot = () => {
         setEditingArea(null);
         setDialogParentId('');
+        setPendingAreaId(generateAreaId(areas));
         setDialogMode('add');
     };
 
@@ -323,6 +344,7 @@ export default function AreaConfigPage({
         }
         setEditingArea(null);
         setDialogParentId(selectedArea.id);
+        setPendingAreaId(generateAreaId(areas));
         setDialogMode('add');
     };
 
@@ -332,6 +354,7 @@ export default function AreaConfigPage({
             return;
         }
         setEditingArea(selectedArea);
+        setPendingAreaId('');
         setDialogMode('edit');
     };
 
@@ -375,7 +398,7 @@ export default function AreaConfigPage({
             const parentId = dialogParentId || value.parentId || null;
             const siblings = areas.filter((a) => a.parentId === parentId);
             const newArea: LargeMeterArea = {
-                id: generateId(),
+                id: pendingAreaId || generateAreaId(areas),
                 name: trimmed,
                 parentId,
                 sort: siblings.length + 1,
@@ -391,6 +414,7 @@ export default function AreaConfigPage({
         setDialogMode(null);
         setEditingArea(null);
         setDialogParentId('');
+        setPendingAreaId('');
     };
 
     const handleBindDevices = (deviceIds: string[]) => {
@@ -445,7 +469,7 @@ export default function AreaConfigPage({
             device.id === nextDevice.id ? nextDevice : device
         )));
         onUpdateLargeMeters((previous) => previous.map((meter) => (
-            meter.userNo === currentDevice.userNo
+            (currentDevice.userNo ? meter.userNo === currentDevice.userNo : false) || meter.code === currentDevice.code
                 ? {
                     ...meter,
                     areaId: selectedArea.id,
@@ -499,6 +523,7 @@ export default function AreaConfigPage({
         : dialogParentId
             ? { name: '', parentId: dialogParentId }
             : undefined;
+    const dialogAreaId = dialogMode === 'edit' ? editingArea?.id ?? '' : pendingAreaId;
 
     const sidebar = <LargeMeterSidebar pageId="area-config" onNavigate={onNavigate} />;
 
@@ -835,12 +860,14 @@ export default function AreaConfigPage({
             <AreaFormDialog
                 open={dialogMode !== null}
                 mode={dialogMode === 'edit' ? 'edit' : 'add'}
+                areaId={dialogAreaId}
                 parentOptions={parentOptions}
                 initialValue={dialogInitialValue}
                 onClose={() => {
                     setDialogMode(null);
                     setEditingArea(null);
                     setDialogParentId('');
+                    setPendingAreaId('');
                 }}
                 onConfirm={handleDialogConfirm}
             />

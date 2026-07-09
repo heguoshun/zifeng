@@ -13,6 +13,7 @@ export type AreaFormValue = {
 type AreaFormDialogProps = {
     open: boolean;
     mode: 'add' | 'edit';
+    areaId: string;
     parentOptions: { label: string; value: string }[];
     initialValue?: AreaFormValue;
     onClose: () => void;
@@ -27,6 +28,7 @@ const EMPTY_FORM: AreaFormValue = {
 export default function AreaFormDialog({
     open,
     mode,
+    areaId,
     parentOptions,
     initialValue,
     onClose,
@@ -77,6 +79,15 @@ export default function AreaFormDialog({
                     <button type="button" className="pcp-drawer__close" onClick={onClose} aria-label="关闭">×</button>
                 </div>
                 <div className="pcp-drawer__body pcp-drawer__body--form">
+                    <label className="pcp-drawer-field">
+                        <span className="pcp-form-label">片区 ID：</span>
+                        <input
+                            type="text"
+                            className="pcp-form-input is-readonly"
+                            value={areaId}
+                            readOnly
+                        />
+                    </label>
                     <label className="pcp-drawer-field">
                         <span className="pcp-form-label"><em>*</em>片区名称：</span>
                         <ClearableInput

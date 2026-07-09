@@ -71,7 +71,49 @@ function ArchiveTypeIcon({ type }: { type: DeviceArchiveType }) {
 }
 
 function buildDeviceLocation(device: DeviceRecord) {
+    if (!device.largeMeterAreaId) return '未记录';
     return device.mapAddress?.trim() || device.installAddress?.trim() || '未记录';
+}
+
+function getCurrentUserInfo(device: DeviceRecord) {
+    if (!device.largeMeterAreaId) {
+        return { name: '—', no: '', searchText: '' };
+    }
+    const name = device.userName?.trim() || '—';
+    const no = device.userNo?.trim() || '';
+    return {
+        name,
+        no,
+        searchText: `${name} ${no}`.toLowerCase(),
+    };
+}
+
+function formatCurrentUserInfo(device: DeviceRecord) {
+    const currentUser = getCurrentUserInfo(device);
+    return currentUser.no ? `${currentUser.name}（${currentUser.no}）` : currentUser.name;
+}
+
+function formatDateTimeMinute(value?: string) {
+    const normalized = value?.trim().replace('T', ' ').replace(/[./]/g, '-') ?? '';
+    if (!normalized) return '—';
+    const match = normalized.match(/^(\d{4})-(\d{1,2})-(\d{1,2})\s+(\d{1,2}):(\d{1,2})(?::(\d{1,2}))?/);
+    if (!match) return normalized;
+    const [, year, month, day, hour, minute, second = '00'] = match;
+    return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')} ${hour.padStart(2, '0')}:${minute.padStart(2, '0')}:${second.padStart(2, '0')}`;
+}
+
+function formatDateOnly(value?: string) {
+    const formatted = formatDateTimeMinute(value);
+    return formatted === '—' ? formatted : formatted.slice(0, 10);
+}
+
+function formatCurrentInstallTime(device: DeviceRecord) {
+    if (!device.largeMeterAreaId) return '—';
+    return formatDateTimeMinute(device.installTime);
+}
+
+function formatAccessTime(device: DeviceRecord) {
+    return formatDateTimeMinute(device.enabledAt);
 }
 
 export default function DeviceArchivePage({
@@ -116,10 +158,10 @@ export default function DeviceArchivePage({
         if (!normalized) return largeMeterDevices;
         return largeMeterDevices.filter((device) => {
             const { productName } = resolveDeviceProduct(device, products);
+            const currentUser = getCurrentUserInfo(device);
             return device.name.toLowerCase().includes(normalized)
                 || device.code.toLowerCase().includes(normalized)
-                || (device.userName ?? '').toLowerCase().includes(normalized)
-                || (device.userNo ?? '').toLowerCase().includes(normalized)
+                || currentUser.searchText.includes(normalized)
                 || productName.toLowerCase().includes(normalized);
         });
     }, [keyword, largeMeterDevices, products]);
@@ -292,7 +334,7 @@ export default function DeviceArchivePage({
                                     <th>所属产品</th>
                                     <th>当前用户</th>
                                     <th>所属片区</th>
-                                    <th>安装时间</th>
+                                    <th>接入时间</th>
                                     <th>档案记录</th>
                                     <th>最近记录</th>
                                     <th>操作</th>
@@ -302,16 +344,17 @@ export default function DeviceArchivePage({
                                 {pagination.items.map((device) => {
                                     const { productName } = resolveDeviceProduct(device, products);
                                     const latest = latestRecords.get(device.id);
+                                    const currentUser = getCurrentUserInfo(device);
                                     return (
                                         <tr key={device.id}>
                                             <td>{device.name}</td>
                                             <td>{device.code}</td>
                                             <td>{productName}</td>
-                                            <td>{device.userName || '—'}</td>
+                                            <td>{currentUser.name}</td>
                                             <td>{device.largeMeterAreaId ? areaMap.get(device.largeMeterAreaId) || '—' : '未分配'}</td>
-                                            <td>{device.installTime?.replace('T', ' ') || '—'}</td>
+                                            <td>{formatAccessTime(device)}</td>
                                             <td>{recordCounts.get(device.id) ?? 0} 条</td>
-                                            <td>{latest ? `${DEVICE_ARCHIVE_TYPE_LABELS[latest.type]} · ${latest.occurredAt.slice(0, 10)}` : '—'}</td>
+                                            <td>{latest ? `${DEVICE_ARCHIVE_TYPE_LABELS[latest.type]} - ${formatDateOnly(latest.occurredAt)}` : '—'}</td>
                                             <td><button type="button" className="pm-link-btn" onClick={() => openArchive(device.id)}>查看档案</button></td>
                                         </tr>
                                     );
@@ -340,7 +383,7 @@ export default function DeviceArchivePage({
                     <aside className="pcp-drawer pcp-drawer--form da-archive-drawer" role="dialog" aria-modal="true" aria-labelledby="device-archive-title" onMouseDown={(event) => event.stopPropagation()}>
                         <div className="pcp-drawer__head">
                             <div>
-                                <h3 id="device-archive-title">{selectedDevice.name} · 设备档案</h3>
+                                <h3 id="device-archive-title">{selectedDevice.name} - 设备档案</h3>
                                 <p>{selectedDevice.code}</p>
                             </div>
                             <button type="button" className="pcp-drawer__close" onClick={closeArchive} aria-label="关闭">×</button>
@@ -349,9 +392,9 @@ export default function DeviceArchivePage({
                             <section className="da-device-summary">
                                 <div className="da-summary-icon"><Archive size={24} /></div>
                                 <dl>
-                                    <div><dt>当前用户</dt><dd>{selectedDevice.userName || '—'}{selectedDevice.userNo ? `（${selectedDevice.userNo}）` : ''}</dd></div>
+                                    <div><dt>当前用户</dt><dd>{formatCurrentUserInfo(selectedDevice)}</dd></div>
                                     <div><dt>所属片区</dt><dd>{selectedDevice.largeMeterAreaId ? areaMap.get(selectedDevice.largeMeterAreaId) || '—' : '未分配'}</dd></div>
-                                    <div><dt>安装时间</dt><dd>{selectedDevice.installTime?.replace('T', ' ') || '—'}</dd></div>
+                                    <div><dt>安装时间</dt><dd>{formatCurrentInstallTime(selectedDevice)}</dd></div>
                                     <div><dt>当前状态</dt><dd><span className={`dm-status-tag dm-status-tag--${selectedDevice.status}`}>{STATUS_LABEL[selectedDevice.status]}</span></dd></div>
                                     <div className="da-summary-location"><dt>设备点位</dt><dd>{buildDeviceLocation(selectedDevice)}</dd></div>
                                 </dl>
@@ -407,7 +450,7 @@ export default function DeviceArchivePage({
                                     <article className="da-timeline-item" key={record.id}>
                                         <div className={`da-timeline-icon da-timeline-icon--${record.type}`}><ArchiveTypeIcon type={record.type} /></div>
                                         <div className="da-timeline-content">
-                                            <div className="da-timeline-head"><div><span className="da-record-type">{DEVICE_ARCHIVE_TYPE_LABELS[record.type]}</span><h4>{record.title}</h4></div><time>{record.occurredAt}</time></div>
+                                            <div className="da-timeline-head"><div><span className="da-record-type">{DEVICE_ARCHIVE_TYPE_LABELS[record.type]}</span><h4>{record.title}</h4></div><time>{formatDateTimeMinute(record.occurredAt)}</time></div>
                                             <p>{record.summary}</p>
                                             {(record.beforeValue || record.afterValue) && <div className="da-change-row"><span>变更前：{record.beforeValue || '—'}</span><span>变更后：{record.afterValue || '—'}</span></div>}
                                             {record.remark && <div className="da-record-remark">备注：{record.remark}</div>}

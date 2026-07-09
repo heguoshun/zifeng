@@ -11,6 +11,7 @@ import DeviceAccessSidebar, { type DeviceAccessPageId } from '../components/Devi
 import ElSelect from '../components/ElSelect';
 import { ConfirmDialog, ViewDrawer } from '../components/IotDialogs';
 import IotToast, { type IotToastData, type IotToastType, triggerIotToast } from '../components/IotToast';
+import type { DictTypeRecord } from '../data/systemDictionaries';
 import '../device-access.css';
 import '../product-management.css';
 import '../product-category.css';
@@ -21,30 +22,33 @@ export type CategoryRecord = {
     parentId: string | null;
     name: string;
     code: string;
+    businessType: string;
     updatedAt: string;
     remark: string;
 };
 
 const INITIAL_CATEGORIES: CategoryRecord[] = [
-    { id: 'water', parentId: null, name: '水务设备', code: 'P25uk', updatedAt: '2024-7-9 15:47:34', remark: '水务监测与计量设备分类' },
-    { id: 'dabiao', parentId: 'water', name: '大表', code: 'P25uk', updatedAt: '2024-7-9 15:47:34', remark: 'DN50及以上管网大口径水表' },
-    { id: 'dabiao-em', parentId: 'dabiao', name: '电磁表', code: 'P25em', updatedAt: '2024-7-9 15:47:34', remark: '电磁感应原理大口径水表' },
-    { id: 'dabiao-mech', parentId: 'dabiao', name: '机械表', code: 'P25mc', updatedAt: '2024-7-9 15:47:34', remark: '机械传动大口径水表' },
-    { id: 'dabiao-ultra', parentId: 'dabiao', name: '超声表', code: 'P25us', updatedAt: '2024-7-9 15:47:34', remark: '超声波非接触大口径水表' },
-    { id: 'dabiao-flow', parentId: 'dabiao', name: '流量计', code: 'P25fl', updatedAt: '2024-7-9 15:47:34', remark: '管网流量计产品' },
-    { id: 'hubiao', parentId: 'water', name: '户表', code: 'P25uk', updatedAt: '2024-7-9 15:47:34', remark: '居民及商业户用远传水表' },
-    { id: 'yaliji', parentId: 'water', name: '压力计', code: 'P25uk', updatedAt: '2024-7-9 15:47:34', remark: '管网压力监测设备' },
-    { id: 'shuizhiyi', parentId: 'water', name: '水质仪', code: 'P25uk', updatedAt: '2024-7-9 15:47:34', remark: '水质在线监测设备' },
-    { id: 'zhihuishuizhan', parentId: 'water', name: '智慧水站', code: 'P25uk', updatedAt: '2024-7-9 15:47:34', remark: '集成监测与供水的智慧水站' },
+    { id: 'water', parentId: null, name: '水务设备', code: 'P25uk', businessType: '', updatedAt: '2024-7-9 15:47:34', remark: '水务监测与计量设备分类' },
+    { id: 'dabiao', parentId: 'water', name: '大表', code: 'P25uk', businessType: 'large_meter', updatedAt: '2024-7-9 15:47:34', remark: 'DN50及以上管网大口径水表' },
+    { id: 'dabiao-em', parentId: 'dabiao', name: '电磁表', code: 'P25em', businessType: 'large_meter', updatedAt: '2024-7-9 15:47:34', remark: '电磁感应原理大口径水表' },
+    { id: 'dabiao-mech', parentId: 'dabiao', name: '机械表', code: 'P25mc', businessType: 'large_meter', updatedAt: '2024-7-9 15:47:34', remark: '机械传动大口径水表' },
+    { id: 'dabiao-ultra', parentId: 'dabiao', name: '超声表', code: 'P25us', businessType: 'large_meter', updatedAt: '2024-7-9 15:47:34', remark: '超声波非接触大口径水表' },
+    { id: 'dabiao-flow', parentId: 'dabiao', name: '流量计', code: 'P25fl', businessType: 'large_meter', updatedAt: '2024-7-9 15:47:34', remark: '管网流量计产品' },
+    { id: 'hubiao', parentId: 'water', name: '户表', code: 'P25uk', businessType: 'household_meter', updatedAt: '2024-7-9 15:47:34', remark: '居民及商业户用远传水表' },
+    { id: 'yaliji', parentId: 'water', name: '压力计', code: 'P25uk', businessType: 'pressure_gauge', updatedAt: '2024-7-9 15:47:34', remark: '管网压力监测设备' },
+    { id: 'shuizhiyi', parentId: 'water', name: '水质仪', code: 'P25uk', businessType: 'water_quality', updatedAt: '2024-7-9 15:47:34', remark: '水质在线监测设备' },
+    { id: 'zhihuishuizhan', parentId: 'water', name: '智慧水站', code: 'P25uk', businessType: 'smart_station', updatedAt: '2024-7-9 15:47:34', remark: '集成监测与供水的智慧水站' },
 ];
 
 type CategoryFormState = {
     name: string;
     parentId: string;
+    businessType: string;
     remark: string;
 };
 
 type ProductCategoryPageProps = {
+    dictionaries: DictTypeRecord[];
     onNavigateHome: () => void;
     onNavigate: (pageId: DeviceAccessPageId) => void;
 };
@@ -119,7 +123,9 @@ function CategoryFormDialog({
     title,
     form,
     parentOptions,
+    businessTypeOptions,
     onChange,
+    onParentChange,
     onClose,
     onSubmit,
     submitLabel,
@@ -127,15 +133,17 @@ function CategoryFormDialog({
     title: string;
     form: CategoryFormState;
     parentOptions: { label: string; value: string }[];
+    businessTypeOptions: { label: string; value: string }[];
     onChange: (next: CategoryFormState) => void;
+    onParentChange: (parentId: string) => void;
     onClose: () => void;
     onSubmit: () => void;
     submitLabel: string;
 }) {
     return (
-        <div className="pc-dialog-mask" role="presentation" onClick={onClose}>
+        <div className="pc-dialog-mask pc-dialog-mask--drawer" role="presentation" onClick={onClose}>
             <div
-                className="pc-dialog"
+                className="pc-dialog pc-dialog--drawer"
                 role="dialog"
                 aria-modal="true"
                 aria-labelledby="pc-dialog-title"
@@ -163,7 +171,17 @@ function CategoryFormDialog({
                             size="medium"
                             value={form.parentId}
                             options={parentOptions}
-                            onChange={(value) => onChange({ ...form, parentId: value })}
+                            onChange={onParentChange}
+                        />
+                    </div>
+                    <div className="pc-form-field">
+                        <span className="pc-form-label">业务类型</span>
+                        <ElSelect
+                            className="el-select--medium pc-form-select"
+                            size="medium"
+                            value={form.businessType}
+                            options={businessTypeOptions}
+                            onChange={(value) => onChange({ ...form, businessType: value })}
                         />
                     </div>
                     <label className="pc-form-field">
@@ -186,7 +204,7 @@ function CategoryFormDialog({
     );
 }
 
-export default function ProductCategoryPage({ onNavigateHome, onNavigate }: ProductCategoryPageProps) {
+export default function ProductCategoryPage({ dictionaries, onNavigateHome, onNavigate }: ProductCategoryPageProps) {
     const [categories, setCategories] = useState<CategoryRecord[]>(INITIAL_CATEGORIES);
     const [keyword, setKeyword] = useState('');
     const [draftKeyword, setDraftKeyword] = useState('');
@@ -199,8 +217,25 @@ export default function ProductCategoryPage({ onNavigateHome, onNavigate }: Prod
     const [editingId, setEditingId] = useState<string | null>(null);
     const [deleteTarget, setDeleteTarget] = useState<CategoryRecord | null>(null);
     const [viewTarget, setViewTarget] = useState<CategoryRecord | null>(null);
-    const [form, setForm] = useState<CategoryFormState>({ name: '', parentId: '', remark: '' });
+    const [form, setForm] = useState<CategoryFormState>({ name: '', parentId: '', businessType: '', remark: '' });
     const [toast, setToast] = useState<IotToastData | null>(null);
+
+    const businessTypeOptions = useMemo(() => {
+        const dict = dictionaries.find((item) => item.code === 'business_type');
+        const options = dict?.items
+            .filter((item) => item.enabled)
+            .sort((left, right) => left.sort - right.sort)
+            .map((item) => ({ label: item.name, value: item.dataValue })) ?? [];
+        return [{ label: '不指定', value: '' }, ...options];
+    }, [dictionaries]);
+
+    const getBusinessTypeName = (businessType: string) => (
+        businessTypeOptions.find((option) => option.value === businessType)?.label ?? '不指定'
+    );
+
+    const resolveCategoryBusinessType = (categoryId: string) => (
+        categories.find((item) => item.id === categoryId)?.businessType ?? ''
+    );
 
     const parentOptions = useMemo(() => {
         const excludeIds = new Set<string>();
@@ -230,7 +265,7 @@ export default function ProductCategoryPage({ onNavigateHome, onNavigate }: Prod
     };
 
     const openAddDialog = () => {
-        setForm({ name: '', parentId: '', remark: '' });
+        setForm({ name: '', parentId: '', businessType: '', remark: '' });
         setEditingId(null);
         setDialogMode('add');
     };
@@ -239,6 +274,7 @@ export default function ProductCategoryPage({ onNavigateHome, onNavigate }: Prod
         setForm({
             name: item.name,
             parentId: item.parentId ?? '',
+            businessType: item.businessType,
             remark: item.remark,
         });
         setEditingId(item.id);
@@ -264,6 +300,7 @@ export default function ProductCategoryPage({ onNavigateHome, onNavigate }: Prod
                 parentId: form.parentId || null,
                 name,
                 code: generateCategoryCode(categories),
+                businessType: form.businessType || resolveCategoryBusinessType(form.parentId),
                 updatedAt: formatNow(),
                 remark: form.remark.trim() || '—',
             };
@@ -283,6 +320,7 @@ export default function ProductCategoryPage({ onNavigateHome, onNavigate }: Prod
                         ...item,
                         name,
                         parentId: form.parentId || null,
+                        businessType: form.businessType,
                         remark: form.remark.trim() || '—',
                         updatedAt: formatNow(),
                     }
@@ -377,6 +415,7 @@ export default function ProductCategoryPage({ onNavigateHome, onNavigate }: Prod
                                 <tr>
                                     <th>产品分类名称</th>
                                     <th>类别编号</th>
+                                    <th>业务类型</th>
                                     <th>更新时间</th>
                                     <th>备注</th>
                                     <th>操作</th>
@@ -414,6 +453,7 @@ export default function ProductCategoryPage({ onNavigateHome, onNavigate }: Prod
                                                 </div>
                                             </td>
                                             <td>{item.code}</td>
+                                            <td>{getBusinessTypeName(item.businessType)}</td>
                                             <td>{item.updatedAt}</td>
                                             <td className="pc-remark-cell">{item.remark}</td>
                                             <td>
@@ -428,7 +468,7 @@ export default function ProductCategoryPage({ onNavigateHome, onNavigate }: Prod
                                 })}
                                 {tableRows.length === 0 && (
                                     <tr>
-                                        <td colSpan={5} className="pc-empty-cell">暂无匹配的分类数据</td>
+                                        <td colSpan={6} className="pc-empty-cell">暂无匹配的分类数据</td>
                                     </tr>
                                 )}
                             </tbody>
@@ -442,7 +482,13 @@ export default function ProductCategoryPage({ onNavigateHome, onNavigate }: Prod
                     title={dialogMode === 'add' ? '新增分类' : '编辑分类'}
                     form={form}
                     parentOptions={parentOptions}
+                    businessTypeOptions={businessTypeOptions}
                     onChange={setForm}
+                    onParentChange={(parentId) => setForm((previous) => ({
+                        ...previous,
+                        parentId,
+                        businessType: previous.businessType || resolveCategoryBusinessType(parentId),
+                    }))}
                     onClose={closeDialog}
                     onSubmit={handleSubmit}
                     submitLabel={dialogMode === 'add' ? '新增' : '保存'}
@@ -462,12 +508,13 @@ export default function ProductCategoryPage({ onNavigateHome, onNavigate }: Prod
                 title="查看分类"
                 open={Boolean(viewTarget)}
                 onClose={() => setViewTarget(null)}
-                items={viewTarget ? [
-                    { label: '分类名称', value: viewTarget.name },
-                    { label: '类别编号', value: viewTarget.code },
-                    { label: '更新时间', value: viewTarget.updatedAt },
-                    { label: '备注', value: viewTarget.remark },
-                ] : []}
+	                items={viewTarget ? [
+	                    { label: '分类名称', value: viewTarget.name },
+	                    { label: '类别编号', value: viewTarget.code },
+	                    { label: '业务类型', value: getBusinessTypeName(viewTarget.businessType) },
+	                    { label: '更新时间', value: viewTarget.updatedAt },
+	                    { label: '备注', value: viewTarget.remark },
+	                ] : []}
             />
 
             <IotToast toast={toast} />

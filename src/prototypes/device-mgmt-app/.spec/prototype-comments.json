@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 1,
+  "kind": "prototype-edit-comments",
+  "resource": {
+    "id": "device-mgmt-app",
+    "targetPath": "prototypes/device-mgmt-app",
+    "filePath": "src/prototypes/device-mgmt-app/.spec/prototype-comments.json"
+  },
+  "comments": [],
+  "tasks": {},
+  "images": []
+}

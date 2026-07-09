@@ -43,6 +43,40 @@ export type LargeMeterDevice = {
 export const METER_MANUFACTURERS = ['山科', '惠然', '汇中', '迈拓', '海威兹', '泽火', '宁波', '紫瑞', '兴玺', '捷先'] as const;
 export const REMOTE_MANUFACTURERS = ['紫峰远传', '宁水远传', '三川智慧', '新天科技', '威胜信息'] as const;
 
+export const LARGE_METER_AREA_IDS = {
+    csgls: 'AREA-20260709-001',
+    jiangbei: 'AREA-20260709-002',
+    jbCamera: 'AREA-20260709-003',
+    jbPressure: 'AREA-20260709-004',
+    jbEm: 'AREA-20260709-005',
+    jbUltrasonic: 'AREA-20260709-006',
+    gaochun: 'AREA-20260709-007',
+    banqiao: 'AREA-20260709-008',
+    tangshan: 'AREA-20260709-009',
+    banqiaoJoint: 'AREA-20260709-010',
+    pipeline: 'AREA-20260709-011',
+    pmc: 'AREA-20260709-012',
+} as const;
+
+export const LEGACY_LARGE_METER_AREA_ID_MAP: Record<string, string> = {
+    'area-csgls': LARGE_METER_AREA_IDS.csgls,
+    'area-jiangbei': LARGE_METER_AREA_IDS.jiangbei,
+    'area-jb-camera': LARGE_METER_AREA_IDS.jbCamera,
+    'area-jb-pressure': LARGE_METER_AREA_IDS.jbPressure,
+    'area-jb-em': LARGE_METER_AREA_IDS.jbEm,
+    'area-jb-ultrasonic': LARGE_METER_AREA_IDS.jbUltrasonic,
+    'area-gaochun': LARGE_METER_AREA_IDS.gaochun,
+    'area-banqiao': LARGE_METER_AREA_IDS.banqiao,
+    'area-tangshan': LARGE_METER_AREA_IDS.tangshan,
+    'area-banqiao-joint': LARGE_METER_AREA_IDS.banqiaoJoint,
+    'area-pipeline': LARGE_METER_AREA_IDS.pipeline,
+    'area-pmc': LARGE_METER_AREA_IDS.pmc,
+};
+
+export function normalizeLargeMeterAreaId(areaId: string): string {
+    return LEGACY_LARGE_METER_AREA_ID_MAP[areaId] ?? areaId;
+}
+
 export function resolveRemoteManufacturer(
     source: Pick<LargeMeterDevice, 'remoteManufacturer' | 'id'>,
 ): string {
@@ -208,33 +242,33 @@ export const UNASSIGNED_AREA_ID = '__unassigned__';
 
 export function createInitialAreas(): LargeMeterArea[] {
     return [
-        { id: 'area-csgls', name: '抄收管理所', parentId: null, sort: 1 },
-        { id: 'area-jiangbei', name: '江北分公司', parentId: null, sort: 2 },
-        { id: 'area-jb-camera', name: '江北摄像表', parentId: 'area-jiangbei', sort: 1 },
-        { id: 'area-jb-pressure', name: '江北压力表', parentId: 'area-jiangbei', sort: 2 },
-        { id: 'area-jb-em', name: '江北电磁表', parentId: 'area-jiangbei', sort: 3 },
-        { id: 'area-jb-ultrasonic', name: '江北超声表', parentId: 'area-jiangbei', sort: 4 },
-        { id: 'area-gaochun', name: '高淳分公司', parentId: null, sort: 3 },
-        { id: 'area-banqiao', name: '板桥分公司', parentId: null, sort: 4 },
-        { id: 'area-tangshan', name: '汤山分公司', parentId: null, sort: 5 },
-        { id: 'area-banqiao-joint', name: '抄收板桥共管表', parentId: null, sort: 6 },
-        { id: 'area-pipeline', name: '管线管理所', parentId: null, sort: 7 },
-        { id: 'area-pmc', name: '项目管理中心', parentId: null, sort: 8 },
+        { id: LARGE_METER_AREA_IDS.csgls, name: '抄收管理所', parentId: null, sort: 1 },
+        { id: LARGE_METER_AREA_IDS.jiangbei, name: '江北分公司', parentId: null, sort: 2 },
+        { id: LARGE_METER_AREA_IDS.jbCamera, name: '江北摄像表', parentId: LARGE_METER_AREA_IDS.jiangbei, sort: 1 },
+        { id: LARGE_METER_AREA_IDS.jbPressure, name: '江北压力表', parentId: LARGE_METER_AREA_IDS.jiangbei, sort: 2 },
+        { id: LARGE_METER_AREA_IDS.jbEm, name: '江北电磁表', parentId: LARGE_METER_AREA_IDS.jiangbei, sort: 3 },
+        { id: LARGE_METER_AREA_IDS.jbUltrasonic, name: '江北超声表', parentId: LARGE_METER_AREA_IDS.jiangbei, sort: 4 },
+        { id: LARGE_METER_AREA_IDS.gaochun, name: '高淳分公司', parentId: null, sort: 3 },
+        { id: LARGE_METER_AREA_IDS.banqiao, name: '板桥分公司', parentId: null, sort: 4 },
+        { id: LARGE_METER_AREA_IDS.tangshan, name: '汤山分公司', parentId: null, sort: 5 },
+        { id: LARGE_METER_AREA_IDS.banqiaoJoint, name: '抄收板桥共管表', parentId: null, sort: 6 },
+        { id: LARGE_METER_AREA_IDS.pipeline, name: '管线管理所', parentId: null, sort: 7 },
+        { id: LARGE_METER_AREA_IDS.pmc, name: '项目管理中心', parentId: null, sort: 8 },
     ];
 }
 
 const METER_AREA_CONFIG: { areaId: string; prefix: string; count: number; groups: string[] }[] = [
-    { areaId: 'area-jb-camera', prefix: '江北摄像表', count: 8, groups: ['大表', '江北', '摄像表'] },
-    { areaId: 'area-jb-pressure', prefix: '江北压力表', count: 7, groups: ['大表', '江北', '压力表'] },
-    { areaId: 'area-jb-em', prefix: '江北电磁表', count: 6, groups: ['大表', '江北', '电磁表'] },
-    { areaId: 'area-jb-ultrasonic', prefix: '江北超声表', count: 8, groups: ['大表', '江北', '超声表'] },
-    { areaId: 'area-gaochun', prefix: '高淳大表', count: 10, groups: ['大表', '高淳'] },
-    { areaId: 'area-banqiao', prefix: '板桥大表', count: 8, groups: ['大表', '板桥'] },
-    { areaId: 'area-tangshan', prefix: '汤山大表', count: 6, groups: ['大表', '汤山'] },
-    { areaId: 'area-banqiao-joint', prefix: '板桥共管表', count: 5, groups: ['大表', '板桥', '共管'] },
-    { areaId: 'area-csgls', prefix: '抄收大表', count: 5, groups: ['大表', '抄收'] },
-    { areaId: 'area-pipeline', prefix: '管线大表', count: 6, groups: ['大表', '管线'] },
-    { areaId: 'area-pmc', prefix: '项目大表', count: 5, groups: ['大表', '项目'] },
+    { areaId: LARGE_METER_AREA_IDS.jbCamera, prefix: '江北摄像表', count: 8, groups: ['大表', '江北', '摄像表'] },
+    { areaId: LARGE_METER_AREA_IDS.jbPressure, prefix: '江北压力表', count: 7, groups: ['大表', '江北', '压力表'] },
+    { areaId: LARGE_METER_AREA_IDS.jbEm, prefix: '江北电磁表', count: 6, groups: ['大表', '江北', '电磁表'] },
+    { areaId: LARGE_METER_AREA_IDS.jbUltrasonic, prefix: '江北超声表', count: 8, groups: ['大表', '江北', '超声表'] },
+    { areaId: LARGE_METER_AREA_IDS.gaochun, prefix: '高淳大表', count: 10, groups: ['大表', '高淳'] },
+    { areaId: LARGE_METER_AREA_IDS.banqiao, prefix: '板桥大表', count: 8, groups: ['大表', '板桥'] },
+    { areaId: LARGE_METER_AREA_IDS.tangshan, prefix: '汤山大表', count: 6, groups: ['大表', '汤山'] },
+    { areaId: LARGE_METER_AREA_IDS.banqiaoJoint, prefix: '板桥共管表', count: 5, groups: ['大表', '板桥', '共管'] },
+    { areaId: LARGE_METER_AREA_IDS.csgls, prefix: '抄收大表', count: 5, groups: ['大表', '抄收'] },
+    { areaId: LARGE_METER_AREA_IDS.pipeline, prefix: '管线大表', count: 6, groups: ['大表', '管线'] },
+    { areaId: LARGE_METER_AREA_IDS.pmc, prefix: '项目大表', count: 5, groups: ['大表', '项目'] },
 ];
 
 const METER_STATUSES: LargeMeterDevice['status'][] = ['在线', '在线', '在线', '在线', '在线', '告警', '离线'];
@@ -423,11 +457,11 @@ export function createInitialDataReports(): DataReportRecord[] {
     const meters = createInitialLargeMeters();
     const areas = createInitialAreas();
     const samples: Array<{ areaId: string; type: DataReportType; date: string; exported: boolean }> = [
-        { areaId: 'area-jiangbei', type: '日报', date: '2026-06-17', exported: true },
-        { areaId: 'area-gaochun', type: '日报', date: '2026-06-17', exported: false },
-        { areaId: 'area-banqiao', type: '月报', date: '2026-06', exported: false },
-        { areaId: 'area-jiangbei', type: '季报', date: '2026-Q2', exported: true },
-        { areaId: 'area-csgls', type: '年报', date: '2026', exported: false },
+        { areaId: LARGE_METER_AREA_IDS.jiangbei, type: '日报', date: '2026-06-17', exported: true },
+        { areaId: LARGE_METER_AREA_IDS.gaochun, type: '日报', date: '2026-06-17', exported: false },
+        { areaId: LARGE_METER_AREA_IDS.banqiao, type: '月报', date: '2026-06', exported: false },
+        { areaId: LARGE_METER_AREA_IDS.jiangbei, type: '季报', date: '2026-Q2', exported: true },
+        { areaId: LARGE_METER_AREA_IDS.csgls, type: '年报', date: '2026', exported: false },
     ];
 
     return samples.map((sample, index) => {
