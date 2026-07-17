@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Plus, Search } from 'lucide-react';
 import AppShell from '../components/AppShell';
+import Breadcrumb from '../components/Breadcrumb';
 import DeviceAccessSidebar, { type DeviceAccessPageId } from '../components/DeviceAccessSidebar';
 import ElSelect from '../components/ElSelect';
 import CertificateFormDrawer from '../components/CertificateFormDrawer';
@@ -187,7 +188,11 @@ export default function CertificateManagementPage({
             }}
         >
             <div className="pm-page cert-page">
-                <div className="crumb">设备接入 / 设备运维 / 证书管理</div>
+                <Breadcrumb items={[
+                                    { label: '设备接入', pageId: 'home' },
+                                    { label: '证书管理', pageId: 'certificate-mgmt' },
+                                    { label: '证书管理' },
+                                ]} onNavigate={(id) => onNavigate(id as DeviceAccessPageId)} />
 
                 <section className="panel pm-filter-panel">
                     <div className="pm-filter-row">

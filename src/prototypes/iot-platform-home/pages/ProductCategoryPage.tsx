@@ -6,6 +6,7 @@ import {
     Search,
 } from 'lucide-react';
 import AppShell from '../components/AppShell';
+import Breadcrumb from '../components/Breadcrumb';
 import TreeToggleIcon from '../components/TreeToggleIcon';
 import DeviceAccessSidebar, { type DeviceAccessPageId } from '../components/DeviceAccessSidebar';
 import ElSelect from '../components/ElSelect';
@@ -355,7 +356,11 @@ export default function ProductCategoryPage({ dictionaries, onNavigateHome, onNa
             }}
         >
             <div className="pc-page">
-                <div className="crumb">设备接入 / 产品开发 / 产品管理 / 产品分类</div>
+                <Breadcrumb items={[
+                                    { label: '设备接入', pageId: 'home' },
+                                    { label: '产品管理', pageId: 'product-management' },
+                                    { label: '产品分类' },
+                                ]} onNavigate={(id) => onNavigate(id as DeviceAccessPageId)} />
 
                 <button
                     type="button"

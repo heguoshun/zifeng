@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { CirclePlus } from 'lucide-react';
 import TreeToggleIcon from '../components/TreeToggleIcon';
 import AppShell from '../components/AppShell';
+import Breadcrumb from '../components/Breadcrumb';
 import MessageCenterSidebar, { type MessageCenterPageId } from '../components/MessageCenterSidebar';
 import IotToast, { type IotToastData, type IotToastType, triggerIotToast } from '../components/IotToast';
 import {
@@ -189,7 +190,10 @@ export default function MessageTemplatePage({
             }}
         >
             <div className="mt-page">
-                <div className="crumb">消息中心 / 消息模版</div>
+                <Breadcrumb items={[
+                                    { label: '消息中心', pageId: 'msg-subscribe' },
+                                    { label: '消息模版' },
+                                ]} onNavigate={(id) => onNavigate(id as MessageCenterPageId)} />
 
                 <section className="panel mt-list-panel">
                     <div className="mt-layout">

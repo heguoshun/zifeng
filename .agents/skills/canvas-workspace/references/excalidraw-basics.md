@@ -1,8 +1,6 @@
 # Excalidraw 基础指导
 
-这份只说明如何把内容组织成 Excalidraw 图，不规定 Axhub 画布流程。基础思路参考 `excalidraw-diagram-generator`：先判断图类型，再抽取元素、关系和复杂度，最后生成清晰布局。
-
-参考来源：https://www.skills.sh/github/awesome-copilot/excalidraw-diagram-generator
+这份只说明如何把内容组织成普通 Excalidraw 图，不规定 Axhub 画布流程。流程图、关系图、架构图等请求先按 `canvas-workspace` 主文档分流；已确定要画成 Excalidraw 元素后，再读本文件。
 
 ## 先判断图类型
 
@@ -45,5 +43,5 @@
 
 ## 与 Axhub 规范的边界
 
-- 画布文件仍写入 `src/prototypes/<prototype-name>/canvas.excalidraw`。
+- 画布文件写入 `src/resources/**/*.excalidraw`。
 - 字体、颜色、节点、资源和交付口径仍按本技能主文档与其他 references 执行。

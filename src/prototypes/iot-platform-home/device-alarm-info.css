@@ -793,6 +793,38 @@
     gap: 16px;
 }
 
+.dai-convert-work-order-body .pcp-drawer-field {
+    width: 100%;
+    min-width: 0;
+}
+
+.dai-convert-work-order-body .pcp-drawer-field .pcp-form-input,
+.dai-convert-work-order-body .pcp-drawer-field .el-select,
+.dai-convert-work-order-body .pcp-drawer-field .pcp-form-textarea {
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+    box-sizing: border-box;
+}
+
+.dai-deadline-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.dai-deadline-row__value {
+    flex: 1;
+    width: auto;
+    min-width: 0;
+}
+
+.dai-deadline-row__unit {
+    flex: 0 0 120px;
+    width: 120px;
+    min-width: 120px;
+}
+
 .dai-convert-textarea {
     box-sizing: border-box;
     width: 100%;

@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Plus, Search } from 'lucide-react';
 import AppShell from '../components/AppShell';
+import Breadcrumb from '../components/Breadcrumb';
 import SystemManagementSidebar, { type SystemManagementPageId } from '../components/SystemManagementSidebar';
 import ListPagination from '../components/ListPagination';
 import AnnouncementFormDialog, { type AnnouncementFormValue } from '../components/AnnouncementFormDialog';
@@ -208,7 +209,10 @@ export default function NoticeAnnouncementPage({
             }}
         >
             <div className="na-page">
-                <div className="crumb">系统管理 / 通知公告</div>
+                <Breadcrumb items={[
+                                    { label: '系统管理', pageId: 'tenant-mgmt' },
+                                    { label: '通知公告' },
+                                ]} onNavigate={(id) => onNavigate(id as SystemManagementPageId)} />
 
                 <section className="panel na-filter-panel">
                     <div className="na-filter-row">

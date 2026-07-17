@@ -8,6 +8,7 @@ import DeviceGroupTags from '../components/DeviceGroupTags';
 import TreeToggleIcon from '../components/TreeToggleIcon';
 import EntityCardPlaceholder from '../components/EntityCardPlaceholder';
 import AppShell from '../components/AppShell';
+import Breadcrumb from '../components/Breadcrumb';
 import DeviceAccessSidebar, { type DeviceAccessPageId } from '../components/DeviceAccessSidebar';
 import ElSelect from '../components/ElSelect';
 import ElTreeSelect from '../components/ElTreeSelect';
@@ -474,10 +475,12 @@ export default function DeviceManagementPage({
             }}
         >
             <div className="pm-page">
-                <div className="crumb">
-                    设备接入 / 设备管理 / 设备管理
-                    {activeGroup ? ` / ${activeGroup.name}` : ''}
-                </div>
+                <Breadcrumb items={[
+                    { label: '设备接入', pageId: 'home' },
+                    { label: '设备管理', pageId: 'device-management' },
+                    { label: '设备管理' },
+                    ...(activeGroup ? [{ label: activeGroup.name }] : []),
+                ]} onNavigate={(id) => onNavigate(id as DeviceAccessPageId)} />
 
                 <section className="panel pm-filter-panel">
                     <div className="pm-filter-row dm-filter-row--device">

@@ -20,6 +20,9 @@ type UpgradeTaskFormDialogProps = {
     open: boolean;
     upgradePackage: UpgradePackageTarget | null;
     devices: DeviceRecord[];
+    mode?: 'create' | 'resubmit';
+    initialValue?: UpgradeTaskFormValue;
+    rejectRemark?: string;
     onClose: () => void;
     onSubmit: (value: UpgradeTaskFormValue) => void;
 };
@@ -28,6 +31,9 @@ export default function UpgradeTaskFormDialog({
     open,
     upgradePackage,
     devices,
+    mode = 'create',
+    initialValue,
+    rejectRemark,
     onClose,
     onSubmit,
 }: UpgradeTaskFormDialogProps) {
@@ -46,23 +52,25 @@ export default function UpgradeTaskFormDialog({
 
     useEffect(() => {
         if (!open) return;
-        setForm({
+        setForm(initialValue ? {
+            ...initialValue,
+            deviceIds: [...initialValue.deviceIds],
+        } : {
             ...EMPTY_UPGRADE_TASK_FORM,
             targetVersion: upgradePackage?.version ?? '',
         });
         setTouched(false);
         setDevicePickerOpen(false);
-    }, [open, upgradePackage]);
+    }, [open, upgradePackage, initialValue]);
 
     if (!open || !upgradePackage) return null;
 
-    const showSchedulePicker = form.scheduleType === '定时升级';
     const showDevicePicker = form.scope === '指定设备';
     const canSubmit = Boolean(
         form.targetVersion.trim()
         && form.retryStrategy
         && form.timeout
-        && (!showSchedulePicker || form.scheduledAt.trim())
+        && form.scheduledAt.trim()
         && (!showDevicePicker || form.deviceIds.length > 0),
     );
 
@@ -72,6 +80,7 @@ export default function UpgradeTaskFormDialog({
         onSubmit({
             ...form,
             targetVersion: form.targetVersion.trim(),
+            scheduleType: '定时升级',
         });
     };
 
@@ -92,10 +101,16 @@ export default function UpgradeTaskFormDialog({
                     onMouseDown={(event) => event.stopPropagation()}
                 >
                     <div className="pcp-drawer__head">
-                        <h3 id="ru-task-drawer-title">创建升级任务</h3>
+                        <h3 id="ru-task-drawer-title">{mode === 'resubmit' ? '重新编辑升级任务' : '创建升级任务'}</h3>
                         <button type="button" className="pcp-drawer__close" onClick={onClose} aria-label="关闭">×</button>
                     </div>
                     <div className="pcp-drawer__body pcp-drawer__body--form">
+                        {mode === 'resubmit' && (
+                            <div className="ru-task-resubmit-notice" role="note">
+                                <strong>驳回原因</strong>
+                                <p>{rejectRemark?.trim() || '审核人员未填写驳回说明'}</p>
+                            </div>
+                        )}
                         <label className="pcp-drawer-field">
                             <span className="pcp-form-label"><em>*</em>待升级版本</span>
                             <ClearableInput
@@ -145,32 +160,20 @@ export default function UpgradeTaskFormDialog({
                         </div>
                         <div className="pcp-drawer-field">
                             <span className="pcp-form-label"><em>*</em>升级时间</span>
-                            <div className="pcp-radio-group">
-                                {(['立即升级', '定时升级'] as const).map((option) => (
-                                    <label key={option} className="pcp-radio">
-                                        <input
-                                            type="radio"
-                                            name="upgrade-schedule"
-                                            checked={form.scheduleType === option}
-                                            onChange={() => setForm((prev) => ({
-                                                ...prev,
-                                                scheduleType: option,
-                                                scheduledAt: option === '立即升级' ? '' : prev.scheduledAt,
-                                            }))}
-                                        />
-                                        <span>{option}</span>
-                                    </label>
-                                ))}
-                            </div>
-                            {showSchedulePicker && (
-                                <ElDateTimePicker
-                                    className="pcp-form-select ru-datetime-picker"
-                                    size="medium"
-                                    value={form.scheduledAt}
-                                    placeholder="请选择"
-                                    onChange={(scheduledAt) => setForm((prev) => ({ ...prev, scheduledAt }))}
-                                />
-                            )}
+                            <ElDateTimePicker
+                                className="pcp-form-select ru-datetime-picker"
+                                size="medium"
+                                value={form.scheduledAt}
+                                placeholder="请选择升级时间"
+                                onChange={(scheduledAt) => setForm((prev) => ({
+                                    ...prev,
+                                    scheduleType: '定时升级',
+                                    scheduledAt,
+                                }))}
+                            />
+                            <p className="ru-upload-hint" style={{ marginTop: 6 }}>
+                                审核通过后，任务将在所选时间自动开始执行
+                            </p>
                         </div>
                         <div className="pcp-drawer-field">
                             <span className="pcp-form-label"><em>*</em>升级失败重试策略</span>

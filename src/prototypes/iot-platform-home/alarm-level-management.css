@@ -69,3 +69,40 @@
 .alm-form-drawer .alm-color-picker {
     padding: 4px 0;
 }
+
+.alm-form-drawer .pcp-drawer__body {
+    overflow-x: hidden;
+    overflow-y: auto;
+}
+
+.alm-form-drawer .pcp-drawer-field {
+    width: 100%;
+    min-width: 0;
+}
+
+.alm-form-drawer .pcp-drawer-field .pcp-form-input,
+.alm-form-drawer .pcp-drawer-field .el-select,
+.alm-form-drawer .pcp-drawer-field .pcp-form-textarea {
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+    box-sizing: border-box;
+}
+
+.alm-deadline-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.alm-deadline-row__value {
+    flex: 1;
+    width: auto;
+    min-width: 0;
+}
+
+.alm-deadline-row__unit {
+    flex: 0 0 120px;
+    width: 120px;
+    min-width: 120px;
+}

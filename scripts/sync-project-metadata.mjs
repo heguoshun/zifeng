@@ -13,26 +13,40 @@ export const PROJECT_NAME = '';
 export const PRODUCT_NAME = 'Axhub Make';
 export const MAKE_CLIENT_MARKER_KIND = 'axhub-make-client';
 export const MAKE_CLIENT_MARKER_RELATIVE_PATH = '.axhub/make/client.json';
-export const DEFAULT_CLIENT_ORIGIN = 'http://localhost:51720';
+export const DEFAULT_CLIENT_ORIGIN = 'http://localhost:51731';
 export const DETERMINISTIC_UPDATED_AT = '2026-05-03T00:00:00.000Z';
 
 export const resourceLayout = {
   prototypes: ['src/prototypes'],
-  docs: ['src/resources'],
   themes: ['src/themes'],
   media: ['src/resources/assets'],
 };
 
 export const resourceWriteTargets = {
   prototypes: { type: 'project-relative-path', path: resourceLayout.prototypes[0] },
-  docs: { type: 'project-relative-path', path: resourceLayout.docs[0] },
   themes: { type: 'project-relative-path', path: resourceLayout.themes[0] },
   media: { type: 'project-relative-path', path: resourceLayout.media[0] },
 };
 
 export const localExportCapabilities = {
-  html: false,
+  html: true,
   make: false,
+};
+
+export const PROTOTYPE_PLACEHOLDER_GUIDE = {
+  kind: 'prototype-empty',
+  title: '这个原型还没有开始创建',
+  description: '告诉 AI 你想做什么：目标用户、使用场景、页面内容和参考风格。',
+  steps: [
+    '在本地 AI 软件中打开本页面',
+    '打开草稿创作原型',
+  ],
+  tips: [
+    '模型不要用 auto，推荐：Claude Opus 4.8、Gemini 3.1 Pro、GPT-5.5、Kimi K2.7、GLM-5.2。',
+    '一个任务开一个新对话，避免多个需求互相干扰。',
+    '多用图片和语音描述，截图、草图和参考页面通常比长文字更清楚。',
+    '如果已有视觉规范，建议先创建设计系统。',
+  ],
 };
 
 // Snapshot from https://getdesign.md/api/cli/downloads?brands=...
@@ -228,6 +242,23 @@ function readDisplayName(indexFilePath, fallback) {
   return displayName || fallback;
 }
 
+function hasGeneratedPlaceholderSource(indexFilePath) {
+  if (!fs.existsSync(indexFilePath)) return false;
+  const source = fs.readFileSync(indexFilePath, 'utf8');
+  const hasGeneratedShell = source.includes('placeholder-empty-page')
+    && source.includes('打开左侧默认引导页继续创建')
+    && source.includes('export default function Placeholder');
+  return hasGeneratedShell && (
+    source.includes('@axhub-placeholder prototype-empty')
+    || source.includes('className="placeholder-empty-page"')
+  );
+}
+
+function isGeneratedEmptyPrototypePlaceholder(prototypeDir, indexFilePath) {
+  void prototypeDir;
+  return hasGeneratedPlaceholderSource(indexFilePath);
+}
+
 function getLiteralPropertyValue(objectLiteral, propertyName) {
   const property = objectLiteral.properties.find((candidate) => (
     ts.isPropertyAssignment(candidate)
@@ -245,93 +276,29 @@ function getLiteralPropertyValue(objectLiteral, propertyName) {
     : null;
 }
 
-function getBooleanPropertyValue(objectLiteral, propertyName) {
-  const property = objectLiteral.properties.find((candidate) => (
-    ts.isPropertyAssignment(candidate)
-    && (
-      (ts.isIdentifier(candidate.name) && candidate.name.text === propertyName)
-      || (ts.isStringLiteral(candidate.name) && candidate.name.text === propertyName)
-    )
-  ));
-  if (!property || !ts.isPropertyAssignment(property)) {
-    return null;
-  }
-  const initializer = property.initializer;
-  if (initializer.kind === ts.SyntaxKind.TrueKeyword) {
-    return true;
-  }
-  if (initializer.kind === ts.SyntaxKind.FalseKeyword) {
-    return false;
-  }
-  return null;
-}
-
-function extractPagesFromArrayLiteral(arrayNode) {
-  const pages = [];
-  if (!arrayNode || !ts.isArrayLiteralExpression(arrayNode)) {
-    return pages;
-  }
-  for (const element of arrayNode.elements) {
-    if (!ts.isObjectLiteralExpression(element)) {
-      continue;
-    }
-    const id = normalizePageId(getLiteralPropertyValue(element, 'id'));
-    const title = stringValue(getLiteralPropertyValue(element, 'title'));
-    const showInMenu = getBooleanPropertyValue(element, 'showInMenu');
-    if (id && title) {
-      const pageEntry = { id, title };
-      if (showInMenu === false) {
-        pageEntry.showInMenu = false;
-      }
-      pages.push(pageEntry);
-    }
-  }
-  return pages;
-}
-
-function findVariableArrayInitializer(sourceFile, variableName) {
-  let result = null;
-  const visit = (node) => {
-    if (result) {
-      return;
-    }
-    if (
-      ts.isVariableDeclaration(node)
-      && ts.isIdentifier(node.name)
-      && node.name.text === variableName
-      && node.initializer
-      && ts.isArrayLiteralExpression(node.initializer)
-    ) {
-      result = node.initializer;
-      return;
-    }
-    ts.forEachChild(node, visit);
-  };
-  visit(sourceFile);
-  return result;
-}
-
-function extractHashRouteFromCall(callExpression, sourceFile) {
+function extractHashRouteFromCall(callExpression) {
   const expression = callExpression.expression;
   if (!ts.isIdentifier(expression) || expression.text !== 'defineHashPageRoute') {
     return null;
   }
 
   const pagesArg = callExpression.arguments[0];
-  let pagesArrayNode = null;
-  if (pagesArg && ts.isArrayLiteralExpression(pagesArg)) {
-    pagesArrayNode = pagesArg;
-  } else if (
-    pagesArg
-    && ts.isCallExpression(pagesArg)
-    && ts.isPropertyAccessExpression(pagesArg.expression)
-    && pagesArg.expression.name.text === 'map'
-    && ts.isIdentifier(pagesArg.expression.expression)
-  ) {
-    pagesArrayNode = findVariableArrayInitializer(sourceFile, pagesArg.expression.expression.text);
+  if (!pagesArg || !ts.isArrayLiteralExpression(pagesArg)) {
+    return null;
   }
 
-  const pages = extractPagesFromArrayLiteral(pagesArrayNode);
+  const pages = [];
+  for (const element of pagesArg.elements) {
+    if (!ts.isObjectLiteralExpression(element)) {
+      continue;
+    }
+    const id = normalizePageId(getLiteralPropertyValue(element, 'id'));
+    const title = stringValue(getLiteralPropertyValue(element, 'title'));
+    const group = stringValue(getLiteralPropertyValue(element, 'group'));
+    if (id && title) {
+      pages.push({ id, title, ...(group ? { group } : {}) });
+    }
+  }
   if (!pages.length) {
     return null;
   }
@@ -360,7 +327,7 @@ function extractHashRouteFromFile(filePath) {
       return;
     }
     if (ts.isCallExpression(node)) {
-      route = extractHashRouteFromCall(node, sourceFile);
+      route = extractHashRouteFromCall(node);
       if (route) {
         return;
       }
@@ -385,50 +352,6 @@ function extractHashRouteMetadata(prototypeDir) {
     }
   }
   return null;
-}
-
-function getMenuRoutePages(pages, menuPageIds) {
-  const visiblePages = pages.filter((page) => page.showInMenu !== false);
-  if (!menuPageIds?.length) {
-    return visiblePages.map(({ id, title }) => ({ id, title }));
-  }
-  const pageMap = new Map(visiblePages.map((page) => [page.id, page]));
-  return menuPageIds
-    .map((id) => pageMap.get(id))
-    .filter(Boolean)
-    .map(({ id, title }) => ({ id, title }));
-}
-
-function readPrototypeMenuPageIds(prototypeDir) {
-  const menuFile = path.join(prototypeDir, 'prototypeMenuPages.ts');
-  if (!fs.existsSync(menuFile)) {
-    return null;
-  }
-  const source = fs.readFileSync(menuFile, 'utf8');
-  const match = source.match(/export const PROTOTYPE_MENU_PAGE_IDS = \[([\s\S]*?)\] as const/u);
-  if (!match) {
-    return null;
-  }
-  const ids = [];
-  for (const line of match[1].split('\n')) {
-    const idMatch = line.match(/'([^']+)'/u);
-    if (idMatch) {
-      ids.push(idMatch[1]);
-    }
-  }
-  return ids.length ? ids : null;
-}
-
-function applyMenuPageVisibility(pages, menuPageIds) {
-  if (!menuPageIds?.length) {
-    return pages;
-  }
-  const menuSet = new Set(menuPageIds);
-  return pages.map((page) => ({
-    id: page.id,
-    title: page.title,
-    ...(menuSet.has(page.id) ? {} : { showInMenu: false }),
-  }));
 }
 
 function titleFromMarkdown(markdownPath, fallback) {
@@ -592,10 +515,8 @@ function collectPrototypes(projectRoot, clientOrigin, options = {}) {
       const indexFile = path.join(root, entry.name, 'index.tsx');
       if (!fs.existsSync(indexFile)) continue;
       const filePath = toPosix(path.relative(projectRoot, indexFile));
-      const prototypeDir = path.join(root, entry.name);
-      const route = extractHashRouteMetadata(prototypeDir);
-      const menuPageIds = readPrototypeMenuPageIds(prototypeDir);
-      const visiblePages = route ? applyMenuPageVisibility(route.pages, menuPageIds) : [];
+      const route = extractHashRouteMetadata(path.join(root, entry.name));
+      const placeholder = isGeneratedEmptyPrototypePlaceholder(path.join(root, entry.name), indexFile);
       const item = {
         id: entry.name,
         name: entry.name,
@@ -606,7 +527,8 @@ function collectPrototypes(projectRoot, clientOrigin, options = {}) {
         updatedAt: DETERMINISTIC_UPDATED_AT,
         filePath,
         ...(options.includeAbsoluteFilePaths === false ? {} : { absoluteFilePath: path.resolve(indexFile) }),
-        ...(route ? { pages: getMenuRoutePages(visiblePages, menuPageIds), defaultPageId: route.defaultPageId } : {}),
+        ...(route ? { pages: route.pages, defaultPageId: route.defaultPageId } : {}),
+        ...(placeholder ? { placeholder: true, placeholderGuide: PROTOTYPE_PLACEHOLDER_GUIDE } : {}),
       };
       const artifacts = {
         ...createFigmaArtifactMetadata(projectRoot, entry.name),
@@ -620,32 +542,6 @@ function collectPrototypes(projectRoot, clientOrigin, options = {}) {
     }
   }
   return items.sort(sortById);
-}
-
-function collectDocs(projectRoot, options = {}) {
-  const docs = [];
-  for (const root of resourceLayout.docs.map((dir) => path.resolve(projectRoot, dir))) {
-    for (const filePath of listFiles(root, () => true)) {
-      const relativePath = toPosix(path.relative(root, filePath));
-      if (isIgnoredResourceRelativePath(relativePath)) continue;
-      const isMarkdown = path.extname(filePath).toLowerCase() === '.md';
-      const id = isMarkdown ? relativePath.replace(/\.md$/iu, '') : relativePath;
-      docs.push({
-        id,
-        name: id,
-        title: isMarkdown
-          ? titleFromMarkdown(filePath, path.basename(filePath, '.md'))
-          : relativePath.replace(/\.[^.]+$/u, ''),
-        path: options.includeAbsoluteFilePaths === false
-          ? toPosix(path.relative(projectRoot, filePath))
-          : path.resolve(filePath),
-        description: '',
-        updatedAt: DETERMINISTIC_UPDATED_AT,
-      });
-    }
-  }
-
-  return docs.sort(sortById);
 }
 
 function collectThemes(projectRoot, clientOrigin) {
@@ -688,7 +584,6 @@ export function buildMakeProjectMetadata(projectRoot, options = {}) {
   const clientOrigin = String(options.clientOrigin ?? DEFAULT_CLIENT_ORIGIN).replace(/\/+$/u, '');
   const projectIdentity = readMakeClientProjectIdentity(projectRoot);
   const prototypes = collectPrototypes(projectRoot, clientOrigin, options);
-  const docs = collectDocs(projectRoot, options);
   const themes = collectThemes(projectRoot, clientOrigin);
 
   return {
@@ -699,12 +594,10 @@ export function buildMakeProjectMetadata(projectRoot, options = {}) {
     },
     resources: {
       prototypes,
-      docs,
       themes,
     },
     navigation: {
       prototypes: prototypes.map((item) => item.id),
-      docs: docs.map((item) => item.id),
     },
     orders: {
       themes: themes.map((item) => item.id),

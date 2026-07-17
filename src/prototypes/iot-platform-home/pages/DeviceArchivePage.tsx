@@ -1,16 +1,22 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { Archive, FileClock, MapPin, Plus, Search, Upload, UserRound, Wrench } from 'lucide-react';
+import { createPortal } from 'react-dom';
+import { Archive, FileClock, FileText, MapPin, Pencil, Plus, Search, Trash2, Upload, UserRound, Wrench } from 'lucide-react';
 import AppShell from '../components/AppShell';
+import Breadcrumb from '../components/Breadcrumb';
 import ClearableInput from '../components/ClearableInput';
 import ElSelect from '../components/ElSelect';
 import ElDateTimePicker, { formatDateTimeValue } from '../components/ElDateTimePicker';
+import { ConfirmDialog } from '../components/IotDialogs';
 import IotToast, { type IotToastData, triggerIotToast } from '../components/IotToast';
 import LargeMeterSidebar, { type LargeMeterPageId } from '../components/LargeMeterSidebar';
 import ListPagination from '../components/ListPagination';
+import MapPickerDialog, { type MapPickerValue } from '../components/MapPickerDialog';
 import {
     createDeviceArchiveRecord,
     DEVICE_ARCHIVE_TYPE_LABELS,
     DEVICE_ARCHIVE_TYPE_OPTIONS,
+    MANUAL_DEVICE_ARCHIVE_TYPE_OPTIONS,
+    SYSTEM_GENERATED_ARCHIVE_TYPES,
     type DeviceArchiveRecord,
     type DeviceArchiveType,
 } from '../data/deviceArchives';
@@ -30,6 +36,7 @@ type DeviceArchivePageProps = {
     areas: LargeMeterArea[];
     records: DeviceArchiveRecord[];
     initialDeviceId?: string | null;
+    currentUserName: string;
     onUpdateRecords: React.Dispatch<React.SetStateAction<DeviceArchiveRecord[]>>;
     onNavigateDeviceAccess: () => void;
     onNavigate: (pageId: LargeMeterPageId) => void;
@@ -46,11 +53,96 @@ type ArchiveForm = {
     summary: string;
     beforeValue: string;
     afterValue: string;
+    beforeLongitude: string;
+    beforeLatitude: string;
+    afterLongitude: string;
+    afterLatitude: string;
     operator: string;
     remark: string;
 };
 
-function createEmptyForm(): ArchiveForm {
+type ArchiveFormConfig = {
+    titleLabel?: string;
+    titlePlaceholder?: string;
+    generatedTitle?: string;
+    summaryLabel: string;
+    summaryPlaceholder: string;
+    beforeLabel?: string;
+    beforePlaceholder?: string;
+    beforeRequired?: boolean;
+    afterLabel?: string;
+    afterPlaceholder?: string;
+    afterRequired?: boolean;
+    remarkPlaceholder: string;
+};
+
+const ARCHIVE_FORM_CONFIGS: Record<Exclude<DeviceArchiveType, 'access' | 'installation' | 'status-change'>, ArchiveFormConfig> = {
+    accessory: {
+        titleLabel: '更换配件',
+        titlePlaceholder: '例如：NB-IoT 通讯模块',
+        summaryLabel: '更换原因及处理过程',
+        summaryPlaceholder: '说明故障现象、更换原因和现场处理过程',
+        beforeLabel: '原配件信息',
+        beforePlaceholder: '原配件名称、型号或序列号',
+        beforeRequired: true,
+        afterLabel: '新配件信息',
+        afterPlaceholder: '新配件名称、型号或序列号',
+        afterRequired: true,
+        remarkPlaceholder: '可补充配件来源、质保情况等信息',
+    },
+    'user-change': {
+        generatedTitle: '用户变更',
+        summaryLabel: '变更原因',
+        summaryPlaceholder: '说明用户变更原因和办理情况',
+        beforeLabel: '原用户名称',
+        beforePlaceholder: '请输入原用户名称',
+        beforeRequired: true,
+        afterLabel: '新用户名称',
+        afterPlaceholder: '请输入新用户名称',
+        afterRequired: true,
+        remarkPlaceholder: '可补充交接、资料核验等信息',
+    },
+    'location-change': {
+        generatedTitle: '位置变更',
+        summaryLabel: '变更原因',
+        summaryPlaceholder: '说明迁移原因、施工情况和点位调整',
+        beforeLabel: '原安装位置',
+        beforePlaceholder: '变更前的安装地址或点位',
+        afterLabel: '新安装位置',
+        afterPlaceholder: '变更后的安装地址或点位',
+        afterRequired: true,
+        remarkPlaceholder: '可补充坐标、现场环境等信息',
+    },
+    maintenance: {
+        titleLabel: '维护项目',
+        titlePlaceholder: '例如：例行巡检、阀门维修',
+        summaryLabel: '维护内容',
+        summaryPlaceholder: '记录检查项、故障现象和处理过程',
+        afterLabel: '处理结果',
+        afterPlaceholder: '例如：设备恢复正常、需继续观察',
+        afterRequired: true,
+        remarkPlaceholder: '可补充后续计划、耗材使用等信息',
+    },
+    calibration: {
+        titleLabel: '检定项目',
+        titlePlaceholder: '例如：周期检定、现场校准',
+        summaryLabel: '检定过程',
+        summaryPlaceholder: '记录检定机构、检定依据和执行过程',
+        afterLabel: '检定结果',
+        afterPlaceholder: '例如：合格，误差符合标准要求',
+        afterRequired: true,
+        remarkPlaceholder: '可补充证书编号、有效期等信息',
+    },
+    other: {
+        titleLabel: '记录标题',
+        titlePlaceholder: '概括本次记录事项',
+        summaryLabel: '记录内容',
+        summaryPlaceholder: '说明事项经过和处理结果',
+        remarkPlaceholder: '可补充其他说明',
+    },
+};
+
+function createEmptyForm(operator = '当前用户'): ArchiveForm {
     return {
         type: 'maintenance',
         occurredAt: formatDateTimeValue(new Date()),
@@ -58,9 +150,20 @@ function createEmptyForm(): ArchiveForm {
         summary: '',
         beforeValue: '',
         afterValue: '',
-        operator: 'superadmin',
+        beforeLongitude: '',
+        beforeLatitude: '',
+        afterLongitude: '',
+        afterLatitude: '',
+        operator,
         remark: '',
     };
+}
+
+function getArchiveFormConfig(type: DeviceArchiveType): ArchiveFormConfig {
+    if (type === 'access' || type === 'installation' || type === 'status-change') {
+        return ARCHIVE_FORM_CONFIGS.other;
+    }
+    return ARCHIVE_FORM_CONFIGS[type];
 }
 
 function ArchiveTypeIcon({ type }: { type: DeviceArchiveType }) {
@@ -116,12 +219,164 @@ function formatAccessTime(device: DeviceRecord) {
     return formatDateTimeMinute(device.enabledAt);
 }
 
+function parseCoordinate(value: string): number | undefined {
+    const normalized = value.trim();
+    if (!normalized) return undefined;
+    const coordinate = Number(normalized);
+    return Number.isFinite(coordinate) ? coordinate : undefined;
+}
+
+function formatCoordinates(longitude?: number, latitude?: number) {
+    if (!Number.isFinite(longitude) || !Number.isFinite(latitude)) return '—';
+    return `${longitude!.toFixed(6)}, ${latitude!.toFixed(6)}`;
+}
+
+function isEditableArchiveRecord(record: DeviceArchiveRecord): boolean {
+    return record.source === '人工补录';
+}
+
+function parseUserNoFromValue(value: string): string | undefined {
+    const match = value.match(/（(YH\d+)）$/);
+    return match ? match[1] : undefined;
+}
+
+function recordToForm(record: DeviceArchiveRecord): ArchiveForm {
+    let afterValue = record.afterValue ?? '';
+    if (record.type === 'user-change' && afterValue) {
+        const userNo = parseUserNoFromValue(afterValue);
+        if (userNo) {
+            afterValue = afterValue.replace(`（${userNo}）`, '').trim();
+        }
+    }
+    return {
+        type: record.type,
+        occurredAt: record.occurredAt,
+        title: record.title,
+        summary: record.summary,
+        beforeValue: record.beforeValue ?? '',
+        afterValue,
+        beforeLongitude: record.beforeLongitude === undefined ? '' : String(record.beforeLongitude),
+        beforeLatitude: record.beforeLatitude === undefined ? '' : String(record.beforeLatitude),
+        afterLongitude: record.afterLongitude === undefined ? '' : String(record.afterLongitude),
+        afterLatitude: record.afterLatitude === undefined ? '' : String(record.afterLatitude),
+        operator: record.operator,
+        remark: record.remark ?? '',
+    };
+}
+
+type ArchiveAttachmentItem = {
+    id: string;
+    name: string;
+    kind: 'image' | 'file';
+    previewUrl?: string;
+};
+
+function isImageAttachmentName(name: string): boolean {
+    return /\.(jpg|jpeg|png|gif|webp|bmp)$/i.test(name);
+}
+
+function buildAttachmentPreviewSvg(label: string, tone: 'blue' | 'green' | 'amber'): string {
+    const palette = {
+        blue: { bg: '#ecf5ff', border: '#b3d8ff', accent: '#409eff', text: '#1d39c4' },
+        green: { bg: '#f0f9eb', border: '#c2e7b0', accent: '#67c23a', text: '#3f6212' },
+        amber: { bg: '#fdf6ec', border: '#f3d19e', accent: '#e6a23c', text: '#9a5b13' },
+    }[tone];
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="480" height="320" viewBox="0 0 480 320">
+        <rect width="480" height="320" fill="${palette.bg}"/>
+        <rect x="24" y="24" width="432" height="272" rx="12" fill="#fff" stroke="${palette.border}" stroke-width="2"/>
+        <circle cx="96" cy="96" r="28" fill="${palette.accent}" opacity="0.18"/>
+        <path d="M72 220 L160 132 L232 188 L312 108 L408 220 Z" fill="${palette.accent}" opacity="0.28"/>
+        <rect x="320" y="72" width="96" height="72" rx="8" fill="${palette.accent}" opacity="0.16"/>
+        <text x="240" y="286" text-anchor="middle" fill="${palette.text}" font-size="18" font-family="Arial, sans-serif">${label}</text>
+    </svg>`;
+    return `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}`;
+}
+
+function buildMockAttachmentItems(record: DeviceArchiveRecord): ArchiveAttachmentItem[] {
+    const count = record.attachmentCount ?? 0;
+    const tones: Array<'blue' | 'green' | 'amber'> = ['blue', 'green', 'amber'];
+    const templates = record.type === 'accessory'
+        ? ['通讯模块更换现场照片1.jpg', '通讯模块更换验收单.pdf']
+        : [`${record.title}-现场照片.jpg`, `${record.title}-说明文档.pdf`];
+
+    return Array.from({ length: count }, (_, index) => {
+        const name = templates[index] ?? `${record.title}-附件${index + 1}.jpg`;
+        const kind = isImageAttachmentName(name) ? 'image' : 'file';
+        return {
+            id: `${record.id}-attachment-${index}`,
+            name,
+            kind,
+            previewUrl: kind === 'image'
+                ? buildAttachmentPreviewSvg(`现场照片 ${index + 1}`, tones[index % tones.length])
+                : undefined,
+        };
+    });
+}
+
+function downloadMockAttachment(attachment: ArchiveAttachmentItem) {
+    const blob = new Blob([`模拟附件内容：${attachment.name}`], { type: 'application/octet-stream' });
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement('a');
+    anchor.href = url;
+    anchor.download = attachment.name;
+    anchor.click();
+    URL.revokeObjectURL(url);
+}
+
+function AttachmentPreviewDialog({
+    attachment,
+    onClose,
+}: {
+    attachment: ArchiveAttachmentItem;
+    onClose: () => void;
+}) {
+    useEffect(() => {
+        const previousOverflow = document.body.style.overflow;
+        document.body.style.overflow = 'hidden';
+        return () => {
+            document.body.style.overflow = previousOverflow;
+        };
+    }, []);
+
+    if (!attachment.previewUrl) return null;
+
+    return createPortal(
+        <div
+            className="iot-dialog-mask da-attachment-preview-mask"
+            role="presentation"
+            onMouseDown={(event) => event.target === event.currentTarget && onClose()}
+        >
+            <div
+                className="iot-dialog da-attachment-preview-dialog"
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="da-attachment-preview-title"
+                onMouseDown={(event) => event.stopPropagation()}
+            >
+                <div className="iot-dialog__head">
+                    <h3 id="da-attachment-preview-title">图片预览</h3>
+                    <button type="button" className="pcp-drawer__close" onClick={onClose} aria-label="关闭">×</button>
+                </div>
+                <div className="iot-dialog__body da-attachment-preview-dialog__body">
+                    <p className="da-attachment-preview-dialog__name">{attachment.name}</p>
+                    <img src={attachment.previewUrl} alt={attachment.name} />
+                </div>
+                <div className="iot-dialog__foot">
+                    <button type="button" className="pm-btn pm-btn-ghost" onClick={onClose}>关闭</button>
+                </div>
+            </div>
+        </div>,
+        document.body,
+    );
+}
+
 export default function DeviceArchivePage({
     devices,
     products,
     areas,
     records,
     initialDeviceId,
+    currentUserName,
     onUpdateRecords,
     onNavigateDeviceAccess,
     onNavigate,
@@ -139,7 +394,12 @@ export default function DeviceArchivePage({
     const [recordType, setRecordType] = useState('all');
     const [recordKeyword, setRecordKeyword] = useState('');
     const [formOpen, setFormOpen] = useState(false);
-    const [form, setForm] = useState<ArchiveForm>(createEmptyForm);
+    const [editingRecordId, setEditingRecordId] = useState<string | null>(null);
+    const [deleteTarget, setDeleteTarget] = useState<DeviceArchiveRecord | null>(null);
+    const [expandedAttachmentRecordId, setExpandedAttachmentRecordId] = useState<string | null>(null);
+    const [previewAttachment, setPreviewAttachment] = useState<ArchiveAttachmentItem | null>(null);
+    const [mapPickerOpen, setMapPickerOpen] = useState(false);
+    const [form, setForm] = useState<ArchiveForm>(() => createEmptyForm(currentUserName));
     const [attachmentCount, setAttachmentCount] = useState(0);
     const [toast, setToast] = useState<IotToastData | null>(null);
     const attachmentInputRef = useRef<HTMLInputElement>(null);
@@ -183,6 +443,16 @@ export default function DeviceArchivePage({
         () => devices.find((device) => device.id === selectedDeviceId) ?? null,
         [devices, selectedDeviceId],
     );
+    const hasBoundUser = Boolean(
+        selectedDevice?.largeMeterAreaId
+        && selectedDevice.userName?.trim(),
+    );
+    const availableManualArchiveTypeOptions = useMemo(
+        () => hasBoundUser
+            ? MANUAL_DEVICE_ARCHIVE_TYPE_OPTIONS
+            : MANUAL_DEVICE_ARCHIVE_TYPE_OPTIONS.filter((option) => option.value !== 'user-change'),
+        [hasBoundUser],
+    );
 
     const selectedRecords = useMemo(() => {
         if (!selectedDeviceId) return [];
@@ -222,37 +492,171 @@ export default function DeviceArchivePage({
     const closeArchive = () => {
         setSelectedDeviceId(null);
         setFormOpen(false);
+        setEditingRecordId(null);
+        setDeleteTarget(null);
+        setExpandedAttachmentRecordId(null);
+        setPreviewAttachment(null);
     };
 
     const openCreateForm = () => {
-        setForm(createEmptyForm());
+        setEditingRecordId(null);
+        setForm(createEmptyForm(currentUserName));
         setAttachmentCount(0);
         if (attachmentInputRef.current) attachmentInputRef.current.value = '';
         setFormOpen(true);
     };
 
+    const openEditForm = (record: DeviceArchiveRecord) => {
+        setEditingRecordId(record.id);
+        setForm(recordToForm(record));
+        setAttachmentCount(record.attachmentCount ?? 0);
+        if (attachmentInputRef.current) attachmentInputRef.current.value = '';
+        setFormOpen(true);
+    };
+
+    const closeForm = () => {
+        setFormOpen(false);
+        setEditingRecordId(null);
+    };
+
     const saveRecord = () => {
         if (!selectedDeviceId) return;
-        if (!form.title.trim() || !form.summary.trim() || !form.occurredAt) {
-            triggerIotToast(setToast, '请填写发生时间、记录标题和记录内容');
+        if (!editingRecordId && SYSTEM_GENERATED_ARCHIVE_TYPES.has(form.type)) {
+            triggerIotToast(setToast, '该记录类型由操作设备时系统自动生成');
             return;
         }
+        if (form.type === 'user-change' && !hasBoundUser) {
+            triggerIotToast(setToast, '设备未绑定用户，不能进行用户变更');
+            return;
+        }
+        const config = getArchiveFormConfig(form.type);
+        const resolvedTitle = config.generatedTitle ?? form.title.trim();
+        const isLocationChange = form.type === 'location-change';
+        const beforeLongitude = parseCoordinate(form.beforeLongitude);
+        const beforeLatitude = parseCoordinate(form.beforeLatitude);
+        const afterLongitude = parseCoordinate(form.afterLongitude);
+        const afterLatitude = parseCoordinate(form.afterLatitude);
+        const missingFields = [
+            !form.occurredAt ? '发生时间' : '',
+            !resolvedTitle ? config.titleLabel || '记录标题' : '',
+            !form.summary.trim() ? config.summaryLabel : '',
+            config.beforeRequired && !form.beforeValue.trim() ? config.beforeLabel || '变更前信息' : '',
+            config.afterRequired && !form.afterValue.trim() ? config.afterLabel || '变更后信息' : '',
+            isLocationChange && afterLongitude === undefined ? '新经度' : '',
+            isLocationChange && afterLatitude === undefined ? '新纬度' : '',
+        ].filter(Boolean);
+        if (missingFields.length) {
+            triggerIotToast(setToast, `请填写${missingFields.join('、')}`);
+            return;
+        }
+        if (isLocationChange && (Math.abs(afterLongitude!) > 180 || Math.abs(afterLatitude!) > 90)) {
+            triggerIotToast(setToast, '经度范围应为 -180～180，纬度范围应为 -90～90');
+            return;
+        }
+
+        if (editingRecordId) {
+            let finalAfterValue = form.afterValue.trim() || undefined;
+            let finalBeforeValue = form.beforeValue.trim() || undefined;
+            if (form.type === 'user-change') {
+                const inheritedUserNo = parseUserNoFromValue(form.beforeValue);
+                if (inheritedUserNo && finalAfterValue) {
+                    finalAfterValue = `${finalAfterValue}（${inheritedUserNo}）`;
+                }
+            }
+            onUpdateRecords((previous) => previous.map((record) => (
+                record.id === editingRecordId
+                    ? {
+                        ...record,
+                        type: record.type,
+                        occurredAt: form.occurredAt.replace('T', ' '),
+                        title: resolvedTitle,
+                        summary: form.summary.trim(),
+                        beforeValue: finalBeforeValue,
+                        afterValue: finalAfterValue,
+                        beforeLongitude: isLocationChange ? beforeLongitude : undefined,
+                        beforeLatitude: isLocationChange ? beforeLatitude : undefined,
+                        afterLongitude: isLocationChange ? afterLongitude : undefined,
+                        afterLatitude: isLocationChange ? afterLatitude : undefined,
+                        remark: form.remark.trim() || undefined,
+                        attachmentCount: attachmentCount || undefined,
+                    }
+                    : record
+            )));
+            closeForm();
+            triggerIotToast(setToast, '设备档案记录已更新', 'success');
+            return;
+        }
+
+        let finalAfterValue = form.afterValue.trim() || undefined;
+        let finalBeforeValue = form.beforeValue.trim() || undefined;
+        if (form.type === 'user-change') {
+            const inheritedUserNo = parseUserNoFromValue(form.beforeValue);
+            if (inheritedUserNo && finalAfterValue) {
+                finalAfterValue = `${finalAfterValue}（${inheritedUserNo}）`;
+            }
+        }
+
         const record = createDeviceArchiveRecord({
             deviceId: selectedDeviceId,
             type: form.type,
             occurredAt: form.occurredAt.replace('T', ' '),
-            title: form.title.trim(),
+            title: resolvedTitle,
             summary: form.summary.trim(),
-            beforeValue: form.beforeValue.trim() || undefined,
-            afterValue: form.afterValue.trim() || undefined,
-            operator: form.operator.trim() || 'superadmin',
+            beforeValue: finalBeforeValue,
+            afterValue: finalAfterValue,
+            beforeLongitude: isLocationChange ? beforeLongitude : undefined,
+            beforeLatitude: isLocationChange ? beforeLatitude : undefined,
+            afterLongitude: isLocationChange ? afterLongitude : undefined,
+            afterLatitude: isLocationChange ? afterLatitude : undefined,
+            operator: currentUserName,
             source: '人工补录',
             remark: form.remark.trim() || undefined,
             attachmentCount,
         });
         onUpdateRecords((previous) => [record, ...previous]);
-        setFormOpen(false);
+        closeForm();
         triggerIotToast(setToast, '设备档案记录已新增', 'success');
+    };
+
+    const formConfig = getArchiveFormConfig(form.type);
+
+    const handleArchiveTypeChange = (value: string) => {
+        if (editingRecordId) return;
+        const currentUserName = selectedDevice ? getCurrentUserInfo(selectedDevice).name : '—';
+        setForm((previous) => ({
+            ...previous,
+            type: value as DeviceArchiveType,
+            title: '',
+            summary: '',
+            beforeValue: value === 'location-change' && selectedDevice
+                ? buildDeviceLocation(selectedDevice)
+                : value === 'user-change'
+                    ? (currentUserName === '—' ? '未绑定用户' : currentUserName)
+                    : '',
+            afterValue: '',
+            beforeLongitude: value === 'location-change' && Number.isFinite(selectedDevice?.longitude) ? String(selectedDevice?.longitude) : '',
+            beforeLatitude: value === 'location-change' && Number.isFinite(selectedDevice?.latitude) ? String(selectedDevice?.latitude) : '',
+            afterLongitude: '',
+            afterLatitude: '',
+        }));
+    };
+
+    const handleConfirmMapPoint = (value: MapPickerValue) => {
+        setForm((previous) => ({
+            ...previous,
+            afterValue: value.location,
+            afterLongitude: value.longitude,
+            afterLatitude: value.latitude,
+        }));
+        triggerIotToast(setToast, '新位置已选择', 'success');
+    };
+
+    const confirmDeleteRecord = () => {
+        if (!deleteTarget) return;
+        onUpdateRecords((previous) => previous.filter((record) => record.id !== deleteTarget.id));
+        if (editingRecordId === deleteTarget.id) closeForm();
+        setDeleteTarget(null);
+        triggerIotToast(setToast, '设备档案记录已删除', 'success');
     };
 
     const sidebar = <LargeMeterSidebar pageId="device-archive" onNavigate={onNavigate} />;
@@ -270,7 +674,10 @@ export default function DeviceArchivePage({
             }}
         >
             <div className="pm-page da-page">
-                <div className="crumb">大表中心 / 大表档案</div>
+                <Breadcrumb items={[
+                                    { label: '大表中心', pageId: 'data-monitor' },
+                                    { label: '大表档案' },
+                                ]} onNavigate={(id) => onNavigate(id as LargeMeterPageId)} />
 
                 <section className="panel pm-filter-panel da-filter-panel">
                     <div className="pm-filter-row">
@@ -321,7 +728,7 @@ export default function DeviceArchivePage({
                     <div className="pm-page-title-row da-title-row">
                         <div>
                             <h2>大表档案</h2>
-                            <p>集中查看大表的安装、用户、点位、配件及维护履历。</p>
+                            <p>集中查看大表的接入、安装、用户、点位、配件及维护履历。</p>
                         </div>
                     </div>
 
@@ -420,17 +827,48 @@ export default function DeviceArchivePage({
                                 <button type="button" className="pm-btn pm-btn-primary" onClick={openCreateForm}><Plus size={14} />新增记录</button>
                             </div>
 
-                            {formOpen && (
+                            {formOpen && (() => {
+                                const formPanel = (
                                 <section className="da-create-form">
-                                    <div className="da-create-form__head"><h4>新增档案记录</h4><button type="button" onClick={() => setFormOpen(false)}>收起</button></div>
+                                    <div className="da-create-form__head"><h4>{editingRecordId ? '编辑档案记录' : '新增档案记录'}</h4><button type="button" onClick={closeForm}>收起</button></div>
                                     <div className="da-form-grid">
-                                        <div><span><em>*</em> 记录类型</span><ElSelect size="medium" value={form.type} options={DEVICE_ARCHIVE_TYPE_OPTIONS} onChange={(value) => setForm((previous) => ({ ...previous, type: value as DeviceArchiveType }))} /></div>
+                                        <div className="da-form-field">
+                                            <span><em>*</em> 记录类型</span>
+                                            <ElSelect size="medium" value={form.type} options={availableManualArchiveTypeOptions} onChange={handleArchiveTypeChange} disabled={Boolean(editingRecordId)} />
+                                            <small className="da-form-tip">{editingRecordId ? '编辑记录时不可更改记录类型' : '设备接入、安装投运、启停变更由操作设备时系统自动生成'}</small>
+                                        </div>
                                         <div><span><em>*</em> 发生时间</span><ElDateTimePicker className="da-datetime-picker" size="medium" value={form.occurredAt} placeholder="请选择发生时间" onChange={(occurredAt) => setForm((previous) => ({ ...previous, occurredAt }))} /></div>
-                                        <label className="da-form-wide"><span><em>*</em> 记录标题</span><ClearableInput type="text" placeholder="例如：更换通讯模块" value={form.title} onChange={(event) => setForm((previous) => ({ ...previous, title: event.target.value }))} /></label>
-                                        <label className="da-form-wide"><span><em>*</em> 记录内容</span><textarea placeholder="说明本次安装、变更或维护内容" value={form.summary} onChange={(event) => setForm((previous) => ({ ...previous, summary: event.target.value }))} /></label>
-                                        <label><span>变更前</span><ClearableInput type="text" placeholder="原用户、原配件或原位置" value={form.beforeValue} onChange={(event) => setForm((previous) => ({ ...previous, beforeValue: event.target.value }))} /></label>
-                                        <label><span>变更后</span><ClearableInput type="text" placeholder="新用户、新配件或新位置" value={form.afterValue} onChange={(event) => setForm((previous) => ({ ...previous, afterValue: event.target.value }))} /></label>
-                                        <label><span>操作人</span><ClearableInput type="text" value={form.operator} onChange={(event) => setForm((previous) => ({ ...previous, operator: event.target.value }))} /></label>
+                                        {formConfig.titleLabel && (
+                                            <label className="da-form-wide"><span><em>*</em> {formConfig.titleLabel}</span><ClearableInput type="text" placeholder={formConfig.titlePlaceholder} value={form.title} onChange={(event) => setForm((previous) => ({ ...previous, title: event.target.value }))} /></label>
+                                        )}
+                                        <label className="da-form-wide"><span><em>*</em> {formConfig.summaryLabel}</span><textarea placeholder={formConfig.summaryPlaceholder} value={form.summary} onChange={(event) => setForm((previous) => ({ ...previous, summary: event.target.value }))} /></label>
+                                        {form.type === 'user-change' && (
+                                            <div className="da-form-field">
+                                                <span><em>*</em> 原用户名称</span>
+                                                <div className="da-readonly-field" aria-readonly="true">{form.beforeValue || '未绑定用户'}</div>
+                                            </div>
+                                        )}
+                                        {formConfig.beforeLabel && form.type !== 'location-change' && form.type !== 'user-change' && (
+                                            <label><span>{formConfig.beforeRequired && <em>*</em>} {formConfig.beforeLabel}</span><ClearableInput type="text" placeholder={formConfig.beforePlaceholder} value={form.beforeValue} onChange={(event) => setForm((previous) => ({ ...previous, beforeValue: event.target.value }))} /></label>
+                                        )}
+                                        {formConfig.afterLabel && form.type !== 'location-change' && (
+                                            <label className={formConfig.beforeLabel ? undefined : 'da-form-wide'}><span>{formConfig.afterRequired && <em>*</em>} {formConfig.afterLabel}</span><ClearableInput type="text" placeholder={formConfig.afterPlaceholder} value={form.afterValue} onChange={(event) => setForm((previous) => ({ ...previous, afterValue: event.target.value }))} /></label>
+                                        )}
+                                        {form.type === 'location-change' && (
+                                            <div className="da-location-picker da-form-wide">
+                                                <div className="da-location-picker__head">
+                                                    <span><em>*</em> 新安装位置</span>
+                                                    <button type="button" className="pm-btn pm-btn-ghost" onClick={() => setMapPickerOpen(true)}><MapPin size={14} />选择新位置</button>
+                                                </div>
+                                                <dl>
+                                                    <div><dt>位置</dt><dd>{form.afterValue || '暂未选择'}</dd></div>
+                                                    <div><dt>经度</dt><dd>{form.afterLongitude || '—'}</dd></div>
+                                                    <div><dt>纬度</dt><dd>{form.afterLatitude || '—'}</dd></div>
+                                                </dl>
+                                                <small>原安装位置和原坐标将从设备当前档案中自动记录。</small>
+                                            </div>
+                                        )}
+                                        <div className="da-form-field"><span>操作人</span><div className="da-readonly-field" aria-readonly="true">{form.operator}</div></div>
                                         <div className="da-form-field">
                                             <span>附件</span>
                                             <input ref={attachmentInputRef} className="da-attachment-input" type="file" multiple onChange={(event) => setAttachmentCount(event.target.files?.length ?? 0)} />
@@ -439,22 +877,128 @@ export default function DeviceArchivePage({
                                                 <small>{attachmentCount ? `已选择 ${attachmentCount} 个附件` : '支持多选'}</small>
                                             </div>
                                         </div>
-                                        <label className="da-form-wide"><span>备注</span><textarea placeholder="可补充更换原因、现场情况等信息" value={form.remark} onChange={(event) => setForm((previous) => ({ ...previous, remark: event.target.value }))} /></label>
+                                        <label className="da-form-wide"><span>备注</span><textarea placeholder={formConfig.remarkPlaceholder} value={form.remark} onChange={(event) => setForm((previous) => ({ ...previous, remark: event.target.value }))} /></label>
                                     </div>
-                                    <div className="da-create-form__foot"><button type="button" className="pm-btn pm-btn-ghost" onClick={() => setFormOpen(false)}>取消</button><button type="button" className="pm-btn pm-btn-primary" onClick={saveRecord}>保存记录</button></div>
+                                    <div className="da-create-form__foot"><button type="button" className="pm-btn pm-btn-ghost" onClick={closeForm}>取消</button><button type="button" className="pm-btn pm-btn-primary" onClick={saveRecord}>{editingRecordId ? '保存修改' : '保存记录'}</button></div>
                                 </section>
-                            )}
+                                );
+                                if (!editingRecordId) return formPanel;
+                                const editTarget = document.getElementById(`da-edit-slot-${editingRecordId}`);
+                                return editTarget ? createPortal(formPanel, editTarget) : null;
+                            })()}
 
                             <section className="da-timeline" aria-label="设备档案时间线">
                                 {selectedRecords.map((record) => (
                                     <article className="da-timeline-item" key={record.id}>
                                         <div className={`da-timeline-icon da-timeline-icon--${record.type}`}><ArchiveTypeIcon type={record.type} /></div>
                                         <div className="da-timeline-content">
-                                            <div className="da-timeline-head"><div><span className="da-record-type">{DEVICE_ARCHIVE_TYPE_LABELS[record.type]}</span><h4>{record.title}</h4></div><time>{formatDateTimeMinute(record.occurredAt)}</time></div>
+                                            <div className="da-timeline-head">
+                                                <div>
+                                                    <span className="da-record-type">{DEVICE_ARCHIVE_TYPE_LABELS[record.type]}</span>
+                                                    <h4>{record.title}</h4>
+                                                </div>
+                                                <div className="da-timeline-head__side">
+                                                    {isEditableArchiveRecord(record) && (
+                                                        <div className="da-record-actions">
+                                                            {!(record.type === 'user-change' && !hasBoundUser) && <button type="button" className="pm-link-btn" onClick={() => openEditForm(record)}><Pencil size={13} />编辑</button>}
+                                                            <button type="button" className="pm-link-btn da-link-btn--danger" onClick={() => setDeleteTarget(record)}><Trash2 size={13} />删除</button>
+                                                        </div>
+                                                    )}
+                                                    <time>{formatDateTimeMinute(record.occurredAt)}</time>
+                                                </div>
+                                            </div>
                                             <p>{record.summary}</p>
-                                            {(record.beforeValue || record.afterValue) && <div className="da-change-row"><span>变更前：{record.beforeValue || '—'}</span><span>变更后：{record.afterValue || '—'}</span></div>}
+                                            {record.type !== 'access' && record.type !== 'installation' && record.type !== 'calibration' && (record.beforeValue || record.afterValue) && (
+                                                <div className="da-change-row">
+                                                    {record.type === 'user-change' ? (
+                                                        <>
+                                                            <span>变更前：{parseUserNoFromValue(record.beforeValue || '') ? (record.beforeValue || '').replace(/（YH\d+）$/, '') : (record.beforeValue || '—')}</span>
+                                                            <span>变更后：{parseUserNoFromValue(record.afterValue || '') ? (record.afterValue || '').replace(/（YH\d+）$/, '') : (record.afterValue || '—')}</span>
+                                                        </>
+                                                    ) : (
+                                                        <>
+                                                            <span>变更前：{record.beforeValue || '—'}</span>
+                                                            <span>变更后：{record.afterValue || '—'}</span>
+                                                        </>
+                                                    )}
+                                                </div>
+                                            )}
+                                            {record.type === 'calibration' && record.afterValue && <div className="da-record-remark">检定结果：{record.afterValue}</div>}
+                                            {record.type === 'location-change' && (
+                                                <div className="da-change-row da-coordinate-row">
+                                                    <span>原坐标：{formatCoordinates(record.beforeLongitude, record.beforeLatitude)}</span>
+                                                    <span>新坐标：{formatCoordinates(record.afterLongitude, record.afterLatitude)}</span>
+                                                </div>
+                                            )}
                                             {record.remark && <div className="da-record-remark">备注：{record.remark}</div>}
-                                            <div className="da-record-meta"><span>操作人：{record.operator}</span><span>来源：{record.source}</span>{record.attachmentCount ? <span>附件：{record.attachmentCount} 个</span> : null}</div>
+                                            <div className="da-record-meta">
+                                                <span>操作人：{record.operator}</span>
+                                                <span>来源：{record.source}</span>
+                                                {record.attachmentCount ? (
+                                                    <span className="da-attachment-meta">
+                                                        附件：{record.attachmentCount} 个
+                                                        <button
+                                                            type="button"
+                                                            className="pm-link-btn"
+                                                            onClick={() => {
+                                                                setExpandedAttachmentRecordId((current) => {
+                                                                    if (current === record.id) {
+                                                                        setPreviewAttachment(null);
+                                                                        return null;
+                                                                    }
+                                                                    setPreviewAttachment(null);
+                                                                    return record.id;
+                                                                });
+                                                            }}
+                                                        >
+                                                            {expandedAttachmentRecordId === record.id ? '收起附件' : '查看附件'}
+                                                        </button>
+                                                    </span>
+                                                ) : null}
+                                            </div>
+                                            {record.attachmentCount && expandedAttachmentRecordId === record.id ? (
+                                                <ul className="da-attachment-panel">
+                                                    {buildMockAttachmentItems(record).map((attachment) => (
+                                                        <li key={attachment.id}>
+                                                            <div className="da-attachment-row">
+                                                                {attachment.kind === 'image' && attachment.previewUrl ? (
+                                                                    <button
+                                                                        type="button"
+                                                                        className="da-attachment-thumb-btn"
+                                                                        aria-label={`预览 ${attachment.name}`}
+                                                                        onClick={() => setPreviewAttachment(attachment)}
+                                                                    >
+                                                                        <img src={attachment.previewUrl} alt={attachment.name} />
+                                                                    </button>
+                                                                ) : (
+                                                                    <span className="da-attachment-file-icon" aria-hidden="true">
+                                                                        <FileText size={22} />
+                                                                    </span>
+                                                                )}
+                                                                <span className="da-attachment-name">{attachment.name}</span>
+                                                                {attachment.kind === 'image' ? (
+                                                                    <button
+                                                                        type="button"
+                                                                        className="pm-link-btn"
+                                                                        onClick={() => setPreviewAttachment(attachment)}
+                                                                    >
+                                                                        预览
+                                                                    </button>
+                                                                ) : (
+                                                                    <button
+                                                                        type="button"
+                                                                        className="pm-link-btn"
+                                                                        onClick={() => downloadMockAttachment(attachment)}
+                                                                    >
+                                                                        下载
+                                                                    </button>
+                                                                )}
+                                                            </div>
+                                                        </li>
+                                                    ))}
+                                                </ul>
+                                            ) : null}
+                                            <div id={`da-edit-slot-${record.id}`} className="da-inline-edit-slot" />
                                         </div>
                                     </article>
                                 ))}
@@ -465,7 +1009,32 @@ export default function DeviceArchivePage({
                     </aside>
                 </div>
             )}
+            {deleteTarget && (
+                <ConfirmDialog
+                    title="删除档案记录"
+                    message={`确定删除「${deleteTarget.title}」吗？删除后不可恢复。`}
+                    onClose={() => setDeleteTarget(null)}
+                    onConfirm={confirmDeleteRecord}
+                />
+            )}
+            {previewAttachment?.previewUrl && (
+                <AttachmentPreviewDialog
+                    attachment={previewAttachment}
+                    onClose={() => setPreviewAttachment(null)}
+                />
+            )}
             <IotToast toast={toast} />
+
+            <MapPickerDialog
+                open={mapPickerOpen}
+                initialValue={{
+                    location: form.afterValue,
+                    longitude: form.afterLongitude,
+                    latitude: form.afterLatitude,
+                }}
+                onClose={() => setMapPickerOpen(false)}
+                onConfirm={handleConfirmMapPoint}
+            />
         </AppShell>
     );
 }

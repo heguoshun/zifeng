@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Settings } from 'lucide-react';
 import AppShell from '../components/AppShell';
+import Breadcrumb from '../components/Breadcrumb';
 import MessageCenterSidebar, { type MessageCenterPageId } from '../components/MessageCenterSidebar';
 import PushTimeDialog from '../components/PushTimeDialog';
 import IotToast, { type IotToastData, type IotToastType, triggerIotToast } from '../components/IotToast';
@@ -60,7 +61,10 @@ export default function MessageSubscribePage({
             }}
         >
             <div className="ms-page">
-                <div className="crumb">消息中心 / 消息订阅</div>
+                <Breadcrumb items={[
+                                    { label: '消息中心', pageId: 'msg-subscribe' },
+                                    { label: '消息订阅' },
+                                ]} onNavigate={(id) => onNavigate(id as MessageCenterPageId)} />
 
                 <section className="panel ms-list-panel">
                     <div className="ms-table-head">

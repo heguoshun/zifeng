@@ -1,4 +1,5 @@
 import type { AlarmLevel } from './deviceAlarms';
+import { resolveProcessingDeadlineByLevelName } from './alarmLevels';
 
 export type WorkOrderType = '告警工单' | '其他工单';
 
@@ -28,6 +29,8 @@ export type WorkOrderRecord = {
     handledAt?: string;
     result?: string;
     alarmId?: string;
+    processingDeadline?: number;
+    processingDeadlineUnit?: 'hour' | 'day';
     relatedDevices?: WorkOrderRelatedDeviceGroup[];
     createAttachmentCount?: number;
     processAttachmentCount?: number;
@@ -98,8 +101,17 @@ export function canShowWorkOrderAcceptAction(
 }
 
 export function createInitialWorkOrders(): WorkOrderRecord[] {
+    const withDeadline = (level: AlarmLevel, record: WorkOrderRecord): WorkOrderRecord => {
+        const deadline = resolveProcessingDeadlineByLevelName(level);
+        return {
+            ...record,
+            processingDeadline: record.processingDeadline ?? deadline.processingDeadline,
+            processingDeadlineUnit: record.processingDeadlineUnit ?? deadline.processingDeadlineUnit,
+        };
+    };
+
     return [
-        {
+        withDeadline('重要', {
             id: '0202509122023',
             name: '水压阈值告警',
             level: '重要',
@@ -110,8 +122,8 @@ export function createInitialWorkOrders(): WorkOrderRecord[] {
             content: '水压值超过4MPa，请尽快处理!',
             space: '4F/401',
             assignees: ['张三', '李四'],
-        },
-        {
+        }),
+        withDeadline('紧急', {
             id: '0202509251642',
             name: '网络链路波动复查',
             level: '紧急',
@@ -125,8 +137,8 @@ export function createInitialWorkOrders(): WorkOrderRecord[] {
             handler: '赵六',
             handledAt: '2025-09-23 09:10:00',
             result: '已排查链路，需补充测试报告后重新提交。',
-        },
-        {
+        }),
+        withDeadline('重要', {
             id: '0202509280935',
             name: '水压阀值告警工单',
             level: '重要',
@@ -154,8 +166,8 @@ export function createInitialWorkOrders(): WorkOrderRecord[] {
                 },
             ],
             createAttachmentCount: 1,
-        },
-        {
+        }),
+        withDeadline('紧急', {
             id: '0202509301148',
             name: '温度传感器离线',
             level: '紧急',
@@ -166,8 +178,8 @@ export function createInitialWorkOrders(): WorkOrderRecord[] {
             content: '3F 会议室温度传感器离线超过30分钟',
             space: '3F/301',
             assignees: ['张三'],
-        },
-        {
+        }),
+        withDeadline('重要', {
             id: '0202510030912',
             name: '门禁系统异常',
             level: '重要',
@@ -181,8 +193,8 @@ export function createInitialWorkOrders(): WorkOrderRecord[] {
             handler: '赵六',
             handledAt: '2025-10-02 14:35:00',
             result: '已更换读卡器模块，待验收确认。',
-        },
-        {
+        }),
+        withDeadline('次要', {
             id: '0202510051420',
             name: '消防设备年检',
             level: '次要',
@@ -200,8 +212,8 @@ export function createInitialWorkOrders(): WorkOrderRecord[] {
                     deviceNames: ['YW-601', 'YW-602'],
                 },
             ],
-        },
-        {
+        }),
+        withDeadline('重要', {
             id: '0202510081035',
             name: 'UPS 电池更换',
             level: '重要',
@@ -223,8 +235,8 @@ export function createInitialWorkOrders(): WorkOrderRecord[] {
                 },
             ],
             createAttachmentCount: 1,
-        },
-        {
+        }),
+        withDeadline('提示', {
             id: '0202510101605',
             name: '烟雾探测器误报',
             level: '提示',
@@ -239,7 +251,7 @@ export function createInitialWorkOrders(): WorkOrderRecord[] {
             handler: '张三',
             handledAt: '2025-10-10 10:45:00',
             result: '已清洁探测器并调整灵敏度，误报已消除。',
-        },
+        }),
     ];
 }
 
@@ -256,6 +268,8 @@ export function createWorkOrderFromAlarm(input: {
     assignees: string[];
     space: string;
     alarmId: string;
+    processingDeadline?: number;
+    processingDeadlineUnit?: 'hour' | 'day';
 }): WorkOrderRecord {
     const now = new Date();
     const pad = (value: number) => String(value).padStart(2, '0');
@@ -274,5 +288,78 @@ export function createWorkOrderFromAlarm(input: {
         space: input.space,
         assignees: input.assignees,
         alarmId: input.alarmId,
+        processingDeadline: input.processingDeadline,
+        processingDeadlineUnit: input.processingDeadlineUnit,
     };
+}
+
+export type WorkOrderOverdueStatus = 'none' | 'active' | 'closed';
+
+export type WorkOrderOverdueInfo = {
+    status: WorkOrderOverdueStatus;
+    label: string;
+    hint?: string;
+    deadlineAt?: string;
+};
+
+export function parseWorkOrderDateTime(value?: string): Date | null {
+    if (!value?.trim()) return null;
+    const date = new Date(value.trim().replace(' ', 'T'));
+    return Number.isNaN(date.getTime()) ? null : date;
+}
+
+export function formatWorkOrderDateTime(date: Date): string {
+    const pad = (value: number) => String(value).padStart(2, '0');
+    return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())} `
+        + `${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`;
+}
+
+export function getWorkOrderDeadlineDate(workOrder: WorkOrderRecord): Date | null {
+    if (workOrder.processingDeadline === undefined) return null;
+    const created = parseWorkOrderDateTime(workOrder.createdAt);
+    if (!created) return null;
+
+    const amount = workOrder.processingDeadline;
+    const unit = workOrder.processingDeadlineUnit ?? 'hour';
+    const durationMs = unit === 'day'
+        ? amount * 24 * 60 * 60 * 1000
+        : amount * 60 * 60 * 1000;
+
+    return new Date(created.getTime() + durationMs);
+}
+
+export function resolveWorkOrderOverdueInfo(
+    workOrder: WorkOrderRecord,
+    now = Date.now(),
+): WorkOrderOverdueInfo {
+    const deadline = getWorkOrderDeadlineDate(workOrder);
+    if (!deadline) {
+        return { status: 'none', label: '—' };
+    }
+
+    const deadlineAt = formatWorkOrderDateTime(deadline);
+
+    if (workOrder.status === '已结单') {
+        const finishedAt = parseWorkOrderDateTime(workOrder.closedAt ?? workOrder.handledAt ?? '');
+        if (finishedAt && finishedAt.getTime() > deadline.getTime()) {
+            return {
+                status: 'closed',
+                label: '超期完成',
+                hint: `应于 ${deadlineAt} 前完成`,
+                deadlineAt,
+            };
+        }
+        return { status: 'none', label: '未超期', deadlineAt };
+    }
+
+    if (now > deadline.getTime()) {
+        return {
+            status: 'active',
+            label: '已超期',
+            hint: `应于 ${deadlineAt} 前完成`,
+            deadlineAt,
+        };
+    }
+
+    return { status: 'none', label: '未超期', deadlineAt };
 }

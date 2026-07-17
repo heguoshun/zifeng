@@ -1,4 +1,4 @@
-export type TenantPermissionAction = 'view' | 'create' | 'edit' | 'delete' | 'export';
+export type TenantPermissionAction = 'view' | 'create' | 'edit' | 'delete' | 'export' | 'approve';
 
 export type TenantPermissionActionDef = {
     id: TenantPermissionAction;
@@ -11,6 +11,7 @@ export const TENANT_PERMISSION_ACTIONS: TenantPermissionActionDef[] = [
     { id: 'edit', label: '编辑' },
     { id: 'delete', label: '删除' },
     { id: 'export', label: '导出' },
+    { id: 'approve', label: '审批' },
 ];
 
 export type TenantPermissionModule = {
@@ -35,7 +36,7 @@ export const TENANT_PERMISSION_MODULES: TenantPermissionModule[] = [
 
     { id: 'device-map', label: '设备地图', group: '设备接入', subgroup: '设备地图', actions: ['view', 'edit'] },
 
-    { id: 'remote-upgrade', label: '远程升级', group: '设备接入', subgroup: '设备运维', actions: ['view', 'create', 'edit', 'delete'] },
+    { id: 'remote-upgrade', label: '远程升级', group: '设备接入', subgroup: '设备运维', actions: ['view', 'create', 'edit', 'delete', 'approve'] },
     { id: 'network-protocol', label: '网络协议', group: '设备接入', subgroup: '设备运维', actions: ['view', 'create', 'edit', 'delete'] },
     { id: 'network-service', label: '网络服务', group: '设备接入', subgroup: '设备运维', actions: ['view', 'create', 'edit', 'delete'] },
     { id: 'protocol-mgmt', label: '协议管理', group: '设备接入', subgroup: '设备运维', actions: ['view', 'create', 'edit', 'delete', 'export'] },

@@ -14,6 +14,13 @@ import {
 import { resolveDeviceOrg, type DeviceRecord } from '../data/devices';
 import type { ProductRecord } from '../data/products';
 import { type WorkOrderRecord } from '../data/workOrders';
+import {
+    createInitialAlarmLevels,
+    resolveProcessingDeadlineByLevelName,
+    type AlarmLevelRecord,
+    type ProcessingDeadlineValue,
+} from '../data/alarmLevels';
+import ProcessingDeadlineField from './ProcessingDeadlineField';
 import '../product-create.css';
 import '../device-create.css';
 import '../device-alarm-info.css';
@@ -40,6 +47,7 @@ type WorkOrderCreateDrawerProps = {
     open: boolean;
     products: ProductRecord[];
     devices: DeviceRecord[];
+    alarmLevels?: AlarmLevelRecord[];
     onClose: () => void;
     onSubmit: (workOrder: WorkOrderRecord) => void;
 };
@@ -55,11 +63,14 @@ export default function WorkOrderCreateDrawer({
     open,
     products,
     devices,
+    alarmLevels = createInitialAlarmLevels(),
     onClose,
     onSubmit,
 }: WorkOrderCreateDrawerProps) {
     const [name, setName] = useState('');
     const [level, setLevel] = useState('');
+    const [processingDeadline, setProcessingDeadline] = useState<number | undefined>(undefined);
+    const [processingDeadlineUnit, setProcessingDeadlineUnit] = useState<'hour' | 'day'>('hour');
     const [content, setContent] = useState('');
     const [deviceRows, setDeviceRows] = useState<RelatedDeviceRow[]>([createEmptyDeviceRow()]);
     const [assignees, setAssignees] = useState<string[]>([]);
@@ -80,6 +91,8 @@ export default function WorkOrderCreateDrawer({
         if (!open) return;
         setName('');
         setLevel('');
+        setProcessingDeadline(undefined);
+        setProcessingDeadlineUnit('hour');
         setContent('');
         setDeviceRows([createEmptyDeviceRow()]);
         setAssignees([]);
@@ -157,6 +170,23 @@ export default function WorkOrderCreateDrawer({
         );
     }, [name, level, content, assignees, deviceRows]);
 
+    const handleDeadlineChange = (value: ProcessingDeadlineValue) => {
+        setProcessingDeadline(value.processingDeadline);
+        setProcessingDeadlineUnit(value.processingDeadlineUnit ?? 'hour');
+    };
+
+    const handleLevelChange = (value: string) => {
+        setLevel(value);
+        if (!value) {
+            setProcessingDeadline(undefined);
+            setProcessingDeadlineUnit('hour');
+            return;
+        }
+        const deadline = resolveProcessingDeadlineByLevelName(value, alarmLevels);
+        setProcessingDeadline(deadline.processingDeadline);
+        setProcessingDeadlineUnit(deadline.processingDeadlineUnit ?? 'hour');
+    };
+
     const handleSubmit = () => {
         if (!name.trim()) {
             showToast('请输入工单标题');
@@ -226,6 +256,8 @@ export default function WorkOrderCreateDrawer({
             assignees,
             relatedDevices,
             createAttachmentCount: 0,
+            processingDeadline,
+            processingDeadlineUnit,
         });
     };
 
@@ -273,9 +305,14 @@ export default function WorkOrderCreateDrawer({
                                 size="medium"
                                 value={level}
                                 options={LEVEL_OPTIONS}
-                                onChange={setLevel}
+                                onChange={handleLevelChange}
                             />
                         </div>
+                        <ProcessingDeadlineField
+                            processingDeadline={processingDeadline}
+                            processingDeadlineUnit={processingDeadlineUnit}
+                            onChange={handleDeadlineChange}
+                        />
                         <div className="pcp-drawer-field">
                             <span className="pcp-form-label"><em>*</em>关联设备</span>
                             <div className="wom-device-rows">

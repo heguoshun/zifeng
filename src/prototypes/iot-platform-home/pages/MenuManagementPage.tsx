@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Plus } from 'lucide-react';
 import TreeToggleIcon from '../components/TreeToggleIcon';
 import AppShell from '../components/AppShell';
+import Breadcrumb from '../components/Breadcrumb';
 import SystemManagementSidebar, { type SystemManagementPageId } from '../components/SystemManagementSidebar';
 import ListPagination from '../components/ListPagination';
 import MenuFormDialog from '../components/MenuFormDialog';
@@ -212,7 +213,10 @@ export default function MenuManagementPage({
             }}
         >
             <div className="mm-page">
-                <div className="crumb">系统管理 / 菜单管理</div>
+                <Breadcrumb items={[
+                                    { label: '系统管理', pageId: 'tenant-mgmt' },
+                                    { label: '菜单管理' },
+                                ]} onNavigate={(id) => onNavigate(id as SystemManagementPageId)} />
 
                 <section className="panel mm-table-panel">
                     <div className="mm-table-head">

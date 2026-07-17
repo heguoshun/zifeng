@@ -93,7 +93,7 @@ export default function ElDateTimePicker({
     size = 'medium',
     placeholder = '请选择',
 }: ElDateTimePickerProps) {
-    const committedDate = parseDateTimeValue(value);
+    const committedDate = useMemo(() => parseDateTimeValue(value), [value]);
     const [open, setOpen] = useState(false);
     const [panelMode, setPanelMode] = useState<PanelMode>('date');
     const [draftDate, setDraftDate] = useState<Date>(() => committedDate ?? new Date());

@@ -6,6 +6,7 @@ import type { MessageCenterPageId } from '../components/MessageCenterSidebar';
 import type { AlarmWorkOrderPageId } from '../components/AlarmWorkOrderSidebar';
 import type { AlarmPageModule } from '../utils/alarmModuleShell';
 import { buildAlarmModuleShellConfig } from '../utils/alarmModuleShell';
+import Breadcrumb from '../components/Breadcrumb';
 import ElSelect from '../components/ElSelect';
 import ElTreeSelect from '../components/ElTreeSelect';
 import ElDateRangePicker from '../components/ElDateRangePicker';
@@ -34,6 +35,7 @@ import {
 } from '../data/deviceAlarms';
 import { createWorkOrderFromAlarm, type WorkOrderRecord } from '../data/workOrders';
 import type { ProductRecord } from '../data/products';
+import type { AlarmLevelRecord } from '../data/alarmLevels';
 import type { DeviceRecord } from '../data/devices';
 import '../device-access.css';
 import '../product-management.css';
@@ -72,6 +74,7 @@ type DeviceAlarmInfoPageProps = {
     products: ProductRecord[];
     devices: DeviceRecord[];
     alarms: DeviceAlarmRecord[];
+    alarmLevels?: AlarmLevelRecord[];
     onUpdateAlarms: React.Dispatch<React.SetStateAction<DeviceAlarmRecord[]>>;
     module?: AlarmPageModule;
     onNavigateHome: () => void;
@@ -87,6 +90,7 @@ export default function DeviceAlarmInfoPage({
     products,
     devices,
     alarms,
+    alarmLevels,
     onUpdateAlarms,
     module = 'alarm-work-order',
     onNavigateHome,
@@ -304,6 +308,8 @@ export default function DeviceAlarmInfoPage({
             assignees: form.assignees,
             space: convertAlarm.space,
             alarmId: convertAlarm.id,
+            processingDeadline: form.processingDeadline,
+            processingDeadlineUnit: form.processingDeadlineUnit,
         });
 
         onUpdateAlarms((prev) => prev.map((item) => (
@@ -320,6 +326,8 @@ export default function DeviceAlarmInfoPage({
                         level: form.level,
                         content: form.content,
                         assignees: form.assignees,
+                        processingDeadline: form.processingDeadline,
+                        processingDeadlineUnit: form.processingDeadlineUnit,
                     },
                 })
                 : item
@@ -406,6 +414,8 @@ export default function DeviceAlarmInfoPage({
             assignees: form.assignees,
             space: alarm.space,
             alarmId: alarm.id,
+            processingDeadline: form.processingDeadline,
+            processingDeadlineUnit: form.processingDeadlineUnit,
         }));
 
         onUpdateAlarms((prev) => prev.map((item) => {
@@ -424,6 +434,8 @@ export default function DeviceAlarmInfoPage({
                     level: workOrderRecord.level,
                     content: form.content,
                     assignees: form.assignees,
+                    processingDeadline: form.processingDeadline,
+                    processingDeadlineUnit: form.processingDeadlineUnit,
                 },
             });
         }));
@@ -462,7 +474,7 @@ export default function DeviceAlarmInfoPage({
             }}
         >
             <div className="pm-page dai-alarm-page">
-                <div className="crumb">{shellConfig.crumb}</div>
+                <Breadcrumb items={shellConfig.crumbItems} onNavigate={(id) => onNavigateAlarmWorkOrder?.(id as AlarmWorkOrderPageId)} />
 
                 <section className="panel pm-filter-panel">
                     <div className={`dai-filter-row ${filtersExpanded ? 'dai-filter-row--expanded' : ''}`}>
@@ -746,6 +758,7 @@ export default function DeviceAlarmInfoPage({
             <ConvertWorkOrderModal
                 open={convertModal !== null}
                 alarm={convertAlarm}
+                alarmLevels={alarmLevels}
                 onClose={() => setConvertModal(null)}
                 onConfirm={handleConfirmConvert}
             />
@@ -761,6 +774,7 @@ export default function DeviceAlarmInfoPage({
                 open={batchConvertOpen}
                 count={selectedPendingAlarms.length}
                 defaultLevel={batchConvertDefaultLevel}
+                alarmLevels={alarmLevels}
                 onClose={() => setBatchConvertOpen(false)}
                 onConfirm={handleConfirmBatchConvert}
             />

@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { LayoutGrid, List, Search } from 'lucide-react';
 import AppShell from '../components/AppShell';
+import Breadcrumb from '../components/Breadcrumb';
 import DeviceAccessSidebar, { type DeviceAccessPageId } from '../components/DeviceAccessSidebar';
 import ElSelect from '../components/ElSelect';
 import EntityCardPlaceholder from '../components/EntityCardPlaceholder';
@@ -351,7 +352,11 @@ export default function NetworkServiceManagementPage({
             }}
         >
             <div className="pm-page pt-page">
-                <div className="crumb">设备接入 / 设备运维 / 网络服务</div>
+                <Breadcrumb items={[
+                                    { label: '设备接入', pageId: 'home' },
+                                    { label: '网络服务', pageId: 'network-service' },
+                                    { label: '网络服务' },
+                                ]} onNavigate={(id) => onNavigate(id as DeviceAccessPageId)} />
 
                 <section className="panel pm-filter-panel">
                     <div className="pm-filter-row">

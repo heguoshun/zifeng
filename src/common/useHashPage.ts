@@ -16,8 +16,7 @@ import { useCallback, useEffect, useState } from 'react';
 export interface HashPageRoutePage {
     id: string;
     title: string;
-    /** 为 false 时不出现在 Make 页面菜单（如新增、编辑、详情等子页面） */
-    showInMenu?: boolean;
+    group?: string;
 }
 
 export interface HashPageRoute {
@@ -40,52 +39,10 @@ function normalizeRoutePages(pages: HashPageRoutePage[]): HashPageRoutePage[] {
         .map((page) => {
             const id = normalizePageId(page?.id);
             const title = typeof page?.title === 'string' ? page.title.trim() : '';
-            if (!id || !title) {
-                return null;
-            }
-            const normalized: HashPageRoutePage = { id, title };
-            if (page?.showInMenu === false) {
-                normalized.showInMenu = false;
-            }
-            return normalized;
+            const group = typeof page?.group === 'string' ? page.group.trim() : '';
+            return id && title ? { id, title, ...(group ? { group } : {}) } : null;
         })
         .filter((page): page is HashPageRoutePage => Boolean(page));
-}
-
-function getHostRoutePages(pages: HashPageRoutePage[]): Array<{ id: string; title: string; showInMenu?: boolean }> {
-    return pages.map(({ id, title, showInMenu }) => {
-        const entry: { id: string; title: string; showInMenu?: boolean } = { id, title };
-        if (showInMenu === false) {
-            entry.showInMenu = false;
-        }
-        return entry;
-    });
-}
-
-function getMenuRoutePages(pages: HashPageRoutePage[]): Array<{ id: string; title: string }> {
-    return pages
-        .filter((page) => page.showInMenu !== false)
-        .map(({ id, title }) => ({ id, title }));
-}
-
-function isMenuPageId(pageId: string, pages: HashPageRoutePage[]): boolean {
-    const entry = pages.find((page) => page.id === pageId);
-    return entry ? entry.showInMenu !== false : false;
-}
-
-function resolveHostActivePageId(
-    pageId: string,
-    pages: HashPageRoutePage[],
-    defaultPageId: string,
-): string {
-    if (isMenuPageId(pageId, pages)) {
-        return pageId;
-    }
-    const menuPages = getMenuRoutePages(pages);
-    if (menuPages.some((page) => page.id === defaultPageId)) {
-        return defaultPageId;
-    }
-    return menuPages[0]?.id ?? defaultPageId;
 }
 
 export function parseHashPage(hash: string): string | null {
@@ -147,23 +104,18 @@ function notifyHostPrototypeRouteInfo(
     ) {
         return;
     }
-    const menuPages = getMenuRoutePages(pages);
     window.parent.postMessage({
         type: 'AXHUB_PROTOTYPE_ROUTE_INFO',
-        // Make 页面目录读取 pages / menuPages，仅同步菜单导航项
-        pages: menuPages,
-        menuPages,
-        // 完整路由表供后续扩展；子页面跳转在 iframe 内完成，不通知宿主以避免被重置
-        routePages: getHostRoutePages(pages),
+        pages,
         defaultPageId,
-        activePageId: resolveHostActivePageId(activePageId, pages, defaultPageId),
+        activePageId,
     }, '*');
 }
 
 export function useHashPage(routeOrDefault: HashPageRoute | string = 'home') {
     const route = normalizeRouteInput(routeOrDefault);
     const { pages, defaultPageId } = route;
-    const routeSignature = `${defaultPageId}:${pages.map((routePage) => `${routePage.id}=${routePage.title}:${routePage.showInMenu === false ? '0' : '1'}`).join('|')}`;
+    const routeSignature = `${defaultPageId}:${pages.map((routePage) => `${routePage.id}=${routePage.title}@${routePage.group || ''}`).join('|')}`;
     const [page, setPageState] = useState<string>(() => {
         if (typeof window === 'undefined') {
             return defaultPageId;
@@ -176,14 +128,6 @@ export function useHashPage(routeOrDefault: HashPageRoute | string = 'home') {
     }, [routeSignature]);
 
     useEffect(() => {
-        if (!isMenuPageId(page, pages)) {
-            return;
-        }
-        notifyHostPrototypeRouteInfo(pages, defaultPageId, page);
-        notifyHostPrototypePageChange(page);
-    }, [page, pages, defaultPageId]);
-
-    useEffect(() => {
         if (typeof window === 'undefined') {
             return undefined;
         }
@@ -192,6 +136,7 @@ export function useHashPage(routeOrDefault: HashPageRoute | string = 'home') {
             const next = parseHashPage(window.location.hash) ?? parseSearchPage(window.location.search);
             const nextPageId = next ?? defaultPageId;
             setPageState(nextPageId);
+            notifyHostPrototypePageChange(nextPageId);
         };
 
         window.addEventListener('hashchange', onHashChange);

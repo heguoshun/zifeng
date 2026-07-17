@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Plus, Search } from 'lucide-react';
 import AppShell from '../components/AppShell';
+import Breadcrumb from '../components/Breadcrumb';
 import SystemManagementSidebar, { type SystemManagementPageId } from '../components/SystemManagementSidebar';
 import ListPagination from '../components/ListPagination';
 import { ConfirmDialog } from '../components/IotDialogs';
@@ -198,7 +199,10 @@ export default function ParamManagementPage({
             }}
         >
             <div className="sp-page">
-                <div className="crumb">系统管理 / 参数管理</div>
+                <Breadcrumb items={[
+                                    { label: '系统管理', pageId: 'tenant-mgmt' },
+                                    { label: '参数管理' },
+                                ]} onNavigate={(id) => onNavigate(id as SystemManagementPageId)} />
 
                 {/* ── Filter ── */}
                 <section className="panel sp-filter-panel">

@@ -4,6 +4,7 @@ import type { MessageCenterPageId } from '../components/MessageCenterSidebar';
 import type { AlarmWorkOrderPageId } from '../components/AlarmWorkOrderSidebar';
 import type { AlarmPageModule } from '../utils/alarmModuleShell';
 import { buildAlarmModuleShellConfig } from '../utils/alarmModuleShell';
+import Breadcrumb from '../components/Breadcrumb';
 import AlarmLevelFormDrawer from '../components/AlarmLevelFormDrawer';
 import { ConfirmDialog } from '../components/IotDialogs';
 import IotToast, { type IotToastData, type IotToastType, triggerIotToast } from '../components/IotToast';
@@ -76,7 +77,7 @@ export default function AlarmLevelManagementPage({
         setEditingLevel(null);
     };
 
-    const handleSubmit = (value: { name: string; color: string; description: string }) => {
+    const handleSubmit = (value: { name: string; color: string; description: string; processingDeadline?: number; processingDeadlineUnit?: 'hour' | 'day' }) => {
         const name = value.name.trim();
         if (!name) {
             showToast('请输入级别名称');
@@ -99,6 +100,8 @@ export default function AlarmLevelManagementPage({
                     name,
                     color: value.color,
                     description,
+                    processingDeadline: value.processingDeadline,
+                    processingDeadlineUnit: value.processingDeadlineUnit,
                 },
             ]);
             showToast('告警等级新增成功', 'success');
@@ -114,7 +117,7 @@ export default function AlarmLevelManagementPage({
 
             onUpdateLevels((prev) => prev.map((item) => (
                 item.id === editingLevel.id
-                    ? { ...item, name, color: value.color, description }
+                    ? { ...item, name, color: value.color, description, processingDeadline: value.processingDeadline, processingDeadlineUnit: value.processingDeadlineUnit }
                     : item
             )));
             showToast('告警等级保存成功', 'success');
@@ -159,7 +162,7 @@ export default function AlarmLevelManagementPage({
             }}
         >
             <div className="alm-page">
-                <div className="crumb">{shellConfig.crumb}</div>
+                <Breadcrumb items={shellConfig.crumbItems} onNavigate={(id) => onNavigateAlarmWorkOrder?.(id as AlarmWorkOrderPageId)} />
 
                 <section className="panel alm-list-panel">
                     <div className="pc-table-head">
@@ -180,6 +183,7 @@ export default function AlarmLevelManagementPage({
                                     <th>序号</th>
                                     <th>级别名称</th>
                                     <th>颜色配置</th>
+                                    <th>工单处理期限</th>
                                     <th>描述</th>
                                     <th>操作</th>
                                 </tr>
@@ -190,6 +194,11 @@ export default function AlarmLevelManagementPage({
                                         <td>{index + 1}</td>
                                         <td>{level.name}</td>
                                         <td><ColorCell color={level.color} /></td>
+                                        <td>
+                                            {level.processingDeadline !== undefined && level.processingDeadlineUnit
+                                                ? `${level.processingDeadline}${level.processingDeadlineUnit === 'hour' ? '小时' : '天'}`
+                                                : '—'}
+                                        </td>
                                         <td className="alm-desc-cell">{level.description || '—'}</td>
                                         <td>
                                             <div className="pc-row-actions">
@@ -201,7 +210,7 @@ export default function AlarmLevelManagementPage({
                                 ))}
                                 {levels.length === 0 && (
                                     <tr>
-                                        <td colSpan={5} className="pc-empty-cell">暂无告警等级数据</td>
+                                        <td colSpan={6} className="pc-empty-cell">暂无告警等级数据</td>
                                     </tr>
                                 )}
                             </tbody>
@@ -217,6 +226,8 @@ export default function AlarmLevelManagementPage({
                     name: editingLevel.name,
                     color: editingLevel.color,
                     description: editingLevel.description,
+                    processingDeadline: editingLevel.processingDeadline,
+                    processingDeadlineUnit: editingLevel.processingDeadlineUnit,
                 } : undefined}
                 onClose={closeDrawer}
                 onSubmit={handleSubmit}

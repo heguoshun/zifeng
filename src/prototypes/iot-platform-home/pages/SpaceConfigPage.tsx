@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { ArrowLeft, MoreHorizontal } from 'lucide-react';
 import TreeToggleIcon from '../components/TreeToggleIcon';
 import AppShell from '../components/AppShell';
+import Breadcrumb from '../components/Breadcrumb';
 import AddSubSpaceDrawer, { type AddSubSpaceFormValue } from '../components/AddSubSpaceDrawer';
 import EditSpaceDrawer, { type EditSpaceFormValue } from '../components/EditSpaceDrawer';
 import TechMapMarker from '../components/TechMapMarker';
@@ -482,7 +483,10 @@ export default function SpaceConfigPage({ onNavigateHome, onNavigate }: SpaceCon
             }}
         >
             <div className="sc-page">
-                <div className="crumb">设备接入 / 设备管理 / 空间配置</div>
+                <Breadcrumb items={[
+                                    { label: '设备接入', pageId: 'home' },
+                                    { label: '空间配置' },
+                                ]} onNavigate={(id) => onNavigate(id as DeviceAccessPageId)} />
 
                 <div className="sc-layout">
                     <aside className="sc-tree-panel panel">

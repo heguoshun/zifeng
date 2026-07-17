@@ -240,6 +240,15 @@ export function createInitialRoles(): SystemRoleRecord[] {
             authorizedPermissionIds: AUDIT_VIEW,
         },
         {
+            id: 'role-jiahuan-upgrade-approver',
+            tenantId: 'tenant-jiahuan',
+            name: '远程升级审核人员',
+            roleCode: 'R29p8',
+            createdAt: '2026-07-15 09:00:00',
+            remark: '负责远程升级任务审批，只能处理分配给自己的任务',
+            authorizedPermissionIds: modulePerms('remote-upgrade', ['view', 'approve']),
+        },
+        {
             id: 'role-jiahuan-alarm-specialist',
             tenantId: 'tenant-jiahuan',
             name: '告警规则专员',

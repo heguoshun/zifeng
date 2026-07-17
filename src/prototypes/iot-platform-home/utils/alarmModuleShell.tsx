@@ -1,5 +1,6 @@
 import React from 'react';
 import AlarmWorkOrderSidebar, { type AlarmWorkOrderPageId } from '../components/AlarmWorkOrderSidebar';
+import type { BreadcrumbItem } from '../components/Breadcrumb';
 
 export type AlarmPageModule = 'alarm-work-order';
 
@@ -28,6 +29,9 @@ export function buildAlarmModuleShellConfig(options: AlarmShellConfigOptions) {
                 onNavigate={onNavigateAlarmWorkOrder}
             />
         ),
-        crumb: `告警工单 / 设备告警 / ${crumbSuffix}`,
+        crumbItems: [
+            { label: '告警工单', pageId: 'awo-device-alarm-info' },
+            { label: crumbSuffix },
+        ] as BreadcrumbItem[],
     };
 }

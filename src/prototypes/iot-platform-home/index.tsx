@@ -368,7 +368,7 @@ function IotPlatformHomeRoutes({ sessionUser }: { sessionUser: PlatformSessionUs
             initialProducts,
             createInitialAreas(),
         );
-        return syncLargeMeterDeviceCodes(createInitialLargeMeters(), initialDevices);
+        return syncLargeMeterDeviceCodes(createInitialLargeMeters(), initialDevices, initialProducts);
     });
     const [nightlyWaterUsageConfig, setNightlyWaterUsageConfig] = useState<NightlyWaterUsageConfig>(
         () => createInitialNightlyWaterUsageConfig(),
@@ -453,7 +453,7 @@ function IotPlatformHomeRoutes({ sessionUser }: { sessionUser: PlatformSessionUs
             const missing = fresh.filter((alarm) => !existingIds.has(alarm.id));
             return missing.length ? [...merged, ...missing] : merged;
         });
-        setLargeMeters((previous) => syncLargeMeterDeviceCodes(previous, devices));
+        setLargeMeters((previous) => syncLargeMeterDeviceCodes(previous, devices, products));
     }, [products, devices]);
 
     const syncDeviceFormRoute = useCallback((previous: DeviceFormRoute) => (
@@ -829,6 +829,8 @@ function IotPlatformHomeRoutes({ sessionUser }: { sessionUser: PlatformSessionUs
                 upgradeTasks={upgradeTasks}
                 upgradeBatches={upgradeBatches}
                 upgradeDeviceDetails={upgradeDeviceDetails}
+                systemUsers={systemUsers}
+                systemRoles={systemRoles}
                 onUpdateFirmwarePackages={setFirmwarePackages}
                 onUpdateUpgradeTasks={setUpgradeTasks}
                 onUpdateUpgradeBatches={setUpgradeBatches}
@@ -925,6 +927,7 @@ function IotPlatformHomeRoutes({ sessionUser }: { sessionUser: PlatformSessionUs
                 workOrders={workOrders}
                 products={products}
                 devices={devices}
+                alarmLevels={alarmLevels}
                 createDrawerOpen={activePage === 'work-order-create'}
                 onCreateDrawerOpenChange={(open) => {
                     if (!open && activePage === 'work-order-create') {
@@ -962,6 +965,7 @@ function IotPlatformHomeRoutes({ sessionUser }: { sessionUser: PlatformSessionUs
                 products={products}
                 devices={devices}
                 alarms={deviceAlarms}
+                alarmLevels={alarmLevels}
                 onUpdateAlarms={setDeviceAlarms}
                 module="alarm-work-order"
                 onNavigateHome={() => setPage('home')}
@@ -1069,6 +1073,7 @@ function IotPlatformHomeRoutes({ sessionUser }: { sessionUser: PlatformSessionUs
                     products={products}
                     devices={devices}
                     deviceAlarms={deviceAlarms}
+                    alarmLevels={alarmLevels}
                     onUpdateAlarms={setDeviceAlarms}
                     onCreateWorkOrder={(workOrder) => {
                         setWorkOrders((prev) => [workOrder, ...prev]);
@@ -1127,6 +1132,7 @@ function IotPlatformHomeRoutes({ sessionUser }: { sessionUser: PlatformSessionUs
                 areas={areas}
                 records={deviceArchiveRecords}
                 initialDeviceId={archiveFocusDeviceId}
+                currentUserName={platformSession.displayName || platformSession.account}
                 onUpdateRecords={setDeviceArchiveRecords}
                 onNavigateDeviceAccess={() => setPage('home')}
                 onNavigate={navigateLargeMeterCenter}
@@ -1248,6 +1254,7 @@ function IotPlatformHomeRoutes({ sessionUser }: { sessionUser: PlatformSessionUs
                 products={products}
                 devices={devices}
                 deviceAlarms={deviceAlarms}
+                alarmLevels={alarmLevels}
                 onUpdateAlarms={setDeviceAlarms}
                 onCreateWorkOrder={(workOrder) => {
                     setWorkOrders((prev) => [workOrder, ...prev]);

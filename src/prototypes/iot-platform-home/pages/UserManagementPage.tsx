@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { ChevronDown, Plus, Search, Upload, UserRound } from 'lucide-react';
 import AppShell from '../components/AppShell';
+import Breadcrumb from '../components/Breadcrumb';
 import SystemManagementSidebar, { type SystemManagementPageId } from '../components/SystemManagementSidebar';
 import ElSelect from '../components/ElSelect';
 import ElTreeSelect from '../components/ElTreeSelect';
@@ -351,7 +352,10 @@ export default function UserManagementPage({
             }}
         >
             <div className="um-page">
-                <div className="crumb">系统管理 / 用户管理</div>
+                <Breadcrumb items={[
+                                    { label: '系统管理', pageId: 'tenant-mgmt' },
+                                    { label: '用户管理' },
+                                ]} onNavigate={(id) => onNavigate(id as SystemManagementPageId)} />
 
                 <section className="panel um-filter-panel">
                     <div className="um-filter-row">

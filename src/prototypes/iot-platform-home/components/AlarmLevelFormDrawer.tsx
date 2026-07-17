@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { DEFAULT_ALARM_LEVEL_COLORS } from '../data/alarmLevels';
+import ElSelect from './ElSelect';
 import '../product-create.css';
 import '../device-create.css';
 import '../alarm-level-management.css';
@@ -10,6 +11,8 @@ export type AlarmLevelFormValue = {
     name: string;
     color: string;
     description: string;
+    processingDeadline?: number;
+    processingDeadlineUnit?: 'hour' | 'day';
 };
 
 type AlarmLevelFormDrawerProps = {
@@ -24,7 +27,14 @@ const EMPTY_FORM: AlarmLevelFormValue = {
     name: '',
     color: DEFAULT_ALARM_LEVEL_COLORS[0],
     description: '',
+    processingDeadline: undefined,
+    processingDeadlineUnit: 'hour',
 };
+
+const DEADLINE_UNIT_OPTIONS = [
+    { label: '小时', value: 'hour' },
+    { label: '天', value: 'day' },
+] as const;
 
 export default function AlarmLevelFormDrawer({
     open,
@@ -53,6 +63,8 @@ export default function AlarmLevelFormDrawer({
             name: form.name.trim(),
             color: form.color,
             description: form.description.trim(),
+            processingDeadline: form.processingDeadline,
+            processingDeadlineUnit: form.processingDeadlineUnit,
         });
     };
 
@@ -123,6 +135,33 @@ export default function AlarmLevelFormDrawer({
                             onChange={(event) => setForm((prev) => ({ ...prev, description: event.target.value }))}
                         />
                     </label>
+                    <div className="pcp-drawer-field">
+                        <span className="pcp-form-label">工单处理期限：</span>
+                        <div className="alm-deadline-row">
+                            <ClearableInput
+                                type="number"
+                                className="pcp-form-input alm-deadline-row__value"
+                                placeholder="请输入数值"
+                                min="0"
+                                step="1"
+                                value={form.processingDeadline ?? ''}
+                                onChange={(event) => {
+                                    const value = event.target.value === '' ? undefined : Number(event.target.value);
+                                    setForm((prev) => ({ ...prev, processingDeadline: value }));
+                                }}
+                            />
+                            <ElSelect
+                                className="el-select--medium alm-deadline-row__unit"
+                                size="medium"
+                                value={form.processingDeadlineUnit ?? 'hour'}
+                                options={[...DEADLINE_UNIT_OPTIONS]}
+                                onChange={(value) => setForm((prev) => ({
+                                    ...prev,
+                                    processingDeadlineUnit: value as 'hour' | 'day',
+                                }))}
+                            />
+                        </div>
+                    </div>
                 </div>
                 <div className="pcp-drawer__foot">
                     <button type="button" className="pm-btn pm-btn-ghost" onClick={onClose}>取消</button>

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import AppShell from '../components/AppShell';
+import Breadcrumb from '../components/Breadcrumb';
 import DeviceAccessSidebar, { type DeviceAccessPageId } from '../components/DeviceAccessSidebar';
 import AccessFlowPanel from '../components/AccessFlowPanel';
 import MiniMetric from '../components/dashboard/MiniMetric';
@@ -111,7 +112,10 @@ export default function AccessOverviewPage({ onNavigateHome, onNavigate }: Acces
                 if (tab === '设备接入') onNavigate('home');
             }}
         >
-            <div className="crumb">设备接入 / 接入概览</div>
+            <Breadcrumb items={[
+                                { label: '设备接入', pageId: 'home' },
+                                { label: '接入概览' },
+                            ]} onNavigate={(id) => onNavigate(id as DeviceAccessPageId)} />
 
             <div className="dashboard">
                 <AccessFlowPanel onNavigate={onNavigate} />

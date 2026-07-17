@@ -24,6 +24,7 @@ import {
     type DeviceRecord,
 } from '../../data/devices';
 import { createInitialProducts } from '../../data/products';
+import Breadcrumb from '../Breadcrumb';
 import {
     getExecutiveOverviewData,
     getOverviewFilterLabel,
@@ -42,7 +43,7 @@ import {
 } from '../../data/productCategories';
 import ElTreeSelect from '../ElTreeSelect';
 import ListPagination from '../ListPagination';
-import { DEFAULT_LIST_PAGE_SIZE, paginateItems } from '../../utils/listPagination';
+import { DEFAULT_LIST_PAGE_SIZE } from '../../utils/listPagination';
 import '../../device-executive-overview.css';
 import '../../product-management.css';
 
@@ -173,43 +174,36 @@ type DrilldownRow = {
 
 const DRILLDOWN_META: Record<SummaryDrilldownKey, { title: string; subtitle: string; exportName: string }> = {
     assetInUse: {
-        title: '在用设备数据',
-        subtitle: '展示当前筛选范围内的在用设备样例。',
-        exportName: '在用设备数据',
+        title: '在用设备',
+        subtitle: '当前已启用且投入业务使用的设备。',
+        exportName: '在用设备',
     },
     assetIdle: {
-        title: '闲置设备数据',
-        subtitle: '展示当前筛选范围内的闲置、禁用及需盘点设备。',
-        exportName: '闲置设备数据',
+        title: '闲置设备',
+        subtitle: '当前闲置、禁用的设备。',
+        exportName: '闲置设备',
     },
     onlineActive: {
-        title: '在线设备数据',
-        subtitle: '展示当前在线设备，便于核对连接正常的设备清单。',
-        exportName: '在线设备数据',
+        title: '在线设备',
+        subtitle: '展示当前全部在线设备，便于核对连接正常的设备清单。',
+        exportName: '在线设备',
     },
     onlineOffline: {
-        title: '离线设备信息',
+        title: '离线设备',
         subtitle: '展示当前离线设备，优先定位长时间未恢复的设备。',
-        exportName: '离线设备信息',
+        exportName: '离线设备',
     },
     dataAnomaly: {
-        title: '当前异常设备',
+        title: '异常设备',
         subtitle: '展示此刻仍存在缺报、解析失败或非整点上报等数据异常的设备。',
-        exportName: '当前异常设备',
+        exportName: '异常设备',
     },
     alarmPending: {
-        title: '待处理告警设备信息',
+        title: '待处理告警设备',
         subtitle: '展示待处理告警关联的设备数据。',
-        exportName: '待处理告警设备信息',
+        exportName: '待处理告警设备',
     },
 };
-
-function getDrilldownRowLimit(key: SummaryDrilldownKey, total: number) {
-    if (key === 'onlineOffline' || key === 'dataAnomaly' || key === 'alarmPending' || key === 'assetIdle') {
-        return total;
-    }
-    return Math.min(total, 200);
-}
 
 function buildDetailRows(devices: DeviceRecord[], products = createInitialProducts()): DrilldownRow[] {
     return devices.map((device, index) => {
@@ -224,25 +218,52 @@ function buildDetailRows(devices: DeviceRecord[], products = createInitialProduc
     });
 }
 
-function expandDrilldownRows(rows: DrilldownRow[], targetCount: number) {
-    if (!rows.length || targetCount <= rows.length) return rows.slice(0, targetCount);
-
-    return Array.from({ length: targetCount }, (_, index) => {
-        const source = rows[index % rows.length];
-        const batch = Math.floor(index / rows.length);
-        if (batch === 0) return source;
-        const suffix = String(index + 1).padStart(4, '0');
+/** 按全局序号物化一行，避免一次生成数万行导致卡顿。 */
+function materializeDrilldownRow(templates: DrilldownRow[], index: number): DrilldownRow {
+    const source = templates[index % templates.length];
+    const batch = Math.floor(index / templates.length);
+    if (batch === 0) {
         return {
             ...source,
-            id: `${source.id}-copy-${index}`,
-            device: {
-                ...source.device,
-                id: `${source.device.id}-copy-${index}`,
-                code: `${source.device.code}-${suffix}`,
-                name: `${source.device.name}-${suffix}`,
-            },
+            id: `${source.id}-${index}`,
         };
-    });
+    }
+    const suffix = String(index + 1).padStart(4, '0');
+    return {
+        ...source,
+        id: `${source.id}-copy-${index}`,
+        device: {
+            ...source.device,
+            id: `${source.device.id}-copy-${index}`,
+            code: `${source.device.code}-${suffix}`,
+            name: `${source.device.name}-${suffix}`,
+        },
+    };
+}
+
+function getDrilldownPageRows(templates: DrilldownRow[], total: number, page: number, pageSize: number) {
+    if (!templates.length || total <= 0) {
+        return {
+            items: [] as DrilldownRow[],
+            total: 0,
+            totalPages: 1,
+            currentPage: 1,
+        };
+    }
+
+    const totalPages = Math.max(1, Math.ceil(total / pageSize));
+    const currentPage = Math.min(Math.max(1, page), totalPages);
+    const start = (currentPage - 1) * pageSize;
+    const end = Math.min(total, start + pageSize);
+
+    return {
+        items: Array.from({ length: Math.max(0, end - start) }, (_, offset) => (
+            materializeDrilldownRow(templates, start + offset)
+        )),
+        total,
+        totalPages,
+        currentPage,
+    };
 }
 
 function filterDevicesByProduct(
@@ -254,34 +275,35 @@ function filterDevicesByProduct(
     return devices.filter((device) => itemMatchesProductFilter(productFilterId, device.productId, products));
 }
 
-function buildSummaryDrilldownRows(
+function buildSummaryDrilldownTemplates(
     key: SummaryDrilldownKey,
     productFilterId: string,
-    targetCount: number,
-) {
+): DrilldownRow[] {
     const products = createInitialProducts();
     const devices = filterDevicesByProduct(createInitialDevices(products), productFilterId, products);
     const fallbackDevices = devices.length ? devices : createInitialDevices(products);
-    const rowLimit = getDrilldownRowLimit(key, targetCount);
-    const expandRows = (matchedDevices: DeviceRecord[]) => expandDrilldownRows(buildDetailRows(matchedDevices, products), rowLimit);
+    const toRows = (matchedDevices: DeviceRecord[]) => {
+        const rows = buildDetailRows(matchedDevices, products);
+        return rows.length ? rows : buildDetailRows(fallbackDevices, products);
+    };
 
     if (key === 'assetInUse') {
-        return expandRows(fallbackDevices.filter((device) => device.enabled && device.status !== 'disabled'));
+        return toRows(fallbackDevices.filter((device) => device.enabled && device.status !== 'disabled'));
     }
     if (key === 'assetIdle') {
-        return expandRows(fallbackDevices.filter((device) => !device.enabled || device.status === 'disabled'));
+        return toRows(fallbackDevices.filter((device) => !device.enabled || device.status === 'disabled'));
     }
     if (key === 'onlineActive') {
-        return expandRows(fallbackDevices.filter((device) => device.status === 'online'));
+        return toRows(fallbackDevices.filter((device) => device.status === 'online'));
     }
     if (key === 'onlineOffline') {
-        return expandRows(fallbackDevices.filter((device) => device.status === 'offline'));
+        return toRows(fallbackDevices.filter((device) => device.status === 'offline'));
     }
     if (key === 'dataAnomaly') {
-        return expandRows(fallbackDevices.filter((device) => device.status === 'fault' || device.status === 'offline'));
+        return toRows(fallbackDevices.filter((device) => device.status === 'fault' || device.status === 'offline'));
     }
     if (key === 'alarmPending') {
-        return expandRows(fallbackDevices.filter((device) => device.status === 'fault' || device.status === 'offline'));
+        return toRows(fallbackDevices.filter((device) => device.status === 'fault' || device.status === 'offline'));
     }
     return [];
 }
@@ -291,28 +313,40 @@ function csvEscape(value: string | number) {
     return `"${text}"`;
 }
 
-function buildDrilldownCsvHref(rows: DrilldownRow[]) {
+function downloadDrilldownCsv(templates: DrilldownRow[], total: number, exportName: string) {
+    if (!templates.length || total <= 0) return;
+
     const headers = ['设备名称', '设备编号', '产品', '状态', '位置'];
-    const body = rows.map((row) => [
-        row.device.name,
-        row.device.code,
-        row.productName,
-        STATUS_LABEL[row.device.status],
-        row.location,
-    ]);
-    const csv = [headers, ...body].map((line) => line.map(csvEscape).join(',')).join('\n');
-    return `data:text/csv;charset=utf-8,${encodeURIComponent(`\ufeff${csv}`)}`;
+    const lines = [headers.map(csvEscape).join(',')];
+    for (let index = 0; index < total; index += 1) {
+        const row = materializeDrilldownRow(templates, index);
+        lines.push([
+            row.device.name,
+            row.device.code,
+            row.productName,
+            STATUS_LABEL[row.device.status],
+            row.location,
+        ].map(csvEscape).join(','));
+    }
+
+    const blob = new Blob([`\ufeff${lines.join('\n')}`], { type: 'text/csv;charset=utf-8;' });
+    const href = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = href;
+    link.download = `${exportName}.csv`;
+    link.click();
+    window.setTimeout(() => URL.revokeObjectURL(href), 1000);
 }
 
 function SummaryDrilldownDialog({
     openKey,
     total,
-    rows,
+    templates,
     onClose,
 }: {
     openKey: SummaryDrilldownKey | null;
     total: number;
-    rows: DrilldownRow[];
+    templates: DrilldownRow[];
     onClose: () => void;
 }) {
     const [pageSize, setPageSize] = useState(DEFAULT_LIST_PAGE_SIZE);
@@ -332,11 +366,11 @@ function SummaryDrilldownDialog({
         if (!openKey) return;
         setCurrentPage(1);
         setJumpPage('1');
-    }, [openKey, rows.length, pageSize]);
+    }, [openKey, total, pageSize]);
 
     const pagination = useMemo(
-        () => paginateItems(rows, currentPage, Number(pageSize)),
-        [currentPage, pageSize, rows],
+        () => getDrilldownPageRows(templates, total, currentPage, Number(pageSize)),
+        [currentPage, pageSize, templates, total],
     );
 
     useEffect(() => {
@@ -360,11 +394,6 @@ function SummaryDrilldownDialog({
                     <button type="button" className="pcp-drawer__close" aria-label="关闭设备信息抽屉" onClick={onClose}>×</button>
                 </div>
                 <div className="pcp-drawer__body edo-detail-drawer__body">
-                    <div className="edo-detail-drawer__stats">
-                    <span><small>当前口径总数</small><strong>{total.toLocaleString()}</strong></span>
-                    <span><small>列表数据量</small><strong>{rows.length.toLocaleString()}</strong></span>
-                    <span><small>统计范围</small><strong>当前筛选</strong></span>
-                    </div>
                     <div className="pm-table-wrap edo-detail-table">
                         <table className="pm-table edo-detail-table__inner" aria-label={meta.title}>
                             <thead>
@@ -403,13 +432,13 @@ function SummaryDrilldownDialog({
                     </div>
                 </div>
                 <div className="pcp-drawer__foot">
-                    <a
+                    <button
+                        type="button"
                         className="pm-btn pm-btn-ghost edo-detail-export"
-                        href={buildDrilldownCsvHref(rows)}
-                        download={`${meta.exportName}.csv`}
+                        onClick={() => downloadDrilldownCsv(templates, total, meta.exportName)}
                     >
                         <Download size={14} />导出
-                    </a>
+                    </button>
                     <button type="button" className="pm-btn pm-btn-primary" onClick={onClose}>关闭</button>
                 </div>
             </aside>
@@ -498,11 +527,11 @@ function ExecutiveDeviceOverview({
         if (summaryDrilldownOpen === 'alarmPending') return overviewData.alarmStatusRows[0]?.value ?? 0;
         return 0;
     }, [overviewData, summaryDrilldownOpen]);
-    const drilldownRows = useMemo(
+    const drilldownTemplates = useMemo(
         () => (summaryDrilldownOpen
-            ? buildSummaryDrilldownRows(summaryDrilldownOpen, productFilterId, drilldownTotal)
+            ? buildSummaryDrilldownTemplates(summaryDrilldownOpen, productFilterId)
             : []),
-        [drilldownTotal, productFilterId, summaryDrilldownOpen],
+        [productFilterId, summaryDrilldownOpen],
     );
 
     useEffect(() => {
@@ -543,7 +572,10 @@ function ExecutiveDeviceOverview({
         <div className="edo-page">
             <header className="edo-page-head">
                 <div>
-                    <div className="crumb">工作台 / 设备综合视图</div>
+                    <Breadcrumb items={[
+                                            { label: '工作台' },
+                                            { label: '设备综合视图' },
+                                        ]} />
                     <div className="edo-title-row">
                         <h1>设备综合视图</h1>
                         <span className="edo-status"><i /> 数据运行正常</span>
@@ -665,7 +697,7 @@ function ExecutiveDeviceOverview({
             <SummaryDrilldownDialog
                 openKey={summaryDrilldownOpen}
                 total={drilldownTotal}
-                rows={drilldownRows}
+                templates={drilldownTemplates}
                 onClose={() => setSummaryDrilldownOpen(null)}
             />
 
@@ -731,14 +763,6 @@ function ExecutiveDeviceOverview({
                                 centerLabel="离线设备"
                                 ariaLabel={offlineDistributionHint}
                             />
-                            <span className="edo-donut-legend edo-donut-legend--offline">
-                                {overviewData.offlineRowsByProduct.map((row, index) => (
-                                    <span key={row.name}>
-                                        <i className={`is-color-${index + 1}`} />
-                                        {row.name} <b>{row.value.toLocaleString()}</b>
-                                    </span>
-                                ))}
-                            </span>
                         </div>
                         <div className="edo-share-list">
                             {overviewData.offlineRowsByProduct.map((row, index) => (

@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { ArrowLeft, Info, Plus } from 'lucide-react';
 import AppShell from '../components/AppShell';
+import Breadcrumb from '../components/Breadcrumb';
 import { ConfirmDialog } from '../components/IotDialogs';
 import ListPagination from '../components/ListPagination';
 import DeviceAccessSidebar, { type DeviceAccessPageId } from '../components/DeviceAccessSidebar';
@@ -15,6 +16,7 @@ import DeviceShadowPanel from '../components/DeviceShadowPanel';
 import SubDeviceManagementPanel from '../components/SubDeviceManagementPanel';
 import IotToast, { type IotToastData, type IotToastType, triggerIotToast } from '../components/IotToast';
 import type { DeviceAlarmRecord } from '../data/deviceAlarms';
+import type { AlarmLevelRecord } from '../data/alarmLevels';
 import type { WorkOrderRecord } from '../data/workOrders';
 import {
     buildDeviceFormTags,
@@ -130,6 +132,7 @@ type DeviceCreatePageProps = {
     products: ProductRecord[];
     devices: DeviceRecord[];
     deviceAlarms: DeviceAlarmRecord[];
+    alarmLevels?: AlarmLevelRecord[];
     onUpdateAlarms: React.Dispatch<React.SetStateAction<DeviceAlarmRecord[]>>;
     onCreateWorkOrder?: (workOrder: WorkOrderRecord) => void;
     onViewWorkOrder?: (workOrderId: string) => void;
@@ -153,6 +156,7 @@ export default function DeviceCreatePage({
     products,
     devices,
     deviceAlarms,
+    alarmLevels,
     onUpdateAlarms,
     onCreateWorkOrder,
     onViewWorkOrder,
@@ -615,7 +619,11 @@ export default function DeviceCreatePage({
             }}
         >
             <div className="dcp-page">
-                <div className="crumb">设备接入 / 设备管理 / 设备管理 / {PAGE_TITLE[mode]}</div>
+                <Breadcrumb items={[
+                                    { label: '设备接入', pageId: 'home' },
+                                    { label: '设备管理', pageId: 'device-management' },
+                                    { label: PAGE_TITLE[mode] },
+                                ]} onNavigate={(id) => onNavigate(id as DeviceAccessPageId)} />
 
                 <div className="pcp-head">
                     <button
@@ -938,6 +946,7 @@ export default function DeviceCreatePage({
                         devices={devices}
                         products={products}
                         alarms={deviceAlarms}
+                        alarmLevels={alarmLevels}
                         onUpdateAlarms={onUpdateAlarms}
                         onCreateWorkOrder={onCreateWorkOrder}
                         onViewWorkOrder={onViewWorkOrder}

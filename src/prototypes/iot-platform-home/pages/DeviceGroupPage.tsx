@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Search, Trash2, X } from 'lucide-react';
 import AppShell from '../components/AppShell';
+import Breadcrumb from '../components/Breadcrumb';
 import DeviceAccessSidebar, { type DeviceAccessPageId } from '../components/DeviceAccessSidebar';
 import AddGroupDeviceDialog from '../components/AddGroupDeviceDialog';
 import DeviceGroupTags from '../components/DeviceGroupTags';
@@ -442,7 +443,11 @@ export default function DeviceGroupPage({
             }}
         >
             <div className="pm-page">
-                <div className="crumb">设备接入 / 设备管理 / 设备分组</div>
+                <Breadcrumb items={[
+                                    { label: '设备接入', pageId: 'home' },
+                                    { label: '设备管理', pageId: 'device-management' },
+                                    { label: '设备分组' },
+                                ]} onNavigate={(id) => onNavigate(id as DeviceAccessPageId)} />
 
                 {!viewingGroup && (
                     <section className="panel pm-filter-panel">

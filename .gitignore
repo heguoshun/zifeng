@@ -22,6 +22,9 @@ vite.config.*.timestamp-*
 
 # Environment variables
 .env
+.env.*
+!.env.example
+!.env.*.example
 .env.local
 .env.*.local
 .env.production
@@ -30,10 +33,11 @@ vite.config.*.timestamp-*
 # Local configuration (runtime-generated)
 .axhub/make/*
 !.axhub/make/client.json
-!.axhub/make/README.md
-!.axhub/make/project.json
-!.axhub/make/sidebar-tree.json
 !.axhub/make/axhub.config.json
+!.axhub/make/README.md
+!.axhub/make/sidebar-tree.json
+.axhub/make/review-reports.json
+.axhub/sessions/
 components.json
 .dev-server-info.json
 entries.json
@@ -44,7 +48,11 @@ entries.json
 .claude/*
 !.claude/skills/
 !.claude/skills/**
+.agents/*
+!.agents/skills/
+!.agents/skills/**
 .opencode/
+.codegraph/
 .trae/
 /.drafts/
 *.swp
@@ -66,14 +74,24 @@ Desktop.ini
 
 # Logs
 logs/
+.logs/
 *.log
+*.pid
 
 # Temporary files
 *.tmp
 *.temp
 .cache/
+.drawio-tmp/
+
+# Python bytecode caches
 __pycache__/
-*.pyc
+*.py[cod]
+
+# Runtime review/comment artifacts are project-local by default.
+src/prototypes/**/.spec/acp/
+src/prototypes/**/.spec/prototype-comments.json
+src/prototypes/**/.spec/reviews/config.json
 
 # Coverage reports
 coverage/

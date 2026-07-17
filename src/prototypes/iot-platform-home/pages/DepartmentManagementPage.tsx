@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Plus, Search, Trash2 } from 'lucide-react';
 import TreeToggleIcon from '../components/TreeToggleIcon';
 import AppShell from '../components/AppShell';
+import Breadcrumb from '../components/Breadcrumb';
 import SystemManagementSidebar, { type SystemManagementPageId } from '../components/SystemManagementSidebar';
 import ElTreeSelect from '../components/ElTreeSelect';
 import ListPagination from '../components/ListPagination';
@@ -525,7 +526,10 @@ export default function DepartmentManagementPage({
             }}
         >
             <div className="dm-page">
-                <div className="crumb">系统管理 / 部门管理</div>
+                <Breadcrumb items={[
+                                    { label: '系统管理', pageId: 'tenant-mgmt' },
+                                    { label: '部门管理' },
+                                ]} onNavigate={(id) => onNavigate(id as SystemManagementPageId)} />
 
                 <div className="dm-split">
                     {/* ── Left: Tree ── */}

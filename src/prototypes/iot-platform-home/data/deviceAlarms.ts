@@ -43,6 +43,8 @@ export type AlarmWorkOrder = {
     level: AlarmLevel;
     content: string;
     assignees: string[];
+    processingDeadline?: number;
+    processingDeadlineUnit?: 'hour' | 'day';
     handler?: string;
     handledAt?: string;
     result?: string;

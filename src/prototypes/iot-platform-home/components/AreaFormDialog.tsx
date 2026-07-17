@@ -13,7 +13,6 @@ export type AreaFormValue = {
 type AreaFormDialogProps = {
     open: boolean;
     mode: 'add' | 'edit';
-    areaId: string;
     parentOptions: { label: string; value: string }[];
     initialValue?: AreaFormValue;
     onClose: () => void;
@@ -28,7 +27,6 @@ const EMPTY_FORM: AreaFormValue = {
 export default function AreaFormDialog({
     open,
     mode,
-    areaId,
     parentOptions,
     initialValue,
     onClose,
@@ -80,15 +78,6 @@ export default function AreaFormDialog({
                 </div>
                 <div className="pcp-drawer__body pcp-drawer__body--form">
                     <label className="pcp-drawer-field">
-                        <span className="pcp-form-label">片区 ID：</span>
-                        <input
-                            type="text"
-                            className="pcp-form-input is-readonly"
-                            value={areaId}
-                            readOnly
-                        />
-                    </label>
-                    <label className="pcp-drawer-field">
                         <span className="pcp-form-label"><em>*</em>片区名称：</span>
                         <ClearableInput
                             type="text"
@@ -98,18 +87,16 @@ export default function AreaFormDialog({
                             onChange={(event) => setForm((prev) => ({ ...prev, name: event.target.value }))}
                         />
                     </label>
-                    {mode === 'add' ? (
-                        <div className="pcp-drawer-field">
-                            <span className="pcp-form-label">上级片区：</span>
-                            <ElSelect
-                                className="el-select--medium pcp-form-select"
-                                size="medium"
-                                value={form.parentId}
-                                options={[{ label: '无（顶级片区）', value: '' }, ...parentOptions]}
-                                onChange={(value) => setForm((prev) => ({ ...prev, parentId: value }))}
-                            />
-                        </div>
-                    ) : null}
+                    <div className="pcp-drawer-field">
+                        <span className="pcp-form-label">上级片区：</span>
+                        <ElSelect
+                            className="el-select--medium pcp-form-select"
+                            size="medium"
+                            value={form.parentId}
+                            options={[{ label: '无（顶级片区）', value: '' }, ...parentOptions]}
+                            onChange={(value) => setForm((prev) => ({ ...prev, parentId: value }))}
+                        />
+                    </div>
                 </div>
                 <div className="pcp-drawer__foot">
                     <button type="button" className="pm-btn pm-btn-ghost" onClick={onClose}>取消</button>

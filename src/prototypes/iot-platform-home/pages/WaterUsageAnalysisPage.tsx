@@ -2,11 +2,13 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import * as echarts from 'echarts/core';
 import type { EChartsCoreOption } from 'echarts/core';
 import { BarChart as EChartsBarChart, LineChart as EChartsLineChart } from 'echarts/charts';
-import { GridComponent, LegendComponent, TooltipComponent, AxisPointerComponent } from 'echarts/components';
+import { AxisPointerComponent, DataZoomComponent, GridComponent, LegendComponent, TooltipComponent } from 'echarts/components';
 import { CanvasRenderer } from 'echarts/renderers';
-import { ArrowLeft, Download, List, MapPin, Search, TrendingUp } from 'lucide-react';
+import { ArrowDownRight, ArrowLeft, ArrowUpRight, Clock3, Download, Droplets, List, MapPin, Search, TrendingUp } from 'lucide-react';
 import AppShell from '../components/AppShell';
+import Breadcrumb from '../components/Breadcrumb';
 import ElDateRangePicker from '../components/ElDateRangePicker';
+import ElDateTimePicker from '../components/ElDateTimePicker';
 import ElMonthRangePicker from '../components/ElMonthRangePicker';
 import LargeMeterSidebar, { type LargeMeterPageId } from '../components/LargeMeterSidebar';
 import ListPagination from '../components/ListPagination';
@@ -29,8 +31,10 @@ import {
     type DeviceAlarmRecord,
 } from '../data/deviceAlarms';
 import { createWorkOrderFromAlarm, type WorkOrderRecord } from '../data/workOrders';
+import type { AlarmLevelRecord } from '../data/alarmLevels';
 import { BAIDU_MAP_AK } from '../config/baiduMap';
 import {
+    DEFAULT_NIGHTLY_PERIOD,
     formatNightlyFieldLabels,
     formatNightlyPeriod,
     type NightlyPeriod,
@@ -44,7 +48,7 @@ import '../large-meter.css';
 import '../device-alarm-info.css';
 import '../water-usage-analysis.css';
 
-echarts.use([EChartsBarChart, EChartsLineChart, GridComponent, LegendComponent, TooltipComponent, AxisPointerComponent, CanvasRenderer]);
+echarts.use([EChartsBarChart, EChartsLineChart, GridComponent, LegendComponent, TooltipComponent, AxisPointerComponent, DataZoomComponent, CanvasRenderer]);
 
 type AnalysisTab = 'history' | 'daily' | 'monthly' | 'hourly' | 'nightly' | 'alarm';
 
@@ -77,6 +81,7 @@ type MonthlyRecord = {
 
 type NightlyRecord = {
     date: string;
+    dataTime: string;
     period: string;
     nightlyUsage: number;
     dailyUsage: number;
@@ -95,6 +100,7 @@ type WaterUsageAnalysisPageProps = {
     products: ProductRecord[];
     devices: DeviceRecord[];
     deviceAlarms: DeviceAlarmRecord[];
+    alarmLevels?: AlarmLevelRecord[];
     onUpdateAlarms: React.Dispatch<React.SetStateAction<DeviceAlarmRecord[]>>;
     onCreateWorkOrder?: (workOrder: WorkOrderRecord) => void;
     onViewWorkOrder?: (workOrderId: string) => void;
@@ -135,6 +141,88 @@ const METRIC_STYLES: Record<Exclude<AnalysisTab, 'alarm' | 'history'>, { seedOff
     nightly: { seedOffset: 31, color: '#2f8f83', baseRatio: 0.3 },
 };
 
+type NightlyDateTimeRange = { start: string; end: string };
+
+type NightlyRangePreset = 'yesterday' | 'month' | 'year' | 'custom';
+
+const NIGHTLY_RANGE_PRESETS: { key: Exclude<NightlyRangePreset, 'custom'>; label: string }[] = [
+    { key: 'yesterday', label: '昨日' },
+    { key: 'month', label: '本月' },
+    { key: 'year', label: '本年' },
+];
+
+function formatDateOnly(date: Date) {
+    return `${date.getFullYear()}-${_pad(date.getMonth() + 1)}-${_pad(date.getDate())}`;
+}
+
+function addDays(dateStr: string, days: number) {
+    const next = new Date(`${dateStr}T00:00:00`);
+    next.setDate(next.getDate() + days);
+    return formatDateOnly(next);
+}
+
+function isCrossMidnightPeriod(period: NightlyPeriod) {
+    return period.start > period.end;
+}
+
+function buildNightlyHourLabels(period: NightlyPeriod) {
+    const startHour = Number.parseInt(period.start.slice(0, 2), 10);
+    const endHour = Number.parseInt(period.end.slice(0, 2), 10);
+    const labels: string[] = [];
+    let hour = startHour;
+    for (let index = 0; index < 25; index += 1) {
+        labels.push(`${String(hour).padStart(2, '0')}:00`);
+        if (hour === endHour) break;
+        hour = (hour + 1) % 24;
+    }
+    return labels;
+}
+
+function buildNightlyDateTimeBoundary(nightDate: string, period: NightlyPeriod, boundary: 'start' | 'end') {
+    if (boundary === 'start') {
+        return `${nightDate} ${period.start}:00`;
+    }
+    const endDate = isCrossMidnightPeriod(period) ? addDays(nightDate, 1) : nightDate;
+    return `${endDate} ${period.end}:00`;
+}
+
+function buildNightlyPresetRange(
+    preset: Exclude<NightlyRangePreset, 'custom'>,
+    period: NightlyPeriod,
+    ref = new Date(),
+): NightlyDateTimeRange {
+    const yesterday = new Date(ref);
+    yesterday.setDate(ref.getDate() - 1);
+    const yesterdayStr = formatDateOnly(yesterday);
+
+    let startNightDate = yesterdayStr;
+    if (preset === 'month') {
+        startNightDate = `${ref.getFullYear()}-${_pad(ref.getMonth() + 1)}-01`;
+    } else if (preset === 'year') {
+        startNightDate = `${ref.getFullYear()}-01-01`;
+    }
+
+    return {
+        start: buildNightlyDateTimeBoundary(startNightDate, period, 'start'),
+        end: buildNightlyDateTimeBoundary(yesterdayStr, period, 'end'),
+    };
+}
+
+function dateRangeFromNightlyDateTime(range: NightlyDateTimeRange) {
+    const start = range.start.slice(0, 10);
+    const endTime = range.end.match(/\s+(\d{2}:\d{2})/)?.[1] ?? '23:59';
+    let end = range.end.slice(0, 10);
+    if (endTime <= '12:00') {
+        end = addDays(end, -1);
+    }
+    return start <= end ? { start, end } : { start: end, end: start };
+}
+
+function formatNightlyDateTimeDisplay(value: string) {
+    if (!value) return value;
+    return value.length === 16 ? `${value}:00` : value;
+}
+
 function pseudoRandom(seed: number) {
     const value = Math.sin(seed * 12.9898 + 78.233) * 43758.5453;
     return value - Math.floor(value);
@@ -159,12 +247,12 @@ function exportCsv(filename: string, headers: string[], rows: Array<Array<string
     URL.revokeObjectURL(url);
 }
 
-function dateValues(start: string, end: string) {
+function dateValues(start: string, end: string, maxCount = 366) {
     if (!start || !end) return [];
     const values: string[] = [];
     const current = new Date(`${start}T00:00:00`);
     const last = new Date(`${end}T00:00:00`);
-    while (current <= last && values.length < 92) {
+    while (current <= last && values.length < maxCount) {
         values.push(`${current.getFullYear()}-${String(current.getMonth() + 1).padStart(2, '0')}-${String(current.getDate()).padStart(2, '0')}`);
         current.setDate(current.getDate() + 1);
     }
@@ -189,16 +277,26 @@ function buildMonitorRecords(meter: LargeMeterDevice, start: string, end: string
     const alarmPattern = meter.status === '告警'
         ? [0, 1, 0, 2, 1, 3, 0, 1, 4, 2, 0, 1]
         : [0, 0, 1, 0, 2, 0, 1, 0, 0, 1, 0, 0];
+    const dailyUsages = dates.map((_, index) => {
+        const rSeed = seed + index;
+        return Number((meter.dailyUsage * (0.7 + pseudoRandom(rSeed * 17 + 100) * 0.6)).toFixed(2));
+    });
+    // 累计读数按时间正向累加：期初读数 + 每日用量，避免用“当前值减历史用量”制造不合理数据。
+    let runningReading = Math.max(
+        0,
+        meter.currentReading - dailyUsages.reduce((total, usage) => total + usage, 0),
+    );
     return dates.map((date, index) => {
         const rSeed = seed + index;
         const alarmCount = alarmPattern[(index + seed) % alarmPattern.length];
-        const dailyUsage = Number((meter.dailyUsage * (0.7 + pseudoRandom(rSeed * 17 + 100) * 0.6)).toFixed(2));
+        const dailyUsage = dailyUsages[index] ?? 0;
         const monthlyUsage = Number((meter.monthlyUsage * (0.85 + pseudoRandom(rSeed * 23 + 200) * 0.3)).toFixed(2));
         const hourlyUsage = Number((meter.hourlyUsage * (0.6 + pseudoRandom(rSeed * 41 + 300) * 0.8)).toFixed(2));
         const nightlyUsage = Number((meter.nightlyUsage * (0.5 + pseudoRandom(rSeed * 31 + 400) * 1.0)).toFixed(2));
         const forwardAccumulation = Number((meter.forwardAccumulation * (0.82 + pseudoRandom(rSeed * 11 + 500) * 0.36)).toFixed(2));
         const reverseAccumulation = Number((meter.reverseAccumulation * (0.5 + pseudoRandom(rSeed * 13 + 600) * 1.2)).toFixed(2));
-        const cumulativeReading = Number((meter.currentReading - index * dailyUsage * 0.92).toFixed(2));
+        runningReading += dailyUsage;
+        const cumulativeReading = Number(runningReading.toFixed(2));
         const batteryVoltage = Number((3.55 + pseudoRandom(rSeed * 19 + 700) * 0.45).toFixed(2));
         const signalStrength = Math.round(-62 - pseudoRandom(rSeed * 29 + 800) * 28);
         return {
@@ -254,8 +352,11 @@ function buildNightlyRecords(
         const valleyHour = `${String(Number.parseInt(period.end.slice(0, 2), 10) + (index * 2) % 2).padStart(2, '0')}:${String(10 + (index * 5) % 40).padStart(2, '0')}`;
         const peakFlow = Number((record.nightlyUsage / 8 * (0.8 + pseudoRandom(seed + index * 51 + 1100) * 0.4)).toFixed(2));
         const valleyFlow = Number((record.nightlyUsage / 12 * (0.25 + pseudoRandom(seed + index * 61 + 1200) * 0.45)).toFixed(2));
+        const endDate = isCrossMidnightPeriod(period) ? addDays(record.date, 1) : record.date;
+        const dataTime = `${record.date} ${period.start}:00 ~ ${endDate} ${period.end}:00`;
         return {
             date: record.date,
+            dataTime,
             period: periodLabel,
             nightlyUsage: record.nightlyUsage,
             dailyUsage: record.dailyUsage,
@@ -273,16 +374,27 @@ function buildChartAxisLabelInterval(count: number) {
     if (count <= 12) return 0;
     if (count <= 24) return 1;
     if (count <= 48) return 3;
-    return Math.floor(count / 12);
+    if (count <= 90) return 6;
+    return 'auto' as const;
+}
+
+function buildNightlyBarMaxWidth(count: number) {
+    if (count <= 31) return 24;
+    if (count <= 90) return 12;
+    return 6;
+}
+
+function buildNightlyChartZoom(count: number) {
+    if (count <= 31) return null;
+    const windowSize = count > 90 ? 31 : Math.min(31, count);
+    const startPercent = Math.max(0, 100 - (windowSize / count) * 100);
+    return { start: startPercent, end: 100, windowSize };
 }
 
 function getDisplayInstallTime(meter: LargeMeterDevice): string {
     if (meter.installTime) return meter.installTime;
-    const seed = meterSeed(meter);
-    const year = 2022 + Math.floor(pseudoRandom(seed + 1200) * 4);
-    const month = 1 + Math.floor(pseudoRandom(seed + 1201) * 12);
-    const day = 1 + Math.floor(pseudoRandom(seed + 1202) * 28);
-    return `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')} ${String(8 + Math.floor(pseudoRandom(seed + 1203) * 10)).padStart(2, '0')}:00:00`;
+    // 未填写安装档案时不生成模拟日期，避免未绑定设备出现虚假的安装时间。
+    return '-';
 }
 
 function Chart({ option, ariaLabel }: { option: EChartsCoreOption; ariaLabel: string }) {
@@ -334,6 +446,7 @@ export default function WaterUsageAnalysisPage({
     products,
     devices,
     deviceAlarms,
+    alarmLevels,
     onUpdateAlarms,
     onCreateWorkOrder,
     onViewWorkOrder,
@@ -352,6 +465,13 @@ export default function WaterUsageAnalysisPage({
     const [monthlyRange, setMonthlyRange] = useState(DEFAULT_MONTHLY_RANGE);
     const [draftHourly, setDraftHourly] = useState(DEFAULT_HOURLY_RANGE);
     const [hourlyRange, setHourlyRange] = useState(DEFAULT_HOURLY_RANGE);
+    const [nightlyRangePreset, setNightlyRangePreset] = useState<NightlyRangePreset>('month');
+    const [draftNightlyDateTimeRange, setDraftNightlyDateTimeRange] = useState<NightlyDateTimeRange>(
+        () => buildNightlyPresetRange('month', DEFAULT_NIGHTLY_PERIOD),
+    );
+    const [nightlyDateTimeRange, setNightlyDateTimeRange] = useState<NightlyDateTimeRange>(
+        () => buildNightlyPresetRange('month', DEFAULT_NIGHTLY_PERIOD),
+    );
     const [currentPage, setCurrentPage] = useState(1);
     const [pageSize, setPageSize] = useState(DEFAULT_LIST_PAGE_SIZE);
     const [jumpPage, setJumpPage] = useState('1');
@@ -363,24 +483,79 @@ export default function WaterUsageAnalysisPage({
     } | null>(null);
     const [convertModal, setConvertModal] = useState<{ alarmId: string } | null>(null);
     const status = getMeterDisplayStatus(meter);
-    const areaName = getAreaName(areas, meter.areaId) || '未分配';
+    const isUnassigned = !meter.areaId || !areas.some((area) => area.id === meter.areaId);
+    const areaName = isUnassigned ? '-' : (getAreaName(areas, meter.areaId) || '-');
     const records = useMemo(() => buildMonitorRecords(meter, range.start, range.end), [meter, range]);
+    const nightlyDateFilter = useMemo(
+        () => dateRangeFromNightlyDateTime(nightlyDateTimeRange),
+        [nightlyDateTimeRange],
+    );
+    const nightlySourceRecords = useMemo(
+        () => buildMonitorRecords(meter, nightlyDateFilter.start, nightlyDateFilter.end),
+        [meter, nightlyDateFilter],
+    );
     const hourlyRecords = useMemo(() => buildHourlyRecords(meter, hourlyRange.start, hourlyRange.end), [meter, hourlyRange]);
     const monthlyRecords = useMemo(() => buildMonthlyRecords(meter, monthlyRange.start, monthlyRange.end), [meter, monthlyRange]);
     const nightlyRecords = useMemo(
-        () => buildNightlyRecords(records, meter, nightlyConfig.period),
-        [records, meter, nightlyConfig.period],
+        () => buildNightlyRecords(nightlySourceRecords, meter, nightlyConfig.period),
+        [nightlySourceRecords, meter, nightlyConfig.period],
     );
     const nightlyFieldSet = useMemo(() => new Set(nightlyConfig.fields), [nightlyConfig.fields]);
+    const nightlyStatistics = useMemo(() => {
+        const totalUsage = nightlyRecords.reduce((sum, item) => sum + item.nightlyUsage, 0);
+        const peak = nightlyRecords.reduce<NightlyRecord | null>(
+            (current, item) => (!current || item.peakFlow > current.peakFlow ? item : current),
+            null,
+        );
+        const valley = nightlyRecords.reduce<NightlyRecord | null>(
+            (current, item) => (!current || item.valleyFlow < current.valleyFlow ? item : current),
+            null,
+        );
+        const countByHour = (field: 'peakHour' | 'valleyHour') => {
+            const counts = new Map<string, number>();
+            nightlyRecords.forEach((item) => {
+                const hour = `${item[field].slice(0, 2)}:00`;
+                counts.set(hour, (counts.get(hour) ?? 0) + 1);
+            });
+            return [...counts.entries()].sort((a, b) => b[1] - a[1])[0] ?? ['-', 0] as const;
+        };
+        const [peakCommonHour, peakCommonCount] = countByHour('peakHour');
+        const [valleyCommonHour, valleyCommonCount] = countByHour('valleyHour');
+        return { totalUsage, peak, valley, peakCommonHour, peakCommonCount, valleyCommonHour, valleyCommonCount };
+    }, [nightlyRecords]);
+    const nightlyDistributionOption = useMemo<EChartsCoreOption>(() => {
+        const hours = buildNightlyHourLabels(nightlyConfig.period);
+        const hourIndexes = new Map(hours.map((hour, index) => [hour, index]));
+        const peakCounts = Array(hours.length).fill(0) as number[];
+        const valleyCounts = Array(hours.length).fill(0) as number[];
+        nightlyRecords.forEach((item) => {
+            const peakIndex = hourIndexes.get(`${item.peakHour.slice(0, 2)}:00`);
+            const valleyIndex = hourIndexes.get(`${item.valleyHour.slice(0, 2)}:00`);
+            if (peakIndex !== undefined) peakCounts[peakIndex] += 1;
+            if (valleyIndex !== undefined) valleyCounts[valleyIndex] += 1;
+        });
+        return {
+            animationDuration: 220,
+            tooltip: { ...IOT_AXIS_TOOLTIP, trigger: 'axis' },
+            legend: { top: 0, right: 8, itemWidth: 10, itemHeight: 10, textStyle: { color: '#475569', fontSize: 11 }, data: ['峰值出现次数', '谷值出现次数'] },
+            grid: { top: 48, right: 22, bottom: 34, left: 40 },
+            xAxis: { type: 'category', data: hours, axisTick: { show: false }, axisLine: { lineStyle: { color: '#dbe3ec' } }, axisLabel: { interval: 1, color: '#64748b', fontSize: 10 } },
+            yAxis: { type: 'value', minInterval: 1, name: '次数', nameTextStyle: { color: '#94a3b8', padding: [0, 0, 0, -24] }, splitLine: { lineStyle: { color: '#edf2f7', type: 'dashed' } }, axisLabel: { color: '#94a3b8', fontSize: 10 } },
+            series: [
+                { type: 'bar', name: '峰值出现次数', data: peakCounts, barMaxWidth: 12, itemStyle: { color: '#f59e0b', borderRadius: [4, 4, 0, 0] } },
+                { type: 'bar', name: '谷值出现次数', data: valleyCounts, barMaxWidth: 12, itemStyle: { color: '#2563eb', borderRadius: [4, 4, 0, 0] } },
+            ],
+        };
+    }, [nightlyConfig.period, nightlyRecords]);
     const alarmRecords = useMemo(() => filterAlarmsByDevice(deviceAlarms, meter)
         .sort((a, b) => b.triggeredAt.localeCompare(a.triggeredAt)), [deviceAlarms, meter]);
     const coordinates = useMemo(() => {
-        if (typeof meter.longitude === 'number' && typeof meter.latitude === 'number') {
+        if (!isUnassigned && typeof meter.longitude === 'number' && typeof meter.latitude === 'number') {
             return { lng: meter.longitude, lat: meter.latitude };
         }
         const seed = meterSeed(meter);
         return { lng: 118.71 + pseudoRandom(seed) * 0.16, lat: 31.94 + pseudoRandom(seed + 7) * 0.11 };
-    }, [meter]);
+    }, [isUnassigned, meter]);
 
     const tabRecords = useMemo(() => {
         if (activeTab === 'hourly') return hourlyRecords;
@@ -395,12 +570,10 @@ export default function WaterUsageAnalysisPage({
         [tabRecords, currentPage, pageSize],
     );
 
-    const latestReadAt = records[0]?.readAt;
-
     useEffect(() => {
         setCurrentPage(1);
         setJumpPage('1');
-    }, [activeTab, range, monthlyRange, hourlyRange, nightlyConfig, pageSize]);
+    }, [activeTab, range, monthlyRange, hourlyRange, nightlyDateTimeRange, nightlyConfig, pageSize]);
 
     useEffect(() => {
         if (activeTab !== 'history') {
@@ -497,6 +670,8 @@ export default function WaterUsageAnalysisPage({
             assignees: form.assignees,
             space: convertAlarm.space,
             alarmId: convertAlarm.id,
+            processingDeadline: form.processingDeadline,
+            processingDeadlineUnit: form.processingDeadlineUnit,
         });
 
         onUpdateAlarms((prev) => prev.map((item) => (
@@ -513,6 +688,8 @@ export default function WaterUsageAnalysisPage({
                         level: form.level,
                         content: form.content,
                         assignees: form.assignees,
+                        processingDeadline: form.processingDeadline,
+                        processingDeadlineUnit: form.processingDeadlineUnit,
                     },
                 })
                 : item
@@ -539,8 +716,11 @@ export default function WaterUsageAnalysisPage({
         let labels: string[] = [];
         let unit = 'm³';
         let series: EChartsCoreOption['series'];
-        let labelInterval = 0;
+        let labelInterval: number | 'auto' = 0;
         let labelRotate = 0;
+        let nightlyOrdered: NightlyRecord[] = [];
+        let nightlyZoom: ReturnType<typeof buildNightlyChartZoom> = null;
+        let nightlyBarMaxWidth = 24;
 
         if (activeTab === 'alarm') {
             const alarmCounts = new Map<string, number>();
@@ -581,20 +761,23 @@ export default function WaterUsageAnalysisPage({
                 areaStyle: { color: `${cfg.color}18` },
             }];
         } else if (activeTab === 'nightly') {
-            const ordered = [...nightlyRecords].reverse();
-            labels = ordered.map((item) => item.date.slice(5));
+            nightlyOrdered = [...nightlyRecords].reverse();
+            labels = nightlyOrdered.map((item) => item.date.slice(5));
             labelInterval = buildChartAxisLabelInterval(labels.length);
+            labelRotate = labels.length > 60 ? 35 : 0;
+            nightlyZoom = buildNightlyChartZoom(labels.length);
+            nightlyBarMaxWidth = buildNightlyBarMaxWidth(labels.length);
             const cfg = METRIC_STYLES.nightly;
             const seriesList: EChartsCoreOption['series'] = [];
             if (nightlyFieldSet.has('usage')) {
                 seriesList.push({
                     type: 'bar',
                     name: '夜间用水',
-                    data: ordered.map((item) => ({
+                    data: nightlyOrdered.map((item) => ({
                         value: item.nightlyUsage,
                         itemStyle: { color: item.isAbnormal ? '#f56c6c' : cfg.color },
                     })),
-                    barMaxWidth: 24,
+                    barMaxWidth: nightlyBarMaxWidth,
                     itemStyle: { color: cfg.color, borderRadius: [3, 3, 0, 0] },
                 });
             }
@@ -603,8 +786,9 @@ export default function WaterUsageAnalysisPage({
                     ...common,
                     name: '峰值流量',
                     yAxisIndex: nightlyFieldSet.has('usage') ? 1 : 0,
-                    data: ordered.map((item) => item.peakFlow),
+                    data: nightlyOrdered.map((item) => item.peakFlow),
                     itemStyle: { color: '#fa8c16' },
+                    showSymbol: labels.length <= 90,
                 });
             }
             if (nightlyFieldSet.has('valley')) {
@@ -612,8 +796,9 @@ export default function WaterUsageAnalysisPage({
                     ...common,
                     name: '谷值流量',
                     yAxisIndex: nightlyFieldSet.has('usage') ? 1 : 0,
-                    data: ordered.map((item) => item.valleyFlow),
+                    data: nightlyOrdered.map((item) => item.valleyFlow),
                     itemStyle: { color: '#722ed1' },
+                    showSymbol: labels.length <= 90,
                 });
             }
             if (nightlyFieldSet.has('ratio')) {
@@ -621,15 +806,16 @@ export default function WaterUsageAnalysisPage({
                     ...common,
                     name: '占日比例',
                     yAxisIndex: nightlyFieldSet.has('usage') ? 1 : 0,
-                    data: ordered.map((item) => item.ratio),
+                    data: nightlyOrdered.map((item) => item.ratio),
                     itemStyle: { color: '#13c2c2' },
+                    showSymbol: labels.length <= 90,
                 });
             }
             series = seriesList.length ? seriesList : [{
                 type: 'bar',
                 name: TAB_LABELS.nightly,
-                data: ordered.map((item) => item.nightlyUsage),
-                barMaxWidth: 24,
+                data: nightlyOrdered.map((item) => item.nightlyUsage),
+                barMaxWidth: nightlyBarMaxWidth,
             }];
             unit = nightlyFieldSet.has('usage') ? 'm³' : nightlyFieldSet.has('ratio') ? '%' : 'm³/h';
         } else if (activeTab === 'daily') {
@@ -652,9 +838,26 @@ export default function WaterUsageAnalysisPage({
             tooltip: {
                 ...IOT_AXIS_TOOLTIP,
                 valueFormatter: (value) => `${value} ${unit}`,
+                ...(activeTab === 'nightly' ? {
+                    formatter: (params) => {
+                        const items = Array.isArray(params) ? params : [params];
+                        const index = items[0]?.dataIndex ?? 0;
+                        const record = nightlyOrdered[index];
+                        const title = record?.date ?? items[0]?.name ?? '';
+                        const lines = items.map((item) => {
+                            const marker = item.marker ?? '';
+                            const seriesName = item.seriesName ?? '';
+                            const rawValue = typeof item.value === 'object' && item.value !== null && 'value' in item.value
+                                ? (item.value as { value: number }).value
+                                : item.value;
+                            return `${marker}${seriesName}：${rawValue} ${unit}`;
+                        });
+                        return [title, ...lines].join('<br/>');
+                    },
+                } : {}),
             },
             legend: {
-                bottom: 0,
+                bottom: nightlyZoom ? 34 : 0,
                 left: 'center',
                 itemWidth: 12,
                 itemHeight: 7,
@@ -665,8 +868,34 @@ export default function WaterUsageAnalysisPage({
                 left: 56,
                 right: activeTab === 'nightly' && nightlyFieldSet.has('usage') && (nightlyFieldSet.has('peak') || nightlyFieldSet.has('valley') || nightlyFieldSet.has('ratio')) ? 60 : 18,
                 top: activeTab === 'nightly' ? 48 : 38,
-                bottom: labelRotate ? 78 : 62,
+                bottom: nightlyZoom ? 92 : labelRotate ? 78 : 62,
             },
+            ...(nightlyZoom ? {
+                dataZoom: [
+                    {
+                        type: 'slider',
+                        start: nightlyZoom.start,
+                        end: nightlyZoom.end,
+                        height: 18,
+                        bottom: 8,
+                        borderColor: '#e8edf3',
+                        backgroundColor: '#f7f9fb',
+                        fillerColor: 'rgba(35, 143, 216, 0.12)',
+                        handleStyle: { color: '#238fd8', borderColor: '#238fd8' },
+                        moveHandleStyle: { color: '#238fd8' },
+                        textStyle: { color: '#8c9bab', fontSize: 11 },
+                        brushSelect: false,
+                    },
+                    {
+                        type: 'inside',
+                        start: nightlyZoom.start,
+                        end: nightlyZoom.end,
+                        zoomOnMouseWheel: true,
+                        moveOnMouseMove: true,
+                        moveOnMouseWheel: true,
+                    },
+                ],
+            } : {}),
             xAxis: {
                 type: 'category',
                 data: labels,
@@ -710,7 +939,7 @@ export default function WaterUsageAnalysisPage({
         if (activeTab === 'history') return '监测数据明细';
         if (activeTab === 'hourly') return `${TAB_LABELS.hourly}明细`;
         if (activeTab === 'monthly') return `${TAB_LABELS.monthly}明细`;
-        if (activeTab === 'nightly') return `${TAB_LABELS.nightly}明细（${formatNightlyPeriod(nightlyConfig.period)}）`;
+        if (activeTab === 'nightly') return `每日夜间流量明细（${formatNightlyPeriod(nightlyConfig.period)}）`;
         return `${TAB_LABELS[activeTab]}明细`;
     }, [activeTab, nightlyConfig.period]);
 
@@ -723,8 +952,8 @@ export default function WaterUsageAnalysisPage({
             headers = ['抄表时间', '累计读数(m³)', '日结累计正向流量(m³)', '日结累计逆向流量(m³)', '电池电压(V)', '信号强度(dBm)'];
             rows = records.map((item) => [item.readAt, item.cumulativeReading, item.forwardAccumulation, item.reverseAccumulation, item.batteryVoltage, item.signalStrength]);
         } else if (activeTab === 'daily') {
-            headers = ['日期', '抄表时间', '日用水(m³)', '数据状态'];
-            rows = records.map((item) => [item.date, item.readAt, item.dailyUsage, item.readAt === latestReadAt && meter.status === '离线' ? '数据中断' : '正常']);
+            headers = ['日期', '抄表时间', '日用水(m³)'];
+            rows = records.map((item) => [item.date, item.readAt, item.dailyUsage]);
         } else if (activeTab === 'monthly') {
             headers = ['月份', '月用水(m³)'];
             rows = monthlyRecords.map((item) => [item.month, item.monthlyUsage]);
@@ -732,21 +961,19 @@ export default function WaterUsageAnalysisPage({
             headers = ['时间', '时用水(m³)'];
             rows = hourlyRecords.map((item) => [item.readAt, item.hourlyUsage]);
         } else if (activeTab === 'nightly') {
-            headers = ['日期', '统计时段'];
+            headers = ['数据时间', '统计时段'];
             if (nightlyFieldSet.has('usage')) headers.push('夜间用水(m³)');
             if (nightlyFieldSet.has('ratio')) headers.push('日用水(m³)', '占日比例(%)');
             else if (nightlyFieldSet.has('usage')) headers.push('日用水(m³)');
             if (nightlyFieldSet.has('peak')) headers.push('峰值流量(m³/h)', '峰值时刻');
             if (nightlyFieldSet.has('valley')) headers.push('谷值流量(m³/h)', '谷值时刻');
-            headers.push('状态');
             rows = nightlyRecords.map((item) => {
-                const row: Array<string | number> = [item.date, item.period];
+                const row: Array<string | number> = [item.dataTime, item.period];
                 if (nightlyFieldSet.has('usage')) row.push(item.nightlyUsage);
                 if (nightlyFieldSet.has('ratio')) row.push(item.dailyUsage, item.ratio);
                 else if (nightlyFieldSet.has('usage')) row.push(item.dailyUsage);
                 if (nightlyFieldSet.has('peak')) row.push(item.peakFlow, item.peakHour);
                 if (nightlyFieldSet.has('valley')) row.push(item.valleyFlow, item.valleyHour);
-                row.push(item.isAbnormal ? '夜间异常' : '正常');
                 return row;
             });
         } else {
@@ -771,8 +998,22 @@ export default function WaterUsageAnalysisPage({
     const rangeHint = useMemo(() => {
         if (activeTab === 'hourly') return `${hourlyRange.start} 至 ${hourlyRange.end}`;
         if (activeTab === 'monthly') return `${monthlyRange.start} 至 ${monthlyRange.end}`;
+        if (activeTab === 'nightly') {
+            return `${formatNightlyDateTimeDisplay(nightlyDateTimeRange.start)} 至 ${formatNightlyDateTimeDisplay(nightlyDateTimeRange.end)}`;
+        }
         return `${range.start} 至 ${range.end}`;
-    }, [activeTab, hourlyRange, monthlyRange, range]);
+    }, [activeTab, hourlyRange, monthlyRange, nightlyDateTimeRange, range]);
+
+    const applyNightlyPreset = (preset: Exclude<NightlyRangePreset, 'custom'>) => {
+        const next = buildNightlyPresetRange(preset, nightlyConfig.period);
+        setNightlyRangePreset(preset);
+        setDraftNightlyDateTimeRange(next);
+        setNightlyDateTimeRange(next);
+    };
+
+    const resetNightlyRange = () => {
+        applyNightlyPreset('month');
+    };
 
     const installTime = getDisplayInstallTime(meter);
     const sidebar = <LargeMeterSidebar pageId="data-monitor" onNavigate={onNavigate} />;
@@ -790,7 +1031,11 @@ export default function WaterUsageAnalysisPage({
             }}
         >
             <div className="pm-page wua-page">
-                <div className="crumb">大表中心 / 数据监测 / 设备数据</div>
+                <Breadcrumb items={[
+                                    { label: '大表中心', pageId: 'data-monitor' },
+                                    { label: '数据监测', pageId: 'data-monitor' },
+                                    { label: '设备数据' },
+                                ]} onNavigate={(id) => onNavigateLargeMeterCenter(id as LargeMeterPageId)} />
 
                 <div className="pcp-head wua-page-head">
                     <button type="button" className="pcp-back-btn" onClick={onBack} aria-label="返回">
@@ -810,27 +1055,31 @@ export default function WaterUsageAnalysisPage({
                                     <h2>{meter.name}</h2>
                                     <span className={`lm-status-tag lm-status-tag--${status.tone}`}>{status.label}</span>
                                 </div>
-                                <p className="wua-device-head__meta">{meter.code} · {meter.bodyNo} · {areaName}</p>
+                                <p className="wua-device-head__meta">{meter.code || '-'} · {meter.bodyNo || '-'} · {areaName || '-'}</p>
                             </div>
 
                             <dl className="wua-info-grid">
-                                <div><dt>用户名称</dt><dd>{meter.userName || '—'}</dd></div>
-                                <div><dt>用户号</dt><dd>{meter.userNo || '—'}</dd></div>
+                                <div><dt>用户名称</dt><dd>{isUnassigned ? '-' : (meter.userName || '-')}</dd></div>
+                                <div><dt>用户号</dt><dd>{isUnassigned ? '-' : (meter.userNo || '-')}</dd></div>
                                 <div><dt>设备编号</dt><dd>{meter.code}</dd></div>
-                                <div><dt>表身号</dt><dd>{meter.bodyNo || '—'}</dd></div>
-                                <div><dt>表具厂家</dt><dd>{meter.manufacturer || '—'}</dd></div>
-                                <div><dt>远传厂家</dt><dd>{resolveRemoteManufacturer(meter)}</dd></div>
-                                <div><dt>设备功能</dt><dd>{meter.deviceFunction || '—'}</dd></div>
-                                <div><dt>设备口径</dt><dd>{meter.caliber || '—'}</dd></div>
-                                <div><dt>通讯码</dt><dd>{meter.communicationNo || '—'}</dd></div>
-                                <div><dt>安装时间</dt><dd>{installTime || '—'}</dd></div>
-                                <div><dt>具体地址</dt><dd>{meter.installAddress || '—'}</dd></div>
-                                <div><dt>所属区域</dt><dd>{areaName || '—'}</dd></div>
+                                <div><dt>表身号</dt><dd>{isUnassigned ? '-' : (meter.bodyNo || '-')}</dd></div>
+                                <div><dt>表具厂家</dt><dd>{isUnassigned ? '-' : (meter.manufacturer || '-')}</dd></div>
+                                <div><dt>远传厂家</dt><dd>{isUnassigned ? '-' : resolveRemoteManufacturer(meter)}</dd></div>
+                                <div><dt>设备功能</dt><dd>{isUnassigned ? '-' : (meter.deviceFunction || '-')}</dd></div>
+                                <div><dt>设备口径</dt><dd>{isUnassigned ? '-' : (meter.caliber || '-')}</dd></div>
+                                <div><dt>通讯码</dt><dd>{isUnassigned ? '-' : (meter.communicationNo || '-')}</dd></div>
+                                <div><dt>安装时间</dt><dd>{installTime || '-'}</dd></div>
+                                <div><dt>具体地址</dt><dd>{isUnassigned ? '-' : (meter.installAddress || '-')}</dd></div>
+                                <div><dt>所属片区</dt><dd>{areaName || '-'}</dd></div>
                             </dl>
                         </div>
 
                         <div className="wua-device-col wua-device-col--side">
-                            <DevicePointMap longitude={coordinates.lng} latitude={coordinates.lat} name={meter.name} />
+                            {isUnassigned ? (
+                                <div className="wua-baidu-map-shell"><div className="wua-baidu-map__state"><MapPin size={18} /><span>-</span></div></div>
+                            ) : (
+                                <DevicePointMap longitude={coordinates.lng} latitude={coordinates.lat} name={meter.name} />
+                            )}
                         </div>
                     </div>
                 </section>
@@ -881,10 +1130,52 @@ export default function WaterUsageAnalysisPage({
                                     </>
                                 ) : activeTab === 'nightly' ? (
                                     <>
-                                        <div className="wua-date-filter"><span>数据时间</span><ElDateRangePicker size="medium" start={draftRange.start} end={draftRange.end} onChange={setDraftRange} /></div>
+                                        <div className="wua-range-presets" role="group" aria-label="夜间用水时间快捷切换">
+                                            {NIGHTLY_RANGE_PRESETS.map((preset) => (
+                                                <button
+                                                    key={preset.key}
+                                                    type="button"
+                                                    className={nightlyRangePreset === preset.key ? 'is-active' : ''}
+                                                    onClick={() => applyNightlyPreset(preset.key)}
+                                                >
+                                                    {preset.label}
+                                                </button>
+                                            ))}
+                                        </div>
+                                        <div className="wua-date-filter wua-date-filter--datetime">
+                                            <span>数据时间</span>
+                                            <ElDateTimePicker
+                                                size="medium"
+                                                className="wua-datetime-picker"
+                                                value={draftNightlyDateTimeRange.start}
+                                                placeholder="开始时间"
+                                                onChange={(start) => {
+                                                    setDraftNightlyDateTimeRange((previous) => ({ ...previous, start }));
+                                                    setNightlyRangePreset('custom');
+                                                }}
+                                            />
+                                            <span className="wua-date-filter__sep">至</span>
+                                            <ElDateTimePicker
+                                                size="medium"
+                                                className="wua-datetime-picker"
+                                                value={draftNightlyDateTimeRange.end}
+                                                placeholder="结束时间"
+                                                onChange={(end) => {
+                                                    setDraftNightlyDateTimeRange((previous) => ({ ...previous, end }));
+                                                    setNightlyRangePreset('custom');
+                                                }}
+                                            />
+                                        </div>
                                         <div className="wua-filter-actions">
-                                            <button type="button" className="pm-btn pm-btn-primary" disabled={!draftRange.start || !draftRange.end} onClick={() => setRange(draftRange)}><Search size={14} />查询</button>
-                                            <button type="button" className="pm-btn pm-btn-ghost" onClick={() => { setDraftRange(DEFAULT_RANGE); setRange(DEFAULT_RANGE); }}>重置</button>
+                                            <button
+                                                type="button"
+                                                className="pm-btn pm-btn-primary"
+                                                disabled={!draftNightlyDateTimeRange.start || !draftNightlyDateTimeRange.end}
+                                                onClick={() => setNightlyDateTimeRange(draftNightlyDateTimeRange)}
+                                            >
+                                                <Search size={14} />查询
+                                            </button>
+                                            <button type="button" className="pm-btn pm-btn-ghost" onClick={resetNightlyRange}>重置</button>
                                         </div>
                                     </>
                                 ) : (
@@ -913,16 +1204,59 @@ export default function WaterUsageAnalysisPage({
                                 <div className="wua-chart-block">
                                     <div className="wua-block-head">
                                         <div>
-                                            <h3>{TAB_LABELS[activeTab]}趋势</h3>
-                                            <p>{rangeHint}{activeTab === 'hourly' ? ' · 逐时' : activeTab === 'nightly' ? ` · ${formatNightlyPeriod(nightlyConfig.period)}` : ''}</p>
+                                            <h3>{activeTab === 'nightly' ? '夜间用水统计' : `${TAB_LABELS[activeTab]}趋势`}</h3>
+                                            <p>{rangeHint}{activeTab === 'hourly' ? ' · 逐时' : activeTab === 'nightly' ? ` · 统计时段 ${formatNightlyPeriod(nightlyConfig.period)}` : ''}</p>
                                         </div>
-                                        <div className="wua-view-toggle" role="group" aria-label="内容视图">
-                                            <button type="button" className={contentView === 'chart' ? 'is-active' : ''} onClick={() => setContentView('chart')}><TrendingUp size={14} />趋势图</button>
-                                            <button type="button" className={contentView === 'detail' ? 'is-active' : ''} onClick={() => setContentView('detail')}><List size={14} />数据明细</button>
-                                        </div>
+                                        {(
+                                            <div className="wua-view-toggle" role="group" aria-label="内容视图">
+                                                <button type="button" className={contentView === 'chart' ? 'is-active' : ''} onClick={() => setContentView('chart')}><TrendingUp size={14} />趋势图</button>
+                                                <button type="button" className={contentView === 'detail' ? 'is-active' : ''} onClick={() => setContentView('detail')}><List size={14} />数据明细</button>
+                                            </div>
+                                        )}
                                     </div>
 
-                                    <Chart option={chartOption} ariaLabel={`${TAB_LABELS[activeTab]}趋势`} />
+                                    {activeTab === 'nightly' && (
+                                        <div className="wua-nightly-summary" aria-label="夜间用水统计摘要">
+                                            <div className="wua-nightly-hero">
+                                                <div className="wua-nightly-hero__icon"><Droplets size={22} /></div>
+                                                <div className="wua-nightly-hero__content">
+                                                    <span>累计夜间用水</span>
+                                                    <strong>{formatNumber(nightlyStatistics.totalUsage)}<em>m³</em></strong>
+                                                    <small>{rangeHint} · 已统计 {nightlyRecords.length} 个夜间周期</small>
+                                                </div>
+                                                <div className="wua-nightly-hero__period">
+                                                    <Clock3 size={14} />{formatNightlyPeriod(nightlyConfig.period)}
+                                                </div>
+                                            </div>
+                                            <div className="wua-nightly-metric is-peak">
+                                                <div className="wua-nightly-metric__head"><span><ArrowUpRight size={15} />峰值流量</span><b>MAX</b></div>
+                                                <strong>{nightlyStatistics.peak ? formatNumber(nightlyStatistics.peak.peakFlow) : '-'}<em>m³/h</em></strong>
+                                                <small>{nightlyStatistics.peak ? `${nightlyStatistics.peak.date} · ${nightlyStatistics.peak.peakHour}` : '暂无数据'}</small>
+                                            </div>
+                                            <div className="wua-nightly-metric is-valley">
+                                                <div className="wua-nightly-metric__head"><span><ArrowDownRight size={15} />谷值流量</span><b>MIN</b></div>
+                                                <strong>{nightlyStatistics.valley ? formatNumber(nightlyStatistics.valley.valleyFlow) : '-'}<em>m³/h</em></strong>
+                                                <small>{nightlyStatistics.valley ? `${nightlyStatistics.valley.date} · ${nightlyStatistics.valley.valleyHour}` : '暂无数据'}</small>
+                                            </div>
+                                        </div>
+                                    )}
+                                    {activeTab === 'nightly' ? (
+                                        <div className="wua-nightly-distribution">
+                                            <div className="wua-nightly-distribution__head">
+                                                <div>
+                                                    <h4>峰谷时刻分布</h4>
+                                                    <p>查看统计周期内，峰值与谷值最常出现在哪些小时</p>
+                                                </div>
+                                                <div className="wua-nightly-insights">
+                                                    <span className="is-peak"><i />峰值集中 <strong>{nightlyStatistics.peakCommonHour}</strong><small>{nightlyStatistics.peakCommonCount} 次</small></span>
+                                                    <span className="is-valley"><i />谷值集中 <strong>{nightlyStatistics.valleyCommonHour}</strong><small>{nightlyStatistics.valleyCommonCount} 次</small></span>
+                                                </div>
+                                            </div>
+                                            <Chart option={nightlyDistributionOption} ariaLabel="峰谷时刻分布" />
+                                        </div>
+                                    ) : (
+                                        <Chart option={chartOption} ariaLabel={`${TAB_LABELS[activeTab]}趋势`} />
+                                    )}
                                 </div>
                             )}
 
@@ -975,7 +1309,7 @@ export default function WaterUsageAnalysisPage({
                                                         <td>{alarm.deviceName}</td>
                                                         <td>{alarm.deviceCode}</td>
                                                         <td>{resolveAlarmProductName(alarm.productId, products)}</td>
-                                                        <td>{alarm.space}</td>
+                                                        <td>{isUnassigned ? '-' : (alarm.space || '-')}</td>
                                                         <td><ReadStatusCell status={alarm.readStatus} /></td>
                                                         <td>{alarm.triggeredAt}</td>
                                                         <td>
@@ -1042,7 +1376,6 @@ export default function WaterUsageAnalysisPage({
                                                     <th>日期</th>
                                                     <th>抄表时间</th>
                                                     <th className="col-num">日用水(m³)</th>
-                                                    <th className="col-status">数据状态</th>
                                                 </tr>
                                             </thead>
                                             <tbody>
@@ -1051,11 +1384,6 @@ export default function WaterUsageAnalysisPage({
                                                         <td>{record.date}</td>
                                                         <td>{record.readAt}</td>
                                                         <td className="col-num">{formatNumber(record.dailyUsage)}</td>
-                                                        <td className="col-status">
-                                                            <span className={`wua-data-status ${record.readAt === latestReadAt && meter.status === '离线' ? 'is-error' : ''}`}>
-                                                                {record.readAt === latestReadAt && meter.status === '离线' ? '数据中断' : '正常'}
-                                                            </span>
-                                                        </td>
                                                     </tr>
                                                 ))}
                                             </tbody>
@@ -1104,7 +1432,7 @@ export default function WaterUsageAnalysisPage({
                                         <table className="wua-table wua-table--nightly">
                                             <thead>
                                                 <tr>
-                                                    <th>日期</th>
+                                                    <th>数据时间</th>
                                                     <th>统计时段</th>
                                                     {nightlyFieldSet.has('usage') && <th className="col-num">夜间用水(m³)</th>}
                                                     {(nightlyFieldSet.has('usage') || nightlyFieldSet.has('ratio')) && (
@@ -1115,13 +1443,12 @@ export default function WaterUsageAnalysisPage({
                                                     {nightlyFieldSet.has('peak') && <th>峰值时刻</th>}
                                                     {nightlyFieldSet.has('valley') && <th className="col-num">谷值流量(m³/h)</th>}
                                                     {nightlyFieldSet.has('valley') && <th>谷值时刻</th>}
-                                                    <th className="col-status">状态</th>
                                                 </tr>
                                             </thead>
                                             <tbody>
                                                 {(pagination.items as NightlyRecord[]).map((record) => (
                                                     <tr key={`nightly-${record.date}`}>
-                                                        <td>{record.date}</td>
+                                                        <td>{record.dataTime}</td>
                                                         <td>{record.period}</td>
                                                         {nightlyFieldSet.has('usage') && (
                                                             <td className="col-num">{formatNumber(record.nightlyUsage)}</td>
@@ -1140,11 +1467,6 @@ export default function WaterUsageAnalysisPage({
                                                             <td className="col-num">{formatNumber(record.valleyFlow)}</td>
                                                         )}
                                                         {nightlyFieldSet.has('valley') && <td>{record.valleyHour}</td>}
-                                                        <td className="col-status">
-                                                            <span className={`wua-data-status ${record.isAbnormal ? 'is-error' : ''}`}>
-                                                                {record.isAbnormal ? '夜间异常' : '正常'}
-                                                            </span>
-                                                        </td>
                                                     </tr>
                                                 ))}
                                             </tbody>
@@ -1184,6 +1506,7 @@ export default function WaterUsageAnalysisPage({
             <ConvertWorkOrderModal
                 open={convertModal !== null}
                 alarm={convertAlarm}
+                alarmLevels={alarmLevels}
                 onClose={() => setConvertModal(null)}
                 onConfirm={handleConfirmConvert}
             />

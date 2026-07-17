@@ -166,6 +166,866 @@
     color: #909399;
 }
 
+/* 升级审核：沿用现有后台基底，强化信息层级和高风险确认 */
+.pcp-drawer.ru-audit-drawer {
+    width: min(720px, 100vw);
+}
+
+.ru-audit-head {
+    align-items: flex-start;
+}
+
+.ru-audit-head h3 {
+    margin-bottom: 4px;
+}
+
+.ru-audit-head p {
+    margin: 0;
+    color: #606266;
+    font-size: 12px;
+    font-weight: 400;
+}
+
+.ru-audit-body {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    padding: 20px 24px 24px !important;
+    background: #fff;
+}
+
+.ru-audit-summary,
+.ru-audit-decision {
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: #fff;
+}
+
+.ru-audit-section-title {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    color: #303133;
+}
+
+.ru-audit-section-title h4 {
+    margin: 0;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.ru-audit-section-title > span:not(.ru-audit-status) {
+    margin-left: auto;
+    color: #909399;
+    font-size: 12px;
+    font-weight: 400;
+}
+
+.ru-audit-status {
+    margin-left: auto;
+    padding: 3px 9px;
+    border: 1px solid #f5dab1;
+    border-radius: 999px;
+    background: #fdf6ec;
+    color: #e6a23c;
+    font-size: 12px;
+}
+
+.ru-audit-task-name {
+    margin-top: 10px;
+    color: #303133;
+    font-size: 18px;
+    font-weight: 600;
+    line-height: 1.4;
+}
+
+.ru-audit-summary-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 10px 20px;
+    margin-top: 14px;
+}
+
+.ru-audit-summary-grid div {
+    min-width: 0;
+}
+
+.ru-audit-summary-grid span,
+.ru-audit-impact-card > span {
+    display: block;
+    margin-bottom: 5px;
+    color: #73767a;
+    font-size: 12px;
+}
+
+.ru-audit-summary-grid strong {
+    display: block;
+    overflow: hidden;
+    color: #303133;
+    font-size: 13px;
+    font-weight: 500;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.ru-audit-impact {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0;
+    margin-top: 18px;
+    border-top: 1px solid #e4e7ed;
+    border-bottom: 1px solid #e4e7ed;
+    background: #fafafa;
+}
+
+.ru-audit-impact-card {
+    position: relative;
+    min-width: 0;
+    padding: 14px 16px 14px 46px;
+    border: 0;
+    border-right: 1px solid #e4e7ed;
+    border-radius: 0;
+    background: transparent;
+}
+
+.ru-audit-impact-card:last-child {
+    border-right: 0;
+}
+
+.ru-audit-impact-card > svg {
+    position: absolute;
+    top: 15px;
+    left: 17px;
+    color: #409eff;
+}
+
+.ru-audit-impact-card strong {
+    display: block;
+    color: #303133;
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 1.5;
+}
+
+.ru-audit-device-link {
+    margin-top: 5px;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: #409eff;
+    font-family: inherit;
+    font-size: 12px;
+    cursor: pointer;
+}
+
+.ru-audit-device-link:hover {
+    color: #337ecc;
+}
+
+.ru-audit-device-list {
+    border-bottom: 1px solid #e4e7ed;
+    background: #fff;
+}
+
+.ru-audit-device-list__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 0 8px;
+    color: #303133;
+    font-size: 12px;
+}
+
+.ru-audit-device-list__head span {
+    color: #73767a;
+}
+
+.ru-audit-device-toolbar {
+    padding: 0 0 10px;
+}
+
+.ru-audit-device-search {
+    width: 240px;
+    min-width: 240px;
+}
+
+.ru-audit-device-list__table {
+    overflow-x: auto;
+    border: 1px solid #e4e7ed;
+}
+
+.ru-audit-device-list table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+}
+
+.ru-audit-device-list th,
+.ru-audit-device-list td {
+    padding: 8px 12px;
+    border-bottom: 1px solid #ebeef5;
+    color: #606266;
+    text-align: left;
+}
+
+.ru-audit-device-list th {
+    background: #fafafa;
+    color: #303133;
+    font-weight: 600;
+}
+
+.ru-audit-device-empty {
+    padding: 24px 12px !important;
+    color: #909399 !important;
+    text-align: center !important;
+}
+
+.ru-audit-device-pagination {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 10px;
+    padding: 10px 0 0;
+    color: #909399;
+    font-size: 12px;
+}
+
+.ru-audit-device-pagination button {
+    min-width: 56px;
+    height: 28px;
+    border: 1px solid #dcdfe6;
+    border-radius: 4px;
+    background: #fff;
+    color: #606266;
+    font-family: inherit;
+    cursor: pointer;
+}
+
+.ru-audit-device-pagination button:hover:not(:disabled) {
+    border-color: #409eff;
+    color: #409eff;
+}
+
+.ru-audit-device-pagination button:focus-visible {
+    outline: 2px solid #409eff;
+    outline-offset: 2px;
+}
+
+.ru-audit-device-pagination button:disabled {
+    background: #f5f7fa;
+    color: #c0c4cc;
+    cursor: not-allowed;
+}
+
+.ru-audit-device-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    white-space: nowrap;
+}
+
+.ru-audit-device-status::before {
+    content: '';
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #909399;
+}
+
+.ru-audit-device-status.is-online::before { background: #67c23a; }
+.ru-audit-device-status.is-fault::before { background: #f56c6c; }
+.ru-audit-device-status.is-disabled::before { background: #c0c4cc; }
+
+.ru-audit-risk {
+    display: flex;
+    align-items: flex-start;
+    gap: 9px;
+    margin-top: 12px;
+    padding: 10px 12px;
+    border: 0;
+    border-radius: 6px;
+    background: #fff7e6;
+    color: #b88230;
+}
+
+.ru-audit-risk > svg {
+    flex: 0 0 auto;
+    margin-top: 1px;
+}
+
+.ru-audit-risk h4 {
+    margin: 0 0 3px;
+    color: #9a6b20;
+    font-size: 13px;
+}
+
+.ru-audit-risk ul {
+    margin: 0;
+    padding-left: 18px;
+    font-size: 12px;
+    line-height: 1.55;
+}
+
+.ru-audit-decision-options {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+    margin-top: 12px;
+}
+
+.ru-audit-decision {
+    margin-top: 20px;
+    padding-top: 18px;
+    border-top: 1px solid #e4e7ed;
+}
+
+.ru-audit-option {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    min-width: 0;
+    padding: 11px 13px;
+    border: 1px solid #dcdfe6;
+    border-radius: 7px;
+    background: #fff;
+    color: #606266;
+    font-family: inherit;
+    text-align: left;
+    cursor: pointer;
+    transition: border-color 180ms ease, background-color 180ms ease, color 180ms ease;
+}
+
+.ru-audit-option:hover {
+    border-color: #a0cfff;
+}
+
+.ru-audit-option span {
+    min-width: 0;
+}
+
+.ru-audit-option strong,
+.ru-audit-option small {
+    display: block;
+}
+
+.ru-audit-option strong {
+    margin-bottom: 4px;
+    color: #303133;
+    font-size: 13px;
+}
+
+.ru-audit-option small {
+    color: #909399;
+    font-size: 11px;
+    line-height: 1.45;
+}
+
+.ru-audit-option--approve.is-active {
+    border-color: #409eff;
+    background: #ecf5ff;
+    color: #409eff;
+    box-shadow: none;
+}
+
+.ru-audit-option--reject.is-active {
+    border-color: #f56c6c;
+    background: #fef0f0;
+    color: #f56c6c;
+    box-shadow: none;
+}
+
+.ru-audit-remark {
+    margin-top: 14px;
+}
+
+.ru-audit-remark-wrap {
+    width: 100%;
+}
+
+.ru-audit-remark .ru-audit-remark-textarea {
+    width: 100%;
+    min-height: 88px;
+    max-height: 88px;
+    padding-bottom: 26px;
+    box-sizing: border-box;
+    resize: none;
+}
+
+.ru-audit-remark .pcp-form-textarea.is-error {
+    border-color: #f56c6c;
+}
+
+.ru-audit-confirm {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    margin-top: 10px;
+    padding: 8px 10px;
+    border-radius: 5px;
+    background: #f5f7fa;
+    color: #606266;
+    font-size: 12px;
+    line-height: 1.55;
+    cursor: pointer;
+}
+
+.ru-audit-confirm input {
+    width: 15px;
+    height: 15px;
+    margin: 2px 0 0;
+    accent-color: #409eff;
+}
+
+.ru-audit-error {
+    margin: 8px 0 0;
+    color: #f56c6c;
+    font-size: 12px;
+}
+
+.ru-audit-foot {
+    justify-content: space-between;
+}
+
+.ru-audit-foot > span {
+    color: #909399;
+    font-size: 12px;
+}
+
+.ru-audit-foot > div {
+    display: flex;
+    gap: 10px;
+}
+
+.ru-audit-reject-btn {
+    border-color: #f56c6c;
+    background: #f56c6c;
+    color: #fff;
+}
+
+.ru-audit-reject-btn:hover {
+    border-color: #f78989;
+    background: #f78989;
+}
+
+.ru-audit-history-panel {
+    margin-bottom: 16px;
+    flex: none !important;
+}
+
+.ru-audit-history-panel .pm-section-head > div p {
+    margin: 4px 0 0;
+    color: #909399;
+    font-size: 12px;
+}
+
+.ru-audit-history-toggle {
+    margin-left: auto;
+    flex: 0 0 auto;
+}
+
+.ru-audit-history-table-wrap {
+    max-height: 300px;
+    overflow: auto;
+    border-top: 1px solid #ebeef5;
+}
+
+.ru-audit-history-table-wrap .pm-table thead th {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    background: #fafafa;
+}
+
+.ru-pending-audit-panel {
+    flex: 1 !important;
+    min-height: 0;
+    margin-bottom: 0;
+}
+
+.ru-detail-view-tabs {
+    display: flex;
+    align-items: flex-end;
+    gap: 28px;
+    height: 52px;
+    padding: 0 20px;
+    border: 1px solid #e4e7ed;
+    border-bottom: 0;
+    border-radius: 8px 8px 0 0;
+    background: #fff;
+}
+
+.ru-detail-view-tabs button {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    height: 52px;
+    padding: 0 2px;
+    border: 0;
+    background: transparent;
+    color: #606266;
+    font-family: inherit;
+    font-size: 14px;
+    cursor: pointer;
+    transition: color 180ms ease;
+}
+
+.ru-detail-view-tabs button:hover,
+.ru-detail-view-tabs button.is-active {
+    color: #409eff;
+}
+
+.ru-detail-view-tabs button.is-active {
+    font-weight: 600;
+}
+
+.ru-detail-view-tabs button.is-active::after {
+    content: '';
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    height: 2px;
+    border-radius: 2px 2px 0 0;
+    background: #409eff;
+}
+
+.ru-detail-view-tabs button > span {
+    min-width: 18px;
+    padding: 1px 5px;
+    border-radius: 9px;
+    background: #f0f2f5;
+    color: #909399;
+    font-size: 11px;
+    font-weight: 500;
+    text-align: center;
+}
+
+.ru-detail-view-tabs + .panel {
+    border-radius: 0 0 8px 8px;
+}
+
+.ru-detail-tab-empty {
+    min-height: 180px;
+    padding: 70px 20px;
+    box-sizing: border-box;
+    color: #909399;
+    text-align: center;
+}
+
+.ru-detail-view-tabs + .ru-pending-audit-panel,
+.ru-detail-view-tabs + .ru-task-batch-panel {
+    margin-top: 0;
+}
+
+.ru-approval-workbench__head {
+    align-items: center;
+}
+
+.ru-workspace-shell {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    min-width: 0;
+    min-height: 0;
+    gap: 12px;
+    overflow: visible;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+}
+
+.ru-workspace-detail {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    min-width: 0;
+    min-height: 0;
+}
+
+.ru-workspace-detail > .ru-task-detail-view {
+    flex: 1;
+    padding: 0;
+}
+
+.ru-workspace-tabs {
+    display: flex;
+    align-items: center;
+    gap: 26px;
+    height: 50px;
+    padding: 0 20px;
+    border: 1px solid #e4e7ed;
+    border-bottom: 1px solid #e4e7ed;
+    border-radius: 6px;
+    background: #fff;
+}
+
+.ru-workspace-tabs button {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    height: 50px;
+    padding: 0 2px;
+    border: 0;
+    background: transparent;
+    color: #606266;
+    font-family: inherit;
+    font-size: 14px;
+    cursor: pointer;
+    transition: color 180ms ease;
+}
+
+.ru-workspace-tabs button:focus-visible {
+    outline: 2px solid #409eff;
+    outline-offset: -2px;
+    border-radius: 3px;
+}
+
+.ru-workspace-tabs button:hover,
+.ru-workspace-tabs button.is-active {
+    color: #409eff;
+}
+
+.ru-workspace-tabs button.is-active {
+    font-weight: 600;
+}
+
+.ru-workspace-tabs button.is-active::after {
+    content: '';
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    height: 2px;
+    background: #409eff;
+}
+
+.ru-workspace-tabs button > span {
+    padding: 1px 6px;
+    border-radius: 9px;
+    background: #f0f2f5;
+    color: #73767a;
+    font-size: 11px;
+}
+
+.ru-workspace-tabs button > em {
+    padding: 2px 7px;
+    border-radius: 9px;
+    background: #fdf6ec;
+    color: #e6a23c;
+    font-size: 11px;
+    font-style: normal;
+}
+
+.ru-workspace-shell > .panel {
+    margin: 0;
+    border: 1px solid #e4e7ed;
+    border-radius: 6px;
+    box-shadow: none;
+}
+
+
+.ru-workspace-shell > .ru-approval-workbench .pm-section-head,
+.ru-workspace-shell > .pm-list-panel .pm-section-head {
+    border-top: 0;
+}
+
+.ru-approval-workbench__head > div:first-child p {
+    margin: 4px 0 0;
+    color: #909399;
+    font-size: 12px;
+}
+
+.ru-approval-summary {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-left: auto;
+}
+
+.ru-approval-summary > span {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 7px 10px;
+    border-radius: 6px;
+    background: #f5f7fa;
+    color: #606266;
+    font-size: 12px;
+}
+
+.ru-approval-summary > span:first-child {
+    background: #fdf6ec;
+    color: #b88230;
+}
+
+.ru-approval-summary strong {
+    font-size: 14px;
+}
+
+.ru-approval-state {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 12px;
+    font-weight: 500;
+    white-space: nowrap;
+}
+
+.ru-approval-state.is-pending {
+    color: #e6a23c;
+}
+
+.ru-approval-state.is-approved {
+    color: #67c23a;
+}
+
+.ru-approval-state.is-rejected {
+    color: #f56c6c;
+}
+
+@media (max-width: 900px) {
+    .ru-approval-workbench__head {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .ru-approval-summary {
+        margin-left: 0;
+    }
+}
+
+.ru-pending-audit-panel .pm-section-head > div p {
+    margin: 4px 0 0;
+    color: #909399;
+    font-size: 12px;
+}
+
+.ru-upgrade-task-audit-info strong,
+.ru-upgrade-task-audit-info span {
+    display: block;
+    white-space: nowrap;
+}
+
+.ru-upgrade-task-audit-info strong {
+    color: #606266;
+    font-size: 12px;
+    font-weight: 500;
+}
+
+.ru-upgrade-task-audit-info span {
+    margin-top: 3px;
+    color: #909399;
+    font-size: 11px;
+}
+
+.ru-pending-audit-table-wrap {
+    max-height: 300px;
+    overflow: auto;
+}
+
+.ru-pending-audit-table-wrap .pm-table thead th {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    background: #fafafa;
+}
+
+.ru-audit-result {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 12px;
+    font-weight: 500;
+    white-space: nowrap;
+}
+
+.ru-audit-result.is-approved {
+    color: #67c23a;
+}
+
+.ru-audit-result.is-rejected {
+    color: #f56c6c;
+}
+
+.ru-audit-record-remark {
+    display: block;
+    max-width: 220px;
+    overflow: hidden;
+    color: #606266;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.ru-audit-record-done {
+    color: #909399;
+    font-size: 12px;
+}
+
+.ru-task-resubmit-notice {
+    margin-bottom: 16px;
+    padding: 12px 14px;
+    border: 1px solid #fbc4c4;
+    border-radius: 6px;
+    background: #fef0f0;
+}
+
+.ru-task-resubmit-notice strong {
+    display: block;
+    margin-bottom: 6px;
+    color: #f56c6c;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.ru-task-resubmit-notice p {
+    margin: 0;
+    color: #606266;
+    font-size: 13px;
+    line-height: 1.6;
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
+@media (max-width: 640px) {
+    .ru-audit-summary-grid,
+    .ru-audit-impact,
+    .ru-audit-decision-options {
+        grid-template-columns: 1fr;
+    }
+
+    .ru-audit-foot {
+        align-items: flex-end;
+    }
+
+    .ru-audit-foot > span {
+        max-width: 42%;
+    }
+
+    .ru-audit-impact {
+        grid-template-columns: 1fr;
+    }
+
+    .ru-audit-impact-card {
+        border-right: 0;
+        border-bottom: 1px solid #e4e7ed;
+    }
+
+    .ru-audit-impact-card:last-child {
+        border-bottom: 0;
+    }
+}
+
+@media (min-width: 641px) and (max-width: 760px) {
+    .ru-audit-summary-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
 .ru-textarea-wrap {
     position: relative;
 }
@@ -340,6 +1200,28 @@
     color: var(--blue);
 }
 
+/* 任务详情复用平台详情页结构，覆盖早期独立卡片样式 */
+.ru-task-detail-view {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    flex: 1;
+    min-height: 0;
+    padding: 0;
+    background: transparent;
+}
+
+.ru-task-detail-page-head {
+    margin: 0;
+    padding: 0;
+}
+
+.ru-task-detail-page-head p {
+    margin: 3px 0 0;
+    color: var(--text-muted);
+    font-size: 12px;
+}
+
 /* ── Detail header card ── */
 
 .ru-task-detail-head {
@@ -347,6 +1229,48 @@
     margin-bottom: 12px;
     border-top: 3px solid var(--blue);
     overflow: hidden;
+}
+
+.ru-task-detail-view .ru-task-detail-head {
+    margin: 0;
+    border-top: 0;
+}
+
+.ru-task-detail-view .ru-detail-header {
+    padding: 16px 20px 0;
+}
+
+.ru-task-detail-view .ru-detail-header__title,
+.ru-task-detail-view .ru-detail-header__icon {
+    display: none;
+}
+
+.ru-task-detail-view .ru-detail-desc {
+    margin: 14px 20px 0;
+}
+
+.ru-task-detail-view .ru-detail-stats {
+    margin-top: 14px;
+}
+
+.ru-task-detail-view .ru-detail-stat {
+    padding: 14px 20px;
+}
+
+.ru-task-detail-view .ru-detail-stat__data strong {
+    font-size: 18px;
+}
+
+.ru-task-detail-view > .ru-detail-view-tabs {
+    margin-bottom: -12px;
+    border-radius: 8px 8px 0 0;
+}
+
+.ru-task-detail-view > .ru-detail-view-tabs + .panel {
+    flex: 1;
+    min-height: 0;
+    margin-bottom: 0;
+    border-radius: 0 0 8px 8px;
 }
 
 .ru-detail-header {
@@ -515,6 +1439,8 @@
 /* ── Batch list ── */
 
 .ru-task-batch-panel {
+    flex: 1;
+    min-height: 0;
     margin-bottom: 0;
 }
 
@@ -574,7 +1500,7 @@
 }
 
 .ru-device-detail-drawer {
-    width: min(900px, 100vw);
+    width: min(1200px, 100vw);
     max-width: 100vw;
     overflow: hidden;
 }

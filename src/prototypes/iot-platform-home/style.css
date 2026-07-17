@@ -523,6 +523,32 @@
     line-height: 1;
 }
 
+.crumb-link {
+    background: none;
+    border: none;
+    padding: 0;
+    margin: 0;
+    font: inherit;
+    color: var(--text-muted);
+    cursor: pointer;
+    text-decoration: none;
+    transition: color 0.15s;
+}
+
+.crumb-link:hover {
+    color: #1677ff;
+    text-decoration: underline;
+}
+
+.crumb-current {
+    color: var(--text-primary);
+}
+
+.crumb-sep {
+    color: var(--text-muted);
+    opacity: 0.5;
+}
+
 /* ── Dashboard grid (24-col) ── */
 .dashboard {
     display: grid;

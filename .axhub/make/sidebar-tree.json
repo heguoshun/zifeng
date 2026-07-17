@@ -1,13 +1,7 @@
 {
   "version": 1,
-  "updatedAt": "2026-07-09T00:40:46.076Z",
+  "updatedAt": "2026-07-17T06:36:59.968Z",
   "prototypes": [
-    {
-      "id": "item-prototypes-device-mgmt-app",
-      "kind": "item",
-      "title": "device mgmt app",
-      "itemKey": "prototypes/device-mgmt-app"
-    },
     {
       "id": "item:prototypes:iot-platform-home",
       "kind": "item",

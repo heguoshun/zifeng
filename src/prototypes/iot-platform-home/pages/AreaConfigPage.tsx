@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Link2, Pencil, Plus, Search, Trash2, Unlink, Upload } from 'lucide-react';
 import AppShell from '../components/AppShell';
+import Breadcrumb from '../components/Breadcrumb';
 import LargeMeterSidebar, { type LargeMeterPageId } from '../components/LargeMeterSidebar';
 import AreaConfigTree from '../components/AreaConfigTree';
 import AreaFormDialog, { type AreaFormValue } from '../components/AreaFormDialog';
@@ -148,6 +149,20 @@ function matchesInstallTimeRange(installTime: string | undefined, start: string,
     if (start && date < start) return false;
     if (end && date > end) return false;
     return true;
+}
+
+function getAreaDescendantIds(areas: LargeMeterArea[], areaId: string): string[] {
+    const descendants: string[] = [];
+    const collect = (parentId: string) => {
+        areas
+            .filter((area) => area.parentId === parentId)
+            .forEach((area) => {
+                descendants.push(area.id);
+                collect(area.id);
+            });
+    };
+    collect(areaId);
+    return descendants;
 }
 
 export default function AreaConfigPage({
@@ -299,9 +314,14 @@ export default function AreaConfigPage({
         ? areas.find((a) => a.id === selectedArea.parentId)?.name ?? '—'
         : '无（顶级片区）';
 
-    const parentOptions = areas
-        .filter((a) => a.id !== editingArea?.id)
-        .map((a) => ({ label: a.name, value: a.id }));
+    const parentOptions = useMemo(() => {
+        const excludedIds = editingArea
+            ? new Set([editingArea.id, ...getAreaDescendantIds(areas, editingArea.id)])
+            : new Set<string>();
+        return areas
+            .filter((area) => !excludedIds.has(area.id))
+            .map((area) => ({ label: area.name, value: area.id }));
+    }, [areas, editingArea]);
 
     const directDeviceCount = selectedArea ? countDirectDevicesInArea(devices, selectedArea.id, products) : 0;
     const totalDeviceCount = selectedArea ? countDevicesInLargeMeterArea(devices, areas, selectedArea.id, products) : 0;
@@ -390,9 +410,22 @@ export default function AreaConfigPage({
         }
 
         if (dialogMode === 'edit' && editingArea) {
+            const nextParentId = value.parentId || null;
+            const movedToNewParent = nextParentId !== editingArea.parentId;
+            const siblings = areas.filter((a) => a.parentId === nextParentId && a.id !== editingArea.id);
             onUpdateAreas((prev) => prev.map((a) => (
-                a.id === editingArea.id ? { ...a, name: trimmed } : a
+                a.id === editingArea.id
+                    ? {
+                        ...a,
+                        name: trimmed,
+                        parentId: nextParentId,
+                        sort: movedToNewParent ? siblings.length + 1 : a.sort,
+                    }
+                    : a
             )));
+            if (nextParentId) {
+                setExpanded((prev) => ({ ...prev, [nextParentId]: true }));
+            }
             showToast(`已更新「${trimmed}」`, 'success');
         } else if (dialogMode === 'add') {
             const parentId = dialogParentId || value.parentId || null;
@@ -419,6 +452,7 @@ export default function AreaConfigPage({
 
     const handleBindDevices = (deviceIds: string[]) => {
         if (!deviceIds.length || !selectedArea) return;
+        const selectedDevices = devices.filter((device) => deviceIds.includes(device.id) && isLargeMeterDevice(device, products));
         const archiveAdditions = devices
             .filter((device) => deviceIds.includes(device.id) && isLargeMeterDevice(device, products))
             .flatMap((device) => createArchiveRecordsFromDeviceChange(
@@ -431,6 +465,14 @@ export default function AreaConfigPage({
                 ? { ...device, largeMeterAreaId: selectedArea.id }
                 : device
         )));
+        onUpdateLargeMeters((previous) => previous.map((meter) => {
+            const linkedDevice = selectedDevices.find((device) => (
+                device.code === meter.code || (device.userNo && device.userNo === meter.userNo)
+            ));
+            return linkedDevice
+                ? { ...meter, code: linkedDevice.code, areaId: selectedArea.id }
+                : meter;
+        }));
         if (archiveAdditions.length) {
             onUpdateArchiveRecords((previous) => [...archiveAdditions, ...previous]);
         }
@@ -472,6 +514,7 @@ export default function AreaConfigPage({
             (currentDevice.userNo ? meter.userNo === currentDevice.userNo : false) || meter.code === currentDevice.code
                 ? {
                     ...meter,
+                    code: currentDevice.code,
                     areaId: selectedArea.id,
                     name: value.name,
                     userName: value.userName,
@@ -512,7 +555,22 @@ export default function AreaConfigPage({
                 : device
         )));
         onUpdateLargeMeters((previous) => previous.map((meter) => (
-            meter.userNo === unbindTarget.userNo ? { ...meter, areaId: '' } : meter
+            (meter.code === unbindTarget.code || (unbindTarget.userNo && meter.userNo === unbindTarget.userNo))
+                ? {
+                    ...meter,
+                    areaId: '',
+                    userName: '',
+                    userNo: '',
+                    bodyNo: '',
+                    installTime: '',
+                    installAddress: '',
+                    manufacturer: '',
+                    remoteManufacturer: '',
+                    deviceFunction: '',
+                    caliber: '',
+                    communicationNo: '',
+                }
+                : meter
         )));
         showToast(`已解绑「${unbindTarget.name}」`, 'success');
         setUnbindTarget(null);
@@ -523,7 +581,6 @@ export default function AreaConfigPage({
         : dialogParentId
             ? { name: '', parentId: dialogParentId }
             : undefined;
-    const dialogAreaId = dialogMode === 'edit' ? editingArea?.id ?? '' : pendingAreaId;
 
     const sidebar = <LargeMeterSidebar pageId="area-config" onNavigate={onNavigate} />;
 
@@ -540,7 +597,10 @@ export default function AreaConfigPage({
             }}
         >
             <div className="pm-page lac-page">
-                <div className="crumb">大表中心 / 区域配置</div>
+                <Breadcrumb items={[
+                                    { label: '大表中心', pageId: 'data-monitor' },
+                                    { label: '区域配置' },
+                                ]} onNavigate={(id) => onNavigate(id as LargeMeterPageId)} />
 
                 <div className="lac-layout">
                     <aside className="panel lac-tree-panel">
@@ -860,7 +920,6 @@ export default function AreaConfigPage({
             <AreaFormDialog
                 open={dialogMode !== null}
                 mode={dialogMode === 'edit' ? 'edit' : 'add'}
-                areaId={dialogAreaId}
                 parentOptions={parentOptions}
                 initialValue={dialogInitialValue}
                 onClose={() => {

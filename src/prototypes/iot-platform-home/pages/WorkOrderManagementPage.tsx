@@ -2,12 +2,14 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { ChevronDown, ChevronUp, Plus, Search } from 'lucide-react';
 import { handleSelectableRowClick } from '../../../common/selectableRow';
 import AppShell from '../components/AppShell';
+import Breadcrumb from '../components/Breadcrumb';
 import AlarmWorkOrderSidebar, { type AlarmWorkOrderPageId } from '../components/AlarmWorkOrderSidebar';
 import ElSelect from '../components/ElSelect';
 import ElDateRangePicker from '../components/ElDateRangePicker';
 import ListPagination from '../components/ListPagination';
 import WorkOrderCreateDrawer from '../components/WorkOrderCreateDrawer';
 import WorkOrderDetailDrawer from '../components/WorkOrderDetailDrawer';
+import WorkOrderOverdueBadge from '../components/WorkOrderOverdueBadge';
 import WorkOrderProcessDrawer from '../components/WorkOrderProcessDrawer';
 import WorkOrderAcceptDialog, { type WorkOrderAcceptPayload } from '../components/WorkOrderAcceptDialog';
 import BatchWorkOrderAcceptDialog from '../components/BatchWorkOrderAcceptDialog';
@@ -29,6 +31,7 @@ import {
     type WorkOrderReadStatus,
     type WorkOrderStatus,
 } from '../data/workOrders';
+import type { AlarmLevelRecord } from '../data/alarmLevels';
 import '../device-access.css';
 import '../product-management.css';
 import '../work-order-management.css';
@@ -103,6 +106,7 @@ type WorkOrderManagementPageProps = {
     workOrders: WorkOrderRecord[];
     products: ProductRecord[];
     devices: DeviceRecord[];
+    alarmLevels?: AlarmLevelRecord[];
     createDrawerOpen?: boolean;
     onCreateDrawerOpenChange?: (open: boolean) => void;
     detailDrawerOpen?: boolean;
@@ -121,6 +125,7 @@ export default function WorkOrderManagementPage({
     workOrders,
     products,
     devices,
+    alarmLevels,
     createDrawerOpen = false,
     onCreateDrawerOpenChange,
     detailDrawerOpen = false,
@@ -418,7 +423,10 @@ export default function WorkOrderManagementPage({
             }}
         >
             <div className="pm-page wom-page">
-                <div className="crumb">告警工单 / 工单管理</div>
+                <Breadcrumb items={[
+                                    { label: '告警工单', pageId: 'awo-device-alarm-info' },
+                                    { label: '工单管理' },
+                                ]} onNavigate={(id) => onNavigate(id as AlarmWorkOrderPageId)} />
 
                 <section className="panel pm-filter-panel">
                     <div className="wom-filter-row">
@@ -604,10 +612,11 @@ export default function WorkOrderManagementPage({
                                     <th>工单等级</th>
                                     <th>工单类型</th>
                                     <th>工单状态</th>
+                                    <th>超期状态</th>
                                     <th>生成时间</th>
                                     <th>阅读状态</th>
                                     <th>工单内容</th>
-                                    <th>所属区域</th>
+                                    <th>所属片区</th>
                                     <th>结单时间</th>
                                     <th>操作</th>
                                 </tr>
@@ -640,6 +649,7 @@ export default function WorkOrderManagementPage({
                                         <td>{item.level}</td>
                                         <td>{item.type}</td>
                                         <td><WorkOrderStatusCell status={item.status} /></td>
+                                        <td><WorkOrderOverdueBadge workOrder={item} /></td>
                                         <td>{item.createdAt}</td>
                                         <td><ReadStatusCell status={item.readStatus} /></td>
                                         <td className="wom-content-cell" title={item.content}>{item.content}</td>
@@ -680,6 +690,7 @@ export default function WorkOrderManagementPage({
                 open={createDrawerVisible}
                 products={products}
                 devices={devices}
+                alarmLevels={alarmLevels}
                 onClose={closeCreateDrawer}
                 onSubmit={(workOrder) => {
                     onCreateWorkOrder(workOrder);

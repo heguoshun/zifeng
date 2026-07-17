@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Plus, Search } from 'lucide-react';
 import AppShell from '../components/AppShell';
+import Breadcrumb from '../components/Breadcrumb';
 import MessageCenterSidebar, { type MessageCenterPageId } from '../components/MessageCenterSidebar';
 import ElSelect from '../components/ElSelect';
 import ListPagination from '../components/ListPagination';
@@ -210,7 +211,10 @@ export default function PushSourceConfigPage({
             }}
         >
             <div className="pm-page psc-page">
-                <div className="crumb">消息中心 / 推送源配置</div>
+                <Breadcrumb items={[
+                                    { label: '消息中心', pageId: 'msg-subscribe' },
+                                    { label: '推送源配置' },
+                                ]} onNavigate={(id) => onNavigate(id as MessageCenterPageId)} />
 
                 <section className="panel pm-filter-panel">
                     <div className="pm-filter-row">

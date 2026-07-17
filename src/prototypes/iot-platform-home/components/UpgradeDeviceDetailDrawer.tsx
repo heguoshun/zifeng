@@ -20,6 +20,7 @@ type UpgradeDeviceDetailDrawerProps = {
     open: boolean;
     batch: UpgradeTaskBatchRecord | null;
     deviceDetails: UpgradeDeviceDetailRecord[];
+    cancelled?: boolean;
     onClose: () => void;
 };
 
@@ -27,6 +28,7 @@ export default function UpgradeDeviceDetailDrawer({
     open,
     batch,
     deviceDetails,
+    cancelled = false,
     onClose,
 }: UpgradeDeviceDetailDrawerProps) {
     const [statusFilter, setStatusFilter] = useState('all');
@@ -61,8 +63,8 @@ export default function UpgradeDeviceDetailDrawer({
         if (!batch) return [];
         const stored = deviceDetails.filter((item) => item.batchId === batch.id);
         if (stored.length) return stored;
-        return createMockDeviceDetailsForBatch(batch, Math.max(batch.deviceCount, 10));
-    }, [batch, deviceDetails]);
+        return createMockDeviceDetailsForBatch(batch, Math.max(batch.deviceCount, 10), { cancelled });
+    }, [batch, deviceDetails, cancelled]);
 
     const filteredDevices = useMemo(() => {
         const normalized = keyword.trim().toLowerCase();
@@ -158,7 +160,6 @@ export default function UpgradeDeviceDetailDrawer({
                                     <th>序号</th>
                                     <th>设备名称</th>
                                     <th>设备编号</th>
-                                    <th>升级方式</th>
                                     <th>升级状态</th>
                                     <th>更新时间</th>
                                 </tr>
@@ -169,14 +170,13 @@ export default function UpgradeDeviceDetailDrawer({
                                         <td>{(pagination.currentPage - 1) * Number(pageSize) + index + 1}</td>
                                         <td>{record.deviceName}</td>
                                         <td>{record.deviceCode}</td>
-                                        <td>{record.scheduleType}</td>
                                         <td>{record.status}</td>
                                         <td>{record.updatedAt}</td>
                                     </tr>
                                 ))}
                                 {!pagination.items.length && (
                                     <tr>
-                                        <td colSpan={6} className="pc-empty-cell">暂无设备升级记录</td>
+                                        <td colSpan={5} className="pc-empty-cell">暂无设备升级记录</td>
                                     </tr>
                                 )}
                             </tbody>

@@ -7,39 +7,6 @@
   "resources": {
     "prototypes": [
       {
-        "id": "device-mgmt-app",
-        "name": "device-mgmt-app",
-        "title": "设备管理 App",
-        "clientUrl": "/prototypes/device-mgmt-app",
-        "previewMode": "clientRuntime",
-        "description": "",
-        "updatedAt": "2026-05-03T00:00:00.000Z",
-        "filePath": "src/prototypes/device-mgmt-app/index.tsx",
-        "pages": [
-          {
-            "id": "home",
-            "title": "首页"
-          },
-          {
-            "id": "devices",
-            "title": "设备"
-          },
-          {
-            "id": "alarms",
-            "title": "告警"
-          },
-          {
-            "id": "workorders",
-            "title": "工单"
-          },
-          {
-            "id": "profile",
-            "title": "我的"
-          }
-        ],
-        "defaultPageId": "login"
-      },
-      {
         "id": "iot-platform-home",
         "name": "iot-platform-home",
         "title": "紫峰装备智慧化管理平台",
@@ -48,16 +15,6 @@
         "description": "",
         "updatedAt": "2026-05-03T00:00:00.000Z",
         "filePath": "src/prototypes/iot-platform-home/index.tsx"
-      }
-    ],
-    "docs": [
-      {
-        "id": "device-mgmt-app-requirements",
-        "name": "device-mgmt-app-requirements",
-        "title": "设备管理 App · 需求探索结论",
-        "path": "src/resources/device-mgmt-app-requirements.md",
-        "description": "",
-        "updatedAt": "2026-05-03T00:00:00.000Z"
       }
     ],
     "themes": [
@@ -1323,11 +1280,7 @@
   },
   "navigation": {
     "prototypes": [
-      "device-mgmt-app",
       "iot-platform-home"
-    ],
-    "docs": [
-      "device-mgmt-app-requirements"
     ]
   },
   "orders": {
@@ -1453,19 +1406,11 @@
     "figmaExport": true,
     "axureExport": true,
     "localExports": {
-      "html": false,
+      "html": true,
       "make": false
     }
   },
   "resourceWriteTargets": {
-    "prototypes": {
-      "type": "project-relative-path",
-      "path": "src/prototypes"
-    },
-    "docs": {
-      "type": "project-relative-path",
-      "path": "src/resources"
-    },
     "themes": {
       "type": "project-relative-path",
       "path": "src/themes"
@@ -1473,6 +1418,10 @@
     "media": {
       "type": "project-relative-path",
       "path": "src/resources/assets"
+    },
+    "prototypes": {
+      "type": "project-relative-path",
+      "path": "src/prototypes"
     }
   }
 }

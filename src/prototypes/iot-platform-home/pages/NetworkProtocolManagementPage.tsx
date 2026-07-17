@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Search } from 'lucide-react';
 import AppShell from '../components/AppShell';
+import Breadcrumb from '../components/Breadcrumb';
 import DeviceAccessSidebar, { type DeviceAccessPageId } from '../components/DeviceAccessSidebar';
 import ListPagination from '../components/ListPagination';
 import { ConfirmDialog } from '../components/IotDialogs';
@@ -122,7 +123,11 @@ export default function NetworkProtocolManagementPage({
             }}
         >
             <div className="pm-page np-page">
-                <div className="crumb">设备接入 / 设备运维 / 网络协议</div>
+                <Breadcrumb items={[
+                                    { label: '设备接入', pageId: 'home' },
+                                    { label: '网络协议', pageId: 'network-protocol' },
+                                    { label: '网络协议' },
+                                ]} onNavigate={(id) => onNavigate(id as DeviceAccessPageId)} />
 
                 <section className="panel pm-filter-panel">
                     <div className="pm-filter-row">

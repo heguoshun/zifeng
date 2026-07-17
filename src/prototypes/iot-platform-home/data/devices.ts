@@ -176,14 +176,20 @@ function buildDeviceName(product: ProductRecord, location: string, seq: number) 
     return `${product.category}-${location}-${String(seq).padStart(3, '0')}`;
 }
 
+const DEVICE_CODE_COUNTERS: Record<string, number> = {};
+
 function resolveDeviceCodePrefix(categoryId: string): string {
     if (categoryId.startsWith('dabiao')) return 'DB';
     return DEVICE_CODE_PREFIX[categoryId] ?? 'DEV';
 }
 
-function buildDeviceCode(product: ProductRecord, seq: number) {
+function buildDeviceCode(product: ProductRecord): string {
     const prefix = resolveDeviceCodePrefix(product.categoryId);
-    return `${prefix}${String(seq).padStart(6, '0')}`;
+    if (!DEVICE_CODE_COUNTERS[prefix]) {
+        DEVICE_CODE_COUNTERS[prefix] = 0;
+    }
+    DEVICE_CODE_COUNTERS[prefix] += 1;
+    return `${prefix}${String(DEVICE_CODE_COUNTERS[prefix]).padStart(6, '0')}`;
 }
 
 const ONE_MONTH_MS = 30 * 24 * 60 * 60 * 1000;
@@ -274,26 +280,27 @@ export function deviceRecordToFormState(device: DeviceRecord) {
 export function createInitialDevices(products: ProductRecord[], now = new Date()): DeviceRecord[] {
     if (!products.length) return [];
 
-    const typeCounters: Record<string, number> = {};
-
     const assignableProducts = products.filter((product) => product.nodeType !== '网关子设备');
     if (!assignableProducts.length) return [];
 
+    // Reset global device code counters before generating devices
+    Object.keys(DEVICE_CODE_COUNTERS).forEach((key) => {
+        DEVICE_CODE_COUNTERS[key] = 0;
+    });
+
     const baseDevices = Array.from({ length: MOCK_DEVICE_TOTAL }, (_, index) => {
         const product = assignableProducts[index % assignableProducts.length];
-        const seq = (typeCounters[product.categoryId] ?? 0) + 1;
-        typeCounters[product.categoryId] = seq;
-
         const location = LOCATIONS[index % LOCATIONS.length];
         const tags = buildDeviceTags(product, index);
         const groups = buildDeviceGroups(tags);
         const { longitude, latitude } = buildDeviceCoordinates(index);
         const enabled = index % 13 !== 6;
         const enabledAtDate = buildDeviceEnabledAt(index, now);
+        const seq = index + 1;
 
         return {
             id: String(index + 1),
-            code: buildDeviceCode(product, seq),
+            code: buildDeviceCode(product),
             name: buildDeviceName(product, location, seq),
             productId: product.id,
             status: STATUSES[index % STATUSES.length] ?? 'online',
@@ -364,12 +371,18 @@ function createGatewaySubDevices(
             const tags = buildDeviceTags(product, slot);
             const groups = buildDeviceGroups(tags);
             const prefix = product.categoryId.startsWith('dabiao') ? 'DBS' : (SUB_DEVICE_CODE_PREFIX[product.categoryId] ?? 'SUB');
-            const seq = gatewayIndex * subProducts.length + productIndex + 1;
+            
+            // Use global counter for sub-device codes to ensure uniqueness
+            if (!DEVICE_CODE_COUNTERS[prefix]) {
+                DEVICE_CODE_COUNTERS[prefix] = 0;
+            }
+            DEVICE_CODE_COUNTERS[prefix] += 1;
+            const uniqueSeq = DEVICE_CODE_COUNTERS[prefix];
 
             subDevices.push({
                 id: `demo-sub-${String(subIndex).padStart(3, '0')}`,
                 gatewayId: gateway.id,
-                code: `${prefix}${String(seq).padStart(4, '0')}`,
+                code: `${prefix}${String(uniqueSeq).padStart(4, '0')}`,
                 name: `${gateway.name}-子设备-${product.category}${String(productIndex + 1).padStart(2, '0')}`,
                 productId: product.id,
                 status: SUB_DEVICE_STATUSES[slot % SUB_DEVICE_STATUSES.length] ?? 'online',
@@ -583,9 +596,20 @@ export function findPlatformDeviceForLargeMeter(
 export function syncLargeMeterDeviceCodes(
     meters: LargeMeterDevice[],
     devices: DeviceRecord[],
+    products: ProductRecord[] = [],
 ): LargeMeterDevice[] {
+    const usedCodes = new Set(meters.filter((meter) => !meter.id.startsWith('meter-unassigned-')).map((meter) => meter.code));
+    const unboundLargeMeterDevices = devices.filter((device) => (
+        isLargeMeterDevice(device, products) && !device.largeMeterAreaId && !usedCodes.has(device.code)
+    ));
+    let unassignedIndex = 0;
     return meters.map((meter) => {
         const linked = findPlatformDeviceForLargeMeter(meter, devices);
+        if (!linked && meter.id.startsWith('meter-unassigned-')) {
+            const unbound = unboundLargeMeterDevices[unassignedIndex];
+            unassignedIndex += 1;
+            return unbound ? { ...meter, code: unbound.code } : meter;
+        }
         if (!linked) return meter;
         return {
             ...meter,

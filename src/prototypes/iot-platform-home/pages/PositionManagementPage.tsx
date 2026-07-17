@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Download, Plus, Search } from 'lucide-react';
 import AppShell from '../components/AppShell';
+import Breadcrumb from '../components/Breadcrumb';
 import SystemManagementSidebar, { type SystemManagementPageId } from '../components/SystemManagementSidebar';
 import ListPagination from '../components/ListPagination';
 import PositionFormDrawer, { toPositionFormValue, type PositionFormValue } from '../components/PositionFormDrawer';
@@ -186,7 +187,10 @@ export default function PositionManagementPage({
             }}
         >
             <div className="pos-page">
-                <div className="crumb">系统管理 / 岗位管理</div>
+                <Breadcrumb items={[
+                                    { label: '系统管理', pageId: 'tenant-mgmt' },
+                                    { label: '岗位管理' },
+                                ]} onNavigate={(id) => onNavigate(id as SystemManagementPageId)} />
 
                 <section className="panel pos-filter-panel">
                     <div className="pos-filter-row">

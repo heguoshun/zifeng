@@ -24,6 +24,8 @@ export type UpgradePackageTarget = {
     productId: string;
 };
 
+export type UpgradeTaskStatus = '待审核' | '审核驳回' | '待执行' | '执行中' | '已完成' | '部分失败';
+
 export type UpgradeTaskRecord = {
     id: string;
     packageKind: UpgradePackageKind;
@@ -36,8 +38,13 @@ export type UpgradeTaskRecord = {
     scheduledAt: string;
     retryStrategy: string;
     timeout: string;
-    status: '待执行' | '执行中' | '已完成' | '部分失败';
+    status: UpgradeTaskStatus;
     createdAt: string;
+    designatedAuditor?: string; // 指定审核人
+    auditorUserId?: string; // 指定审核人用户 ID，权限判断依据
+    auditor?: string; // 实际审核人
+    auditTime?: string; // 审核时间
+    auditRemark?: string; // 审核备注
 };
 
 export type FirmwarePackageFormValue = {
@@ -113,6 +120,16 @@ export const UPGRADE_DEVICE_SEARCH_FIELD_OPTIONS = [
     { label: '设备编号', value: 'code' },
 ];
 
+export const UPGRADE_TASK_STATUS_OPTIONS = [
+    { label: '全部状态', value: 'all' },
+    { label: '待审核', value: '待审核' },
+    { label: '审核驳回', value: '审核驳回' },
+    { label: '待执行', value: '待执行' },
+    { label: '执行中', value: '执行中' },
+    { label: '已完成', value: '已完成' },
+    { label: '部分失败', value: '部分失败' },
+];
+
 export type PackageUpgradeStats = {
     pending: number;
     upgrading: number;
@@ -134,6 +151,12 @@ export const UPGRADE_TIMEOUT_OPTIONS = [
     { label: '30 分钟', value: '30 分钟' },
     { label: '1 小时', value: '1 小时' },
     { label: '2 小时', value: '2 小时' },
+];
+
+export const CURRENT_USER_OPTIONS = [
+    { label: '陈伟（企业管理员）', value: '管理员-陈伟' },
+    { label: '张工（发起人）', value: '发起者-张工' },
+    { label: '李经理（审核人员）', value: '审核员-李经理' },
 ];
 
 const FIRMWARE_SEEDS: Array<Omit<FirmwarePackageRecord, 'id' | 'productId' | 'createdAt'>> = [
@@ -217,9 +240,31 @@ export function createMockBatchesForPackage(
     }));
 }
 
+export function isApprovedUpgradeTask(task: UpgradeTaskRecord): boolean {
+    return task.status !== '待审核' && task.status !== '审核驳回';
+}
+
+export function isUpgradeScheduleReached(scheduledAt: string, now = Date.now()): boolean {
+    const normalized = scheduledAt.trim();
+    if (!normalized) return false;
+    const scheduled = new Date(normalized.replace(' ', 'T'));
+    if (Number.isNaN(scheduled.getTime())) return false;
+    return now >= scheduled.getTime();
+}
+
+export function resolveBatchStatusFromTask(task: UpgradeTaskRecord, now = Date.now()): UpgradeBatchStatus {
+    if (task.status === '已完成' || task.status === '部分失败') return '已完成';
+    if (task.status === '执行中') return '进行中';
+    if (task.status === '待执行') {
+        return isUpgradeScheduleReached(task.scheduledAt, now) ? '进行中' : '未开始';
+    }
+    return '未开始';
+}
+
 export function upgradeTaskToBatch(
     task: UpgradeTaskRecord,
     versionAfter: string,
+    now = Date.now(),
 ): UpgradeTaskBatchRecord {
     const batchNo = task.id.replace(/\D/g, '').slice(-7).padStart(7, '0');
     return {
@@ -227,37 +272,52 @@ export function upgradeTaskToBatch(
         batchNo: batchNo || String(Date.now()).slice(-7),
         packageKind: task.packageKind,
         packageId: task.packageId,
-        status: task.status === '待执行'
-            ? '未开始'
-            : task.status === '执行中'
-                ? '进行中'
-                : '已完成',
+        status: resolveBatchStatusFromTask(task, now),
         versionBefore: 'V1.0',
         versionAfter: task.targetVersion || versionAfter,
         deviceCount: task.scope === '指定设备' ? Math.max(task.deviceIds.length, 1) : 48,
         scheduleType: task.scheduleType,
-        upgradeTime: task.scheduleType === '定时升级' ? task.scheduledAt : task.createdAt,
+        upgradeTime: task.scheduledAt || task.auditTime || task.createdAt,
     };
 }
 
-const DEVICE_STATUS_CYCLE: UpgradeDeviceStatus[] = [
-    '取消升级', '取消升级', '取消升级', '取消升级',
-    '升级失败', '升级失败',
-    '升级成功', '升级成功', '升级成功', '升级成功',
+const IN_PROGRESS_DEVICE_STATUS_CYCLE: UpgradeDeviceStatus[] = [
+    '待升级', '待升级', '升级中', '升级中', '升级成功', '升级失败',
 ];
+
+const COMPLETED_DEVICE_STATUS_CYCLE: UpgradeDeviceStatus[] = [
+    '升级成功', '升级成功', '升级成功', '升级成功', '升级失败', '升级失败',
+];
+
+export function resolveDeviceStatusForBatch(
+    batch: UpgradeTaskBatchRecord,
+    index: number,
+    cancelled = false,
+): UpgradeDeviceStatus {
+    if (cancelled) return '取消升级';
+    if (batch.status === '未开始') return '待升级';
+    if (batch.status === '已完成') {
+        return COMPLETED_DEVICE_STATUS_CYCLE[index % COMPLETED_DEVICE_STATUS_CYCLE.length];
+    }
+    return IN_PROGRESS_DEVICE_STATUS_CYCLE[index % IN_PROGRESS_DEVICE_STATUS_CYCLE.length];
+}
 
 export function createMockDeviceDetailsForBatch(
     batch: UpgradeTaskBatchRecord,
     count = 10,
+    options?: { cancelled?: boolean },
 ): UpgradeDeviceDetailRecord[] {
+    const cancelled = options?.cancelled ?? false;
     return Array.from({ length: count }, (_, index) => ({
         id: `${batch.id}-device-${index + 1}`,
         batchId: batch.id,
         deviceName: `大表-主管网-${String(index + 1).padStart(2, '0')}`,
         deviceCode: String(23492783399 + index),
         scheduleType: batch.scheduleType,
-        status: DEVICE_STATUS_CYCLE[index % DEVICE_STATUS_CYCLE.length],
-        updatedAt: `2025-07-30 ${String(11 + (index % 8)).padStart(2, '0')}:${String((index * 5) % 60).padStart(2, '0')}:00`,
+        status: resolveDeviceStatusForBatch(batch, index, cancelled),
+        updatedAt: batch.status === '未开始'
+            ? '—'
+            : `2025-07-30 ${String(11 + (index % 8)).padStart(2, '0')}:${String((index * 5) % 60).padStart(2, '0')}:00`,
     }));
 }
 
@@ -277,29 +337,75 @@ export function computePackageUpgradeStats(
     };
 }
 
+function getBatchAuditSortKey(
+    batch: UpgradeTaskBatchRecord,
+    taskById: Map<string, UpgradeTaskRecord>,
+): string {
+    const task = taskById.get(batch.id);
+    if (task?.auditTime) return task.auditTime;
+    if (task) return task.createdAt;
+    return batch.upgradeTime;
+}
+
+/** 按任务审核通过时间先后排序；未审核批次排在已审核批次之后 */
+export function sortBatchesByAuditApproval(
+    batches: UpgradeTaskBatchRecord[],
+    upgradeTasks: UpgradeTaskRecord[],
+): UpgradeTaskBatchRecord[] {
+    const taskById = new Map(upgradeTasks.map((task) => [task.id, task]));
+    return [...batches].sort((left, right) => {
+        const leftTask = taskById.get(left.id);
+        const rightTask = taskById.get(right.id);
+        const leftAudited = Boolean(leftTask?.auditTime);
+        const rightAudited = Boolean(rightTask?.auditTime);
+
+        if (leftAudited && rightAudited) {
+            return leftTask!.auditTime!.localeCompare(rightTask!.auditTime!);
+        }
+        if (leftAudited !== rightAudited) {
+            return leftAudited ? -1 : 1;
+        }
+
+        return getBatchAuditSortKey(left, taskById).localeCompare(
+            getBatchAuditSortKey(right, taskById),
+        );
+    });
+}
+
 export function mergePackageBatches(
     packageId: string,
     packageKind: UpgradePackageKind,
     version: string,
     upgradeTasks: UpgradeTaskRecord[],
     extraBatches: UpgradeTaskBatchRecord[],
+    now = Date.now(),
 ): UpgradeTaskBatchRecord[] {
+    const approvedTasks = upgradeTasks.filter(
+        (item) => item.packageKind === packageKind
+            && item.packageId === packageId
+            && isApprovedUpgradeTask(item),
+    );
     const byId = new Map<string, UpgradeTaskBatchRecord>();
-    createMockBatchesForPackage(packageId, packageKind, version).forEach((item) => {
-        byId.set(item.id, item);
-    });
-    upgradeTasks
-        .filter((item) => item.packageKind === packageKind && item.packageId === packageId)
-        .map((item) => upgradeTaskToBatch(item, version))
-        .forEach((item) => {
+
+    if (!approvedTasks.length) {
+        createMockBatchesForPackage(packageId, packageKind, version).forEach((item) => {
             byId.set(item.id, item);
         });
+    }
+
     extraBatches
         .filter((item) => item.packageId === packageId)
         .forEach((item) => {
             byId.set(item.id, item);
         });
-    return Array.from(byId.values());
+
+    approvedTasks
+        .map((item) => upgradeTaskToBatch(item, version, now))
+        .forEach((item) => {
+            byId.set(item.id, item);
+        });
+
+    return sortBatchesByAuditApproval(Array.from(byId.values()), upgradeTasks);
 }
 
 export function toFirmwarePackageFormValue(record: FirmwarePackageRecord): FirmwarePackageFormValue {
@@ -328,11 +434,23 @@ export const EMPTY_UPGRADE_TASK_FORM: UpgradeTaskFormValue = {
     targetVersion: '',
     scope: '全部设备',
     deviceIds: [],
-    scheduleType: '立即升级',
+    scheduleType: '定时升级',
     scheduledAt: '',
     retryStrategy: '',
     timeout: '',
 };
+
+export function toUpgradeTaskFormValue(task: UpgradeTaskRecord): UpgradeTaskFormValue {
+    return {
+        targetVersion: task.targetVersion,
+        scope: task.scope,
+        deviceIds: [...task.deviceIds],
+        scheduleType: task.scheduleType,
+        scheduledAt: task.scheduledAt,
+        retryStrategy: task.retryStrategy,
+        timeout: task.timeout,
+    };
+}
 
 export function validatePackageFileName(fileName: string, label = '包'): string | null {
     if (!fileName.trim()) return `请上传${label}文件`;

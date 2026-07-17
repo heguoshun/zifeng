@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 import AppShell from '../components/AppShell';
+import Breadcrumb from '../components/Breadcrumb';
 import MessageCenterSidebar, { type MessageCenterPageId } from '../components/MessageCenterSidebar';
 import ElSelect from '../components/ElSelect';
 import ElDateRangePicker from '../components/ElDateRangePicker';
@@ -487,7 +488,10 @@ export default function HistoryMessagePage({ onNavigateHome, onNavigate }: Histo
             onTopTabChange={() => {}}
         >
             <div className="hm-page">
-                <div className="crumb">消息中心 / 历史消息</div>
+                <Breadcrumb items={[
+                                    { label: '消息中心', pageId: 'msg-subscribe' },
+                                    { label: '历史消息' },
+                                ]} onNavigate={(id) => onNavigate(id as MessageCenterPageId)} />
 
                 <section className="panel pm-filter-panel">
                     <div className="pm-filter-row hm-filter-row">

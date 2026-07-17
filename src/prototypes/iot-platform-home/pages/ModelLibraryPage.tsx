@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { MoreHorizontal, Plus, Search } from 'lucide-react';
 import TreeToggleIcon from '../components/TreeToggleIcon';
 import AppShell from '../components/AppShell';
+import Breadcrumb from '../components/Breadcrumb';
 import DeviceAccessSidebar, { type DeviceAccessPageId } from '../components/DeviceAccessSidebar';
 import EntityCardPlaceholder from '../components/EntityCardPlaceholder';
 import { ConfirmDialog } from '../components/IotDialogs';
@@ -545,7 +546,11 @@ export default function ModelLibraryPage({
             }}
         >
             <div className="ml-page">
-                <div className="crumb">设备接入 / 产品开发 / 物模型库</div>
+                <Breadcrumb items={[
+                                    { label: '设备接入', pageId: 'home' },
+                                    { label: '物模型库', pageId: 'model-library' },
+                                    { label: '物模型库' },
+                                ]} onNavigate={(id) => onNavigate(id as DeviceAccessPageId)} />
 
                 <section className="panel ml-tab-bar">
                     <button

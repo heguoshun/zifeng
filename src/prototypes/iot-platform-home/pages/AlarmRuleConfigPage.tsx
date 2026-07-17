@@ -5,6 +5,7 @@ import type { MessageCenterPageId } from '../components/MessageCenterSidebar';
 import type { AlarmWorkOrderPageId } from '../components/AlarmWorkOrderSidebar';
 import type { AlarmPageModule } from '../utils/alarmModuleShell';
 import { buildAlarmModuleShellConfig } from '../utils/alarmModuleShell';
+import Breadcrumb from '../components/Breadcrumb';
 import ElSelect from '../components/ElSelect';
 import ElMultiSelect from '../components/ElMultiSelect';
 import ListPagination from '../components/ListPagination';
@@ -495,7 +496,7 @@ export default function AlarmRuleConfigPage({
             }}
         >
             <div className="arc-page">
-                <div className="crumb">{shellConfig.crumb}</div>
+                <Breadcrumb items={shellConfig.crumbItems} onNavigate={(id) => onNavigateAlarmWorkOrder?.(id as AlarmWorkOrderPageId)} />
 
                 <div className="arc-layout">
                     <aside className="arc-category-panel panel">

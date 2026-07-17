@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Plus, Search } from 'lucide-react';
 import AppShell from '../components/AppShell';
+import Breadcrumb from '../components/Breadcrumb';
 import SystemManagementSidebar, { type SystemManagementPageId } from '../components/SystemManagementSidebar';
 import ListPagination from '../components/ListPagination';
 import { ConfirmDialog } from '../components/IotDialogs';
@@ -186,7 +187,10 @@ export default function RoleManagementPage({
             }}
         >
             <div className="rm-page">
-                <div className="crumb">系统管理 / 角色管理</div>
+                <Breadcrumb items={[
+                                    { label: '系统管理', pageId: 'tenant-mgmt' },
+                                    { label: '角色管理' },
+                                ]} onNavigate={(id) => onNavigate(id as SystemManagementPageId)} />
 
                 {/* ── Filter ── */}
                 <section className="panel rm-filter-panel">

@@ -2,10 +2,17 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 import ElSelect from './ElSelect';
 import AssigneePickerDialog from './AssigneePickerDialog';
+import ProcessingDeadlineField from './ProcessingDeadlineField';
 import {
     ALARM_LEVEL_OPTIONS,
     type AlarmLevel,
 } from '../data/deviceAlarms';
+import {
+    createInitialAlarmLevels,
+    resolveProcessingDeadlineByLevelName,
+    type AlarmLevelRecord,
+    type ProcessingDeadlineValue,
+} from '../data/alarmLevels';
 import '../product-create.css';
 import '../device-create.css';
 import '../device-alarm-info.css';
@@ -20,12 +27,13 @@ export type BatchConvertWorkOrderForm = {
     level: AlarmLevel;
     content: string;
     assignees: string[];
-};
+} & ProcessingDeadlineValue;
 
 type BatchConvertWorkOrderModalProps = {
     open: boolean;
     count: number;
     defaultLevel?: AlarmLevel;
+    alarmLevels?: AlarmLevelRecord[];
     onClose: () => void;
     onConfirm: (form: BatchConvertWorkOrderForm) => void;
 };
@@ -34,12 +42,15 @@ const EMPTY_FORM: BatchConvertWorkOrderForm = {
     level: '重要',
     content: '',
     assignees: [],
+    processingDeadline: undefined,
+    processingDeadlineUnit: 'hour',
 };
 
 export default function BatchConvertWorkOrderModal({
     open,
     count,
     defaultLevel = '重要',
+    alarmLevels = createInitialAlarmLevels(),
     onClose,
     onConfirm,
 }: BatchConvertWorkOrderModalProps) {
@@ -48,12 +59,14 @@ export default function BatchConvertWorkOrderModal({
 
     useEffect(() => {
         if (!open) return;
+        const deadline = resolveProcessingDeadlineByLevelName(defaultLevel, alarmLevels);
         setForm({
             ...EMPTY_FORM,
             level: defaultLevel,
+            ...deadline,
         });
         setPickerOpen(false);
-    }, [open, count, defaultLevel]);
+    }, [open, count, defaultLevel, alarmLevels]);
 
     const canSubmit = useMemo(
         () => form.level && form.content.trim() && form.assignees.length > 0,
@@ -68,6 +81,8 @@ export default function BatchConvertWorkOrderModal({
             level: form.level,
             content: form.content.trim(),
             assignees: form.assignees,
+            processingDeadline: form.processingDeadline,
+            processingDeadlineUnit: form.processingDeadlineUnit,
         });
     };
 
@@ -106,12 +121,21 @@ export default function BatchConvertWorkOrderModal({
                                 size="medium"
                                 value={form.level}
                                 options={LEVEL_OPTIONS}
-                                onChange={(value) => setForm((prev) => ({
-                                    ...prev,
-                                    level: value as AlarmLevel,
-                                }))}
+                                onChange={(value) => {
+                                    const deadline = resolveProcessingDeadlineByLevelName(value, alarmLevels);
+                                    setForm((prev) => ({
+                                        ...prev,
+                                        level: value as AlarmLevel,
+                                        ...deadline,
+                                    }));
+                                }}
                             />
                         </div>
+                        <ProcessingDeadlineField
+                            processingDeadline={form.processingDeadline}
+                            processingDeadlineUnit={form.processingDeadlineUnit}
+                            onChange={(deadline) => setForm((prev) => ({ ...prev, ...deadline }))}
+                        />
                         <label className="pcp-drawer-field">
                             <span className="pcp-form-label"><em>*</em>工单内容：</span>
                             <div className="dai-textarea-wrap">
@@ -147,7 +171,7 @@ export default function BatchConvertWorkOrderModal({
                             </div>
                         </div>
                         <p className="dai-convert-work-order-tip">
-                            工单等级和告警等级同步，可进行下拉修改。工单指派可选多人，状态同步，任何人一人处理即可进入待验收环节，退回后，指派人员都可以进行重新处理。
+                            工单等级默认与选中告警等级同步，可下拉修改；修改等级后处理期限会按告警等级配置自动更新，也可手动调整。工单指派可选多人，任一人处理即可进入待验收环节。
                         </p>
                     </div>
                     <div className="pcp-drawer__foot">

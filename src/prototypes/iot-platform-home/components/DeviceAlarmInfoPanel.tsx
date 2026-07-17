@@ -18,12 +18,14 @@ import {
 import { createWorkOrderFromAlarm, type WorkOrderRecord } from '../data/workOrders';
 import type { DeviceRecord } from '../data/devices';
 import type { ProductRecord } from '../data/products';
+import type { AlarmLevelRecord } from '../data/alarmLevels';
 
 type DeviceAlarmInfoPanelProps = {
     device: DeviceRecord | null;
     devices?: DeviceRecord[];
     products: ProductRecord[];
     alarms: DeviceAlarmRecord[];
+    alarmLevels?: AlarmLevelRecord[];
     onUpdateAlarms: React.Dispatch<React.SetStateAction<DeviceAlarmRecord[]>>;
     onCreateWorkOrder?: (workOrder: WorkOrderRecord) => void;
     onViewWorkOrder?: (workOrderId: string) => void;
@@ -42,6 +44,7 @@ export default function DeviceAlarmInfoPanel({
     devices = [],
     products,
     alarms,
+    alarmLevels,
     onUpdateAlarms,
     onCreateWorkOrder,
     onViewWorkOrder,
@@ -193,6 +196,8 @@ export default function DeviceAlarmInfoPanel({
             assignees: form.assignees,
             space: convertAlarm.space,
             alarmId: convertAlarm.id,
+            processingDeadline: form.processingDeadline,
+            processingDeadlineUnit: form.processingDeadlineUnit,
         });
 
         onUpdateAlarms((prev) => prev.map((item) => (
@@ -209,6 +214,8 @@ export default function DeviceAlarmInfoPanel({
                         level: form.level,
                         content: form.content,
                         assignees: form.assignees,
+                        processingDeadline: form.processingDeadline,
+                        processingDeadlineUnit: form.processingDeadlineUnit,
                     },
                 })
                 : item
@@ -366,6 +373,7 @@ export default function DeviceAlarmInfoPanel({
             <ConvertWorkOrderModal
                 open={convertModal !== null}
                 alarm={convertAlarm}
+                alarmLevels={alarmLevels}
                 onClose={() => setConvertModal(null)}
                 onConfirm={handleConfirmConvert}
             />

@@ -7,6 +7,9 @@ import {
     type WorkOrderProcessRecordItem,
 } from '../data/workOrderDetails';
 import type { WorkOrderRecord, WorkOrderRelatedDeviceGroup } from '../data/workOrders';
+import { formatProcessingDeadline } from '../data/alarmLevels';
+import { getWorkOrderDeadlineDate, formatWorkOrderDateTime } from '../data/workOrders';
+import WorkOrderOverdueBadge from './WorkOrderOverdueBadge';
 import '../product-create.css';
 import '../device-create.css';
 import '../device-alarm-info.css';
@@ -188,6 +191,10 @@ export default function WorkOrderDetailDrawer({
         () => (workOrder ? resolveWorkOrderDetailView(workOrder) : null),
         [workOrder],
     );
+    const deadlineAt = useMemo(
+        () => (workOrder ? getWorkOrderDeadlineDate(workOrder) : null),
+        [workOrder],
+    );
 
     const handleMaskMouseDown = (event: React.MouseEvent<HTMLDivElement>) => {
         if (event.target === event.currentTarget) {
@@ -242,10 +249,19 @@ export default function WorkOrderDetailDrawer({
                                     <DetailRow label="工单状态">{workOrder.status}</DetailRow>
                                     <DetailRow label="生成时间">{workOrder.createdAt}</DetailRow>
                                     <DetailRow label="工单等级">{workOrder.level}</DetailRow>
+                                    <DetailRow label="处理期限">
+                                        {formatProcessingDeadline(workOrder.processingDeadline, workOrder.processingDeadlineUnit)}
+                                    </DetailRow>
+                                    <DetailRow label="应完成时间">
+                                        {deadlineAt ? formatWorkOrderDateTime(deadlineAt) : '—'}
+                                    </DetailRow>
+                                    <DetailRow label="超期状态">
+                                        <WorkOrderOverdueBadge workOrder={workOrder} />
+                                    </DetailRow>
                                     {workOrder.type === '告警工单' && (
                                         <DetailRow label="工单内容">{workOrder.content}</DetailRow>
                                     )}
-                                    <DetailRow label={workOrder.type === '其他工单' ? '所属站点' : '所属区域'}>
+                                    <DetailRow label={workOrder.type === '其他工单' ? '所属站点' : '所属片区'}>
                                         {workOrder.space}
                                     </DetailRow>
                                     <DetailRow label="处理人员">{detail.processor}</DetailRow>

@@ -801,6 +801,27 @@
     font-weight: 500;
 }
 
+.bd-bind-address-display {
+    grid-column: 1 / -1;
+    display: flex;
+    gap: 12px;
+    align-items: baseline;
+    padding-top: 14px;
+    border-top: 1px dashed #d9ecff;
+}
+
+.bd-bind-address-display span {
+    margin-bottom: 0;
+    white-space: nowrap;
+}
+
+.bd-bind-address-display strong {
+    color: #3f5f88;
+    font-size: 14px;
+    font-weight: 500;
+    word-break: break-all;
+}
+
 @media (max-width: 900px) {
     .bd-bind-body { padding: 20px 18px 28px !important; }
     .bd-bind-step-line { width: 80px; margin-inline: 12px; }

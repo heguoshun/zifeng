@@ -1,6 +1,6 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { Check, MapPin, RefreshCw, Search, Watch } from 'lucide-react';
+import { Check, MapPin, Search, Watch } from 'lucide-react';
 import ListPagination from './ListPagination';
 import type { DeviceRecord, DeviceStatus } from '../data/devices';
 import { isLargeMeterDevice, resolveDeviceProduct, STATUS_LABEL } from '../data/devices';
@@ -8,8 +8,9 @@ import { REMOTE_MANUFACTURERS } from '../data/largeMeters';
 import type { ProductRecord } from '../data/products';
 import type { LargeMeterArea } from '../data/largeMeters';
 import { paginateItems } from '../utils/listPagination';
+import { BAIDU_MAP_AK } from '../config/baiduMap';
+import { loadBaiduMap } from '../utils/loadBaiduMap';
 import ClearableInput from './ClearableInput';
-import MapPickerDialog from './MapPickerDialog';
 import ElSelect from './ElSelect';
 import ElDateTimePicker from './ElDateTimePicker';
 import '../device-management.css';
@@ -101,7 +102,7 @@ function buildFormFromDevice(device: DeviceRecord, products: ProductRecord[]): O
         userNo: device.userNo ?? '',
         bodyNo: device.bodyNo ?? '',
         installTime: toDateTimeLocal(device.installTime),
-        installAddress: getMapAddress(device),
+        installAddress: device.installAddress ?? '',
         manufacturer: device.manufacturer ?? product?.vendor ?? '',
         deviceFunction: device.deviceFunction ?? '大用户表',
         caliber: device.caliber ?? 'DN100',
@@ -131,9 +132,9 @@ export default function BindDeviceDialog({
     const [pageSize, setPageSize] = useState('10');
     const [jumpPage, setJumpPage] = useState('1');
     const [showErrors, setShowErrors] = useState(false);
-    const [mapPickerOpen, setMapPickerOpen] = useState(false);
     const [draftLongitude, setDraftLongitude] = useState<number | null>(null);
     const [draftLatitude, setDraftLatitude] = useState<number | null>(null);
+    const geocoderInstanceRef = useRef<BMap.Geocoder | null>(null);
 
     useEffect(() => {
         if (!open) return;
@@ -155,8 +156,41 @@ export default function BindDeviceDialog({
         setCurrentPage(1);
         setJumpPage('1');
         setShowErrors(false);
-        setMapPickerOpen(false);
     }, [open, editingDevice, products]);
+
+    useEffect(() => {
+        if (!open || step !== 'details') return;
+        if (!Number.isFinite(draftLongitude) || !Number.isFinite(draftLatitude)) return;
+
+        let cancelled = false;
+
+        const doGeocode = () => {
+            if (cancelled || !window.BMap) return;
+            if (!geocoderInstanceRef.current) {
+                geocoderInstanceRef.current = new BMap.Geocoder();
+            }
+            const point = new BMap.Point(draftLongitude!, draftLatitude!);
+            geocoderInstanceRef.current.getLocation(point, (result) => {
+                if (cancelled) return;
+                if (result?.address) {
+                    setForm((prev) => ({ ...prev, installAddress: result.address }));
+                }
+            });
+        };
+
+        if (window.BMap) {
+            doGeocode();
+        } else {
+            loadBaiduMap(BAIDU_MAP_AK).then(() => {
+                if (cancelled) return;
+                if (window.BMap) {
+                    doGeocode();
+                }
+            }).catch(() => {});
+        }
+
+        return () => { cancelled = true; };
+    }, [open, step, draftLongitude, draftLatitude]);
 
     const availableDevices = useMemo(() => {
         const normalized = keyword.trim().toLowerCase();
@@ -199,7 +233,6 @@ export default function BindDeviceDialog({
         setForm({
             ...EMPTY_FORM,
             name: selectedDevice.name,
-            installAddress: getMapAddress(selectedDevice),
         });
         setShowErrors(false);
         setDraftLongitude(Number.isFinite(selectedDevice.longitude) ? selectedDevice.longitude : null);
@@ -344,14 +377,6 @@ export default function BindDeviceDialog({
                                         onChange={(value) => updateField('installTime', value)}
                                     />
                                 </div>
-                                <div className="bd-bind-address-field">
-                                    <span className="bd-bind-field-label"><em>*</em> 具体地址</span>
-                                    <div className={`bd-bind-address-box ${showErrors && !form.installAddress.trim() ? 'is-error' : ''}`}>
-                                        <textarea maxLength={120} value={form.installAddress} placeholder="请输入具体地址" onChange={(event) => updateField('installAddress', event.target.value)} />
-                                        {isEditMode && form.installAddress.trim() ? <small>已登记安装地址</small> : null}
-                                    </div>
-                                    <button type="button" className="pm-btn pm-btn-ghost bd-bind-repick" onClick={() => setMapPickerOpen(true)}><RefreshCw size={14} />重新选点</button>
-                                </div>
                             </div>
 
                             <div className="bd-bind-location-title">位置信息（来自设备选点）</div>
@@ -359,6 +384,7 @@ export default function BindDeviceDialog({
                                 <MapPin size={20} />
                                 <div><span>经度（longitude）</span><strong>{Number.isFinite(draftLongitude) ? draftLongitude?.toFixed(6) : '—'}</strong></div>
                                 <div><span>纬度（latitude）</span><strong>{Number.isFinite(draftLatitude) ? draftLatitude?.toFixed(6) : '—'}</strong></div>
+                                <div className="bd-bind-address-display"><span>具体地址</span><strong>{form.installAddress || (Number.isFinite(draftLongitude) && Number.isFinite(draftLatitude) ? '解析中…' : '—')}</strong></div>
                             </div>
                         </section>
                     ) : null}
@@ -373,21 +399,6 @@ export default function BindDeviceDialog({
                     )}
                 </div>
             </aside>
-            <MapPickerDialog
-                open={mapPickerOpen}
-                initialValue={{
-                    longitude: draftLongitude == null ? '' : String(draftLongitude),
-                    latitude: draftLatitude == null ? '' : String(draftLatitude),
-                    location: form.installAddress,
-                }}
-                onClose={() => setMapPickerOpen(false)}
-                onConfirm={(value) => {
-                    setDraftLongitude(Number(value.longitude));
-                    setDraftLatitude(Number(value.latitude));
-                    updateField('installAddress', value.location);
-                    setMapPickerOpen(false);
-                }}
-            />
         </div>,
         document.body,
     );

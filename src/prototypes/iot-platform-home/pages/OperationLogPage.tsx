@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Search, Upload } from 'lucide-react';
 import AppShell from '../components/AppShell';
+import Breadcrumb from '../components/Breadcrumb';
 import SystemManagementSidebar, { type SystemManagementPageId } from '../components/SystemManagementSidebar';
 import ElSelect from '../components/ElSelect';
 import ElDateRangePicker from '../components/ElDateRangePicker';
@@ -171,7 +172,10 @@ export default function OperationLogPage({
             }}
         >
             <div className="pm-page log-page">
-                <div className="crumb">系统管理 / 日志管理 / 操作日志</div>
+                <Breadcrumb items={[
+                                    { label: '系统管理', pageId: 'tenant-mgmt' },
+                                    { label: '操作日志' },
+                                ]} onNavigate={(id) => onNavigate(id as SystemManagementPageId)} />
 
                 <section className="panel pm-filter-panel">
                     <div className="log-filter-row">

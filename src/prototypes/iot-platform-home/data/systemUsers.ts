@@ -43,6 +43,20 @@ export function formatSystemUserNow(): string {
 export function createInitialSystemUsers(): SystemUserRecord[] {
     const users: SystemUserRecord[] = [
         {
+            id: 'user-li-manager',
+            tenantId: 'tenant-jiahuan',
+            displayName: '李经理',
+            account: 'limanager',
+            phone: '13800001001',
+            roleId: 'role-jiahuan-upgrade-approver',
+            departmentId: 'dept-jiahuan-root',
+            gender: '男',
+            birthday: '1988-06-15',
+            email: 'limanager@jiahuan.com',
+            status: '正常',
+            createdAt: '2026-07-15 09:10:00',
+        },
+        {
             id: 'user-test-1',
             tenantId: 'tenant-jiahuan',
             displayName: '测试测试',

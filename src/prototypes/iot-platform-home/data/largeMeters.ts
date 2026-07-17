@@ -301,6 +301,9 @@ function buildMockMeter(index: number, areaId: string, prefix: string, seq: numb
         ? METER_ALARM_TYPES[Math.floor(r2 * METER_ALARM_TYPES.length)]
         : METER_ALARM_BY_STATUS[status];
     const dailyUsage = status === '离线' ? 0 : Math.round((35 + r3 * 130) * 10) / 10;
+    const currentReading = status === '离线'
+        ? Math.round((dailyUsage * 60 + r3 * 120) * 10) / 10
+        : Math.round((dailyUsage * (45 + r3 * 90)) * 10) / 10;
     const suffix = String.fromCharCode(65 + (seq % 26));
     const codeNum = String(index).padStart(3, '0');
     const dataHour = status === '离线' ? 23 : Math.floor(r4 * 8) + 1;
@@ -331,9 +334,9 @@ function buildMockMeter(index: number, areaId: string, prefix: string, seq: numb
         userNo: `YH2026${String(index).padStart(5, '0')}`,
         userName: MOCK_USER_NAMES[index % MOCK_USER_NAMES.length],
         bodyNo: `BS${String(100000000000 + index * 137).slice(0, 12)}`,
-        forwardAccumulation: Math.round(40000 + r1 * 180000),
-        reverseAccumulation: Math.round(r2 * 800),
-        currentReading: Math.round((400 + r3 * 1600) * 10) / 10,
+        forwardAccumulation: Math.round(dailyUsage * (0.9 + r1 * 0.25) * 10) / 10,
+        reverseAccumulation: Math.round(dailyUsage * r2 * 0.08 * 10) / 10,
+        currentReading,
         dailyUsage,
         monthlyUsage: Math.round(dailyUsage * (28 + r4 * 4)),
         hourlyUsage: Math.round((dailyUsage / 24 + r1 * 3) * 10) / 10,
@@ -394,12 +397,13 @@ export function createInitialLargeMeters(): LargeMeterDevice[] {
             groups: ['大表', '未分配'],
             status: dev.status,
             alarmType: dev.alarmType,
-            userNo: `YH2026${String(index).padStart(5, '0')}`,
-            userName: MOCK_USER_NAMES[index % MOCK_USER_NAMES.length],
-            bodyNo: `BS${String(100000000000 + index * 137).slice(0, 12)}`,
-            forwardAccumulation: Math.round(40000 + r1 * 180000),
-            reverseAccumulation: Math.round(r2 * 800),
-            currentReading: Math.round((400 + r3 * 1600) * 10) / 10,
+            // 未分配区域设备尚未完成用户档案绑定，相关业务字段保持为空，页面统一展示为「-」
+            userNo: '',
+            userName: '',
+            bodyNo: '',
+            forwardAccumulation: Math.round((dev.status === '离线' ? 0 : (35 + r3 * 130) * (0.9 + r1 * 0.25)) * 10) / 10,
+            reverseAccumulation: Math.round((dev.status === '离线' ? 0 : (35 + r3 * 130) * r2 * 0.08) * 10) / 10,
+            currentReading: Math.round((dev.status === '离线' ? (r3 * 120) : ((35 + r3 * 130) * (45 + r3 * 90))) * 10) / 10,
             dailyUsage: dev.status === '离线' ? 0 : Math.round((35 + r3 * 130) * 10) / 10,
             monthlyUsage: 0,
             hourlyUsage: 0,
@@ -409,13 +413,14 @@ export function createInitialLargeMeters(): LargeMeterDevice[] {
             dataTime: dev.status === '离线' ? '2026-06-16 23:45:12' : `2026-06-17 ${String(dataHour).padStart(2, '0')}:${String(dataMinute).padStart(2, '0')}:${String(dataSecond).padStart(2, '0')}`,
             receivedTime: dev.status === '离线' ? '2026-06-16 23:50:08' : `2026-06-17 ${String(dataHour).padStart(2, '0')}:${String(recvMinute).padStart(2, '0')}:${String(recvSecond).padStart(2, '0')}`,
             lastReportTime: '',
-            installTime,
-            installAddress: '待完善安装地址',
-            manufacturer: METER_MANUFACTURERS[index % METER_MANUFACTURERS.length],
-            remoteManufacturer: REMOTE_MANUFACTURERS[index % REMOTE_MANUFACTURERS.length],
-            deviceFunction: '大用户表',
-            caliber: 'DN100',
-            communicationNo: `TX${String(index).padStart(8, '0')}`,
+            installTime: '',
+            installAddress: '',
+            // 以下字段由区域绑定/安装档案填写，未绑定设备不应预置业务档案值
+            manufacturer: '',
+            remoteManufacturer: '',
+            deviceFunction: '',
+            caliber: '',
+            communicationNo: '',
         });
         index += 1;
     });

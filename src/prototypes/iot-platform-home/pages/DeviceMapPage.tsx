@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { ChevronDown, ChevronUp, X } from 'lucide-react';
 import AppShell from '../components/AppShell';
+import Breadcrumb from '../components/Breadcrumb';
 import DeviceAccessSidebar, { type DeviceAccessPageId } from '../components/DeviceAccessSidebar';
 import ElSelect from '../components/ElSelect';
 import EntityCardPlaceholder from '../components/EntityCardPlaceholder';
@@ -647,7 +648,10 @@ export default function DeviceMapPage({
             }}
         >
             <div className="dm-map-page">
-                <div className="crumb">设备接入 / 设备地图</div>
+                <Breadcrumb items={[
+                                    { label: '设备接入', pageId: 'home' },
+                                    { label: '设备地图' },
+                                ]} onNavigate={(id) => onNavigate(id as DeviceAccessPageId)} />
 
                 <div className="dm-map-shell" ref={mapShellRef}>
                     <div className="dm-map-canvas" ref={mapContainerRef} />

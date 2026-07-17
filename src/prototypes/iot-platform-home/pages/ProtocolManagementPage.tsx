@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { LayoutGrid, List, Search } from 'lucide-react';
 import AppShell from '../components/AppShell';
+import Breadcrumb from '../components/Breadcrumb';
 import DeviceAccessSidebar, { type DeviceAccessPageId } from '../components/DeviceAccessSidebar';
 import ElSelect from '../components/ElSelect';
 import EntityCardPlaceholder from '../components/EntityCardPlaceholder';
@@ -281,7 +282,11 @@ export default function ProtocolManagementPage({
             }}
         >
             <div className="pm-page pt-page">
-                <div className="crumb">设备接入 / 设备运维 / 协议管理</div>
+                <Breadcrumb items={[
+                                    { label: '设备接入', pageId: 'home' },
+                                    { label: '协议管理', pageId: 'protocol-mgmt' },
+                                    { label: '协议管理' },
+                                ]} onNavigate={(id) => onNavigate(id as DeviceAccessPageId)} />
 
                 <section className="panel pm-filter-panel">
                     <div className="pm-filter-row">

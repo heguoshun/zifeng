@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Download, Search } from 'lucide-react';
 import AppShell from '../components/AppShell';
+import Breadcrumb from '../components/Breadcrumb';
 import LargeMeterSidebar, { type LargeMeterPageId } from '../components/LargeMeterSidebar';
 import TreeToggleIcon from '../components/TreeToggleIcon';
 import ElSelect from '../components/ElSelect';
@@ -361,7 +362,10 @@ export default function DataReportPage({
             }}
         >
             <div className="pm-page lm-page lm-page--data-report">
-                <div className="crumb">大表中心 / 数据报表</div>
+                <Breadcrumb items={[
+                                    { label: '大表中心', pageId: 'data-monitor' },
+                                    { label: '数据报表' },
+                                ]} onNavigate={(id) => onNavigate(id as LargeMeterPageId)} />
 
                 <section className="panel pm-filter-panel lm-filter-panel">
                     <div className="pm-filter-row">
@@ -486,12 +490,12 @@ export default function DataReportPage({
                                             </tr>
                                         ) : pagination.items.map((m) => (
                                             <tr key={m.id}>
-                                                <td>{m.userNo}</td>
-                                                <td>{m.userName}</td>
-                                                <td>{m.name}</td>
-                                                <td>{m.code}</td>
-                                                <td>{m.areaName}</td>
-                                                <td>{m.usage}</td>
+                                                <td>{m.userNo || '-'}</td>
+                                                <td>{m.userName || '-'}</td>
+                                                <td>{m.name || '-'}</td>
+                                                <td>{m.code || '-'}</td>
+                                                <td>{m.areaName || '-'}</td>
+                                                <td>{m.usage ?? '-'}</td>
                                             </tr>
                                         ))}
                                     </tbody>
@@ -540,11 +544,11 @@ export default function DataReportPage({
                                             </tr>
                                         ) : scopedReports.map((r) => (
                                             <tr key={r.id}>
-                                                <td>{r.type}</td>
-                                                <td>{r.date}</td>
-                                                <td>{getReportAreaLabel(areas, r.areaId)}</td>
-                                                <td>{r.totalUsage}</td>
-                                                <td>{r.deviceCount}</td>
+                                                <td>{r.type || '-'}</td>
+                                                <td>{r.date || '-'}</td>
+                                                <td>{getReportAreaLabel(areas, r.areaId) || '-'}</td>
+                                                <td>{r.totalUsage ?? '-'}</td>
+                                                <td>{r.deviceCount ?? '-'}</td>
                                                 <td>
                                                     <span className={`lm-status-tag ${r.exported ? 'lm-status-tag--online' : 'lm-status-tag--offline'}`}>
                                                         {r.exported ? '已导出' : '未导出'}

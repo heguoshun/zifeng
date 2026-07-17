@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { FileText, Search, Upload } from 'lucide-react';
 import AppShell from '../components/AppShell';
+import Breadcrumb from '../components/Breadcrumb';
 import SystemManagementSidebar, { type SystemManagementPageId } from '../components/SystemManagementSidebar';
 import ListPagination from '../components/ListPagination';
 import FileUploadDrawer from '../components/FileUploadDrawer';
@@ -197,7 +198,10 @@ export default function FileManagementPage({
             }}
         >
             <div className="fm-page">
-                <div className="crumb">系统管理 / 文件管理</div>
+                <Breadcrumb items={[
+                                    { label: '系统管理', pageId: 'tenant-mgmt' },
+                                    { label: '文件管理' },
+                                ]} onNavigate={(id) => onNavigate(id as SystemManagementPageId)} />
 
                 <section className="panel fm-filter-panel">
                     <div className="fm-filter-row">

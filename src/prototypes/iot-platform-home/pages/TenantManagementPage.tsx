@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { Plus, Search } from 'lucide-react';
 import TreeToggleIcon from '../components/TreeToggleIcon';
 import AppShell from '../components/AppShell';
+import Breadcrumb from '../components/Breadcrumb';
 import SystemManagementSidebar, { type SystemManagementPageId } from '../components/SystemManagementSidebar';
 import ListPagination from '../components/ListPagination';
 import TenantFormDrawer, { toTenantFormValue, type TenantFormValue } from '../components/TenantFormDrawer';
@@ -210,7 +211,10 @@ export default function TenantManagementPage({
             }}
         >
             <div className="tm-page">
-                <div className="crumb">系统管理 / 租户管理</div>
+                <Breadcrumb items={[
+                                    { label: '系统管理', pageId: 'tenant-mgmt' },
+                                    { label: '租户管理' },
+                                ]} onNavigate={(id) => onNavigate(id as SystemManagementPageId)} />
 
                 <section className="panel tm-filter-panel">
                     <div className="tm-filter-row">

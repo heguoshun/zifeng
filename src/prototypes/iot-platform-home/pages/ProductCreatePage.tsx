@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { ArrowLeft, Plus, Search } from 'lucide-react';
 import AppShell from '../components/AppShell';
+import Breadcrumb from '../components/Breadcrumb';
 import DeviceAccessSidebar, { type DeviceAccessPageId } from '../components/DeviceAccessSidebar';
 import ElSelect from '../components/ElSelect';
 import ElTreeSelect from '../components/ElTreeSelect';
@@ -1132,9 +1133,17 @@ export default function ProductCreatePage({
 
     const pageTitle = isThingModelEntry ? THING_MODEL_PAGE_TITLE[mode] : PAGE_TITLE[mode];
     const crumbSuffix = isThingModelEntry ? THING_MODEL_CRUMB_SUFFIX[mode] : CRUMB_SUFFIX[mode];
-    const crumbPrefix = isThingModelEntry
-        ? '设备接入 / 产品开发 / 物模型库'
-        : '设备接入 / 产品开发 / 产品管理';
+    const crumbItems = isThingModelEntry
+        ? [
+            { label: '设备接入', pageId: 'home' },
+            { label: '物模型库', pageId: 'model-library' },
+            { label: crumbSuffix },
+        ]
+        : [
+            { label: '设备接入', pageId: 'home' },
+            { label: '产品管理', pageId: 'product-management' },
+            { label: crumbSuffix },
+        ];
 
     const sidebar = (
         <DeviceAccessSidebar
@@ -1160,7 +1169,7 @@ export default function ProductCreatePage({
             }}
         >
             <div className="pcp-page">
-                <div className="crumb">{crumbPrefix} / {crumbSuffix}</div>
+                <Breadcrumb items={crumbItems} onNavigate={(id) => onNavigate(id as DeviceAccessPageId)} />
 
                 <div className="pcp-head">
                     <button
