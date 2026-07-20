@@ -52,7 +52,7 @@ export const PRODUCT_CATEGORY_TREE: ProductCategoryNode[] = [
             { id: 'hubiao', label: '户表', businessType: 'household_meter' },
             { id: 'yaliji', label: '压力计', businessType: 'pressure_gauge' },
             { id: 'shuizhiyi', label: '水质仪', businessType: 'water_quality' },
-            { id: 'zhihuishuizhan', label: '智慧水站', businessType: 'smart_station' },
+            { id: 'zhihuishuizhan', label: '直饮水机', businessType: 'smart_station' },
         ],
     },
 ];

@@ -184,26 +184,26 @@ type CategoryThingModel = {
     events: EventRow[];
 };
 
-/** 智慧水站网关物模型 */
+/** 直饮水机控制网关物模型（依据净水箱清洗工艺图） */
 const GATEWAY_PROPERTIES: PropertyRow[] = [
-    { id: 'gw-p1', identifier: 'inlet_pressure', name: '进水压力', dataType: 'float', accessMode: '只读', description: '进水口压力，单位 MPa' },
-    { id: 'gw-p2', identifier: 'outlet_flow', name: '出水流量', dataType: 'float', accessMode: '只读', description: '出水瞬时流量，单位 m³/h' },
-    { id: 'gw-p3', identifier: 'run_status', name: '运行状态', dataType: 'enum', accessMode: '只读', description: '枚举型：运行/待机/故障' },
-    { id: 'gw-p4', identifier: 'water_quality_index', name: '水质综合指数', dataType: 'float', accessMode: '只读', description: '综合水质评价指数，0-100' },
-    { id: 'gw-p5', identifier: 'pump_power', name: '泵站功率', dataType: 'float', accessMode: '只读', description: '当前泵站运行功率，单位 kW' },
+    { id: 'gw-p1', identifier: 'raw_tank_level', name: '原水箱液位', dataType: 'float', accessMode: '只读', description: '原水箱实时液位，单位 m' },
+    { id: 'gw-p2', identifier: 'pure_tank_level', name: '净水箱液位', dataType: 'float', accessMode: '只读', description: '净水箱实时液位，单位 m' },
+    { id: 'gw-p3', identifier: 'product_flow_rate', name: '产水瞬时量', dataType: 'float', accessMode: '只读', description: '膜处理后的瞬时产水量，单位 m³/h' },
+    { id: 'gw-p4', identifier: 'supply_pressure', name: '供水压力', dataType: 'float', accessMode: '只读', description: '直饮供水管路压力，单位 MPa' },
+    { id: 'gw-p5', identifier: 'run_status', name: '运行状态', dataType: 'enum', accessMode: '只读', description: '枚举型：制水/供水/清洗/待机/故障' },
 ];
 
 const GATEWAY_FUNCTIONS: FunctionRow[] = [
-    { id: 'gw-f1', identifier: 'start_pump', name: '启动泵站', async: '是', description: '远程启动智慧水站供水泵站', inputJson: '{"mode":"auto"}' },
-    { id: 'gw-f2', identifier: 'stop_pump', name: '停止泵站', async: '是', description: '远程停止智慧水站供水泵站', inputJson: '{"mode":"manual"}' },
-    { id: 'gw-f3', identifier: 'set_pressure_threshold', name: '设置压力阈值', async: '否', description: '调整进水/出水压力告警阈值', inputJson: '{"inlet_max":0.8,"outlet_min":0.2}' },
-    { id: 'gw-f4', identifier: 'firmware_upgrade', name: '固件升级', async: '是', description: '下发 OTA 固件包并触发升级', inputJson: '{"version":"2.0.0","url":"https://example.com/zhsz.bin"}' },
+    { id: 'gw-f1', identifier: 'start_production', name: '启动制水', async: '是', description: '联动原水泵、高压泵和膜处理单元启动制水', inputJson: '{"mode":"auto"}' },
+    { id: 'gw-f2', identifier: 'stop_production', name: '停止制水', async: '是', description: '停止制水流程并关闭相关阀门', inputJson: '{}' },
+    { id: 'gw-f3', identifier: 'start_cleaning', name: '启动清洗', async: '是', description: '启动净水箱与膜组件清洗流程', inputJson: '{"duration":600}' },
+    { id: 'gw-f4', identifier: 'firmware_upgrade', name: '固件升级', async: '是', description: '下发 OTA 固件包并触发升级', inputJson: '{"version":"2.0.0","url":"https://example.com/zyssj.bin"}' },
 ];
 
 const GATEWAY_EVENTS: EventRow[] = [
-    { id: 'gw-e1', identifier: 'pressureAlarm', name: '压力异常', eventType: '告警', jsonObject: '{ "pressure": 0.85 }', description: '管网压力超出设定阈值时上报' },
-    { id: 'gw-e2', identifier: 'pump_fault', name: '泵站故障', eventType: '故障', jsonObject: '{ "fault_code": "P001" }', description: '泵站运行异常或保护停机时上报' },
-    { id: 'gw-e3', identifier: 'quality_alarm', name: '水质告警', eventType: '告警', jsonObject: '{ "index": 62 }', description: '水质综合指数低于标准时上报' },
+    { id: 'gw-e1', identifier: 'tank_level_alarm', name: '水箱液位异常', eventType: '告警', jsonObject: '{ "tank":"raw", "level":0.15 }', description: '原水箱或净水箱液位超出上下限时上报' },
+    { id: 'gw-e2', identifier: 'quality_alarm', name: '水质异常', eventType: '告警', jsonObject: '{ "conductivity":68 }', description: '产水电导、浊度、臭氧或 pH 超出阈值时上报' },
+    { id: 'gw-e3', identifier: 'pump_fault', name: '水泵故障', eventType: '故障', jsonObject: '{ "pump":"high_pressure", "fault_code":"P001" }', description: '原水泵、高压泵或供水泵异常时上报' },
     { id: 'gw-e4', identifier: 'offline_event', name: '离线事件', eventType: '信息', jsonObject: '{ "status": "offline" }', description: '设备与平台连接断开时上报' },
 ];
 
@@ -292,23 +292,44 @@ const CATEGORY_THING_MODELS: Record<string, CategoryThingModel> = {
             { id: 'szy-e4', identifier: 'offline_event', name: '离线事件', eventType: '信息', jsonObject: '{ "status": "offline" }', description: '设备离线时上报' },
         ],
     },
-    zhuishuizhan: {
+    zhihuishuizhan: {
         properties: [
-            { id: 'zhsz-p1', identifier: 'inlet_pressure', name: '进水压力', dataType: 'float', accessMode: '只读', description: '进水口压力，单位 MPa' },
-            { id: 'zhsz-p2', identifier: 'outlet_flow', name: '出水流量', dataType: 'float', accessMode: '只读', description: '出水瞬时流量，单位 m³/h' },
-            { id: 'zhsz-p3', identifier: 'turbidity', name: '出水浊度', dataType: 'float', accessMode: '只读', description: '出水浊度，单位 NTU' },
-            { id: 'zhsz-p4', identifier: 'residual_chlorine', name: '出水余氯', dataType: 'float', accessMode: '只读', description: '出水余氯，单位 mg/L' },
-            { id: 'zhsz-p5', identifier: 'run_status', name: '运行状态', dataType: 'enum', accessMode: '只读', description: '运行/待机/故障' },
+            { id: 'zhsz-p1', identifier: 'raw_tank_level', name: '原水箱液位', dataType: 'float', accessMode: '只读', description: '原水箱实时液位，单位 m' },
+            { id: 'zhsz-p2', identifier: 'raw_conductivity', name: '原水电导', dataType: 'float', accessMode: '只读', description: '原水电导率，单位 μS/cm' },
+            { id: 'zhsz-p3', identifier: 'raw_pressure', name: '原水压力', dataType: 'float', accessMode: '只读', description: '原水进水压力，单位 MPa' },
+            { id: 'zhsz-p4', identifier: 'pure_tank_level', name: '净水箱液位', dataType: 'float', accessMode: '只读', description: '净水箱实时液位，单位 m' },
+            { id: 'zhsz-p5', identifier: 'pure_conductivity', name: '净水箱电导', dataType: 'float', accessMode: '只读', description: '净水箱电导率，单位 μS/cm' },
+            { id: 'zhsz-p6', identifier: 'product_flow_rate', name: '产水瞬时量', dataType: 'float', accessMode: '只读', description: '瞬时产水流量，单位 m³/h' },
+            { id: 'zhsz-p7', identifier: 'product_total_flow', name: '产水累计量', dataType: 'float', accessMode: '只读', description: '累计产水量，单位 m³' },
+            { id: 'zhsz-p8', identifier: 'product_conductivity', name: '产水电导', dataType: 'float', accessMode: '只读', description: '膜处理后产水电导率，单位 μS/cm' },
+            { id: 'zhsz-p9', identifier: 'membrane_inlet_pressure', name: '膜前压力', dataType: 'float', accessMode: '只读', description: '膜组件入口压力，单位 MPa' },
+            { id: 'zhsz-p10', identifier: 'membrane_outlet_pressure', name: '膜后压力', dataType: 'float', accessMode: '只读', description: '膜组件出口压力，单位 MPa' },
+            { id: 'zhsz-p11', identifier: 'high_pump_inlet_pressure', name: '高压泵前压力', dataType: 'float', accessMode: '只读', description: '高压泵入口压力，单位 MPa' },
+            { id: 'zhsz-p12', identifier: 'supply_pressure', name: '供水压力', dataType: 'float', accessMode: '只读', description: '直饮供水压力，单位 MPa' },
+            { id: 'zhsz-p13', identifier: 'supply_flow_rate', name: '瞬时供水量', dataType: 'float', accessMode: '只读', description: '瞬时供水流量，单位 m³/h' },
+            { id: 'zhsz-p14', identifier: 'supply_total_flow', name: '累计供水量', dataType: 'float', accessMode: '只读', description: '累计供水量，单位 m³' },
+            { id: 'zhsz-p15', identifier: 'return_flow_rate', name: '回水瞬时量', dataType: 'float', accessMode: '只读', description: '瞬时回水流量，单位 m³/h' },
+            { id: 'zhsz-p16', identifier: 'return_total_flow', name: '回水累计量', dataType: 'float', accessMode: '只读', description: '累计回水量，单位 m³' },
+            { id: 'zhsz-p17', identifier: 'turbidity', name: '浊度', dataType: 'float', accessMode: '只读', description: '回水浊度，单位 NTU' },
+            { id: 'zhsz-p18', identifier: 'ozone', name: '臭氧', dataType: 'float', accessMode: '只读', description: '回水臭氧浓度，单位 mg/L' },
+            { id: 'zhsz-p19', identifier: 'ph', name: 'pH', dataType: 'float', accessMode: '只读', description: '回水酸碱度' },
+            { id: 'zhsz-p20', identifier: 'water_temp', name: '水温', dataType: 'float', accessMode: '只读', description: '回水温度，单位 ℃' },
         ],
         functions: [
-            { id: 'zhsz-f1', identifier: 'start_supply', name: '启动供水', async: '是', description: '远程启动智慧水站供水', inputJson: '{"mode":"auto"}' },
-            { id: 'zhsz-f2', identifier: 'stop_supply', name: '停止供水', async: '是', description: '远程停止智慧水站供水', inputJson: '{"mode":"manual"}' },
-            { id: 'zhsz-f3', identifier: 'set_threshold', name: '设置告警阈值', async: '否', description: '设置压力、水质告警阈值', inputJson: '{"pressure_max":0.8}' },
+            { id: 'zhsz-f1', identifier: 'control_raw_pump', name: '原水泵控制', async: '是', description: '远程启动或停止原水泵', inputJson: '{"action":"start"}' },
+            { id: 'zhsz-f2', identifier: 'control_high_pump', name: '高压泵控制', async: '是', description: '远程启动或停止高压泵', inputJson: '{"action":"start"}' },
+            { id: 'zhsz-f3', identifier: 'control_supply_pump', name: '供水泵控制', async: '是', description: '远程控制 1#、2#、3# 供水泵', inputJson: '{"pump_no":1,"action":"start"}' },
+            { id: 'zhsz-f4', identifier: 'control_ozone_generator', name: '臭氧发生器控制', async: '是', description: '远程启动或停止臭氧发生器', inputJson: '{"action":"start"}' },
+            { id: 'zhsz-f5', identifier: 'control_valve', name: '工艺阀门控制', async: '是', description: '控制原水阀、回水阀、膜前阀、供水阀、清洗进水阀、浓水阀和清洗排放阀', inputJson: '{"valve":"raw_water","action":"open"}' },
+            { id: 'zhsz-f6', identifier: 'start_cleaning', name: '启动清洗流程', async: '是', description: '按工艺顺序联动阀门、水泵和臭氧发生器执行净水箱清洗', inputJson: '{"duration":600}' },
         ],
         events: [
-            { id: 'zhsz-e1', identifier: 'pressure_alarm', name: '压力异常', eventType: '告警', jsonObject: '{ "pressure": 0.85 }', description: '进出水压力异常时上报' },
-            { id: 'zhsz-e2', identifier: 'quality_alarm', name: '水质告警', eventType: '告警', jsonObject: '{ "turbidity": 4.8 }', description: '出水水质超标时上报' },
-            { id: 'zhsz-e3', identifier: 'offline_event', name: '离线事件', eventType: '信息', jsonObject: '{ "status": "offline" }', description: '设备离线时上报' },
+            { id: 'zhsz-e1', identifier: 'tank_level_alarm', name: '水箱液位异常', eventType: '告警', jsonObject: '{ "tank":"pure", "level":0.12 }', description: '原水箱或净水箱液位超出上下限时上报' },
+            { id: 'zhsz-e2', identifier: 'conductivity_alarm', name: '电导异常', eventType: '告警', jsonObject: '{ "point":"product", "conductivity":68 }', description: '原水、净水箱或产水电导率超出阈值时上报' },
+            { id: 'zhsz-e3', identifier: 'pressure_alarm', name: '压力异常', eventType: '告警', jsonObject: '{ "point":"membrane_inlet", "pressure":0.85 }', description: '膜前、膜后、高压泵前或供水压力异常时上报' },
+            { id: 'zhsz-e4', identifier: 'quality_alarm', name: '回水水质异常', eventType: '告警', jsonObject: '{ "turbidity":4.8,"ozone":0.02,"ph":6.2 }', description: '回水浊度、臭氧或 pH 超出阈值时上报' },
+            { id: 'zhsz-e5', identifier: 'pump_fault', name: '水泵故障', eventType: '故障', jsonObject: '{ "pump":"supply_1", "fault_code":"P001" }', description: '原水泵、高压泵或任一供水泵异常时上报' },
+            { id: 'zhsz-e6', identifier: 'offline_event', name: '离线事件', eventType: '信息', jsonObject: '{ "status": "offline" }', description: '设备离线时上报' },
         ],
     },
 };
@@ -348,7 +369,7 @@ const PRODUCT_REMARKS: Record<string, string> = {
     hubiao: '适用于居民及商业户用远传抄表，支持 NB-IoT / LoRa 等多种通信方式。',
     yaliji: '适用于供水管网压力监测，支持高低压告警与传感器校准。',
     shuizhiyi: '适用于水源地、水厂及管网水质在线监测，支持多参数采集。',
-    zhuishuizhan: '集成水质监测、压力监测与供水控制的一体化智慧水站产品。',
+    zhihuishuizhan: '依据净水箱清洗工艺设计，集成原水预处理、精滤、膜处理、净水储存、臭氧消毒和循环供水。',
 };
 
 const VARIANT_REMARKS: Record<string, string> = {
@@ -364,9 +385,7 @@ const VARIANT_REMARKS: Record<string, string> = {
     '便携型': '便携式水质快速检测，适合巡检抽检。',
     '多参数型': '同时监测浊度、PH、余氯、电导率等多指标。',
     '余氯型': '专用于出水余氯在线监测。',
-    '标准型': '标准配置智慧水站，满足常规监测需求。',
-    '增强型': '增强型配置，增加多路传感器接入能力。',
-    '微型站': '小型一体化水站，适合末端监测点位。',
+    '净水箱清洗工艺型': '配置原水箱、净水箱、多级过滤、高压膜处理、三路供水泵和臭氧发生器。',
     '网关型': '作为边缘网关接入子设备，支持本地汇聚上报。',
 };
 
@@ -397,10 +416,10 @@ const PRODUCT_TEMPLATES: Array<{
     },
     {
         categoryId: 'zhihuishuizhan',
-        category: '智慧水站',
-        prefix: 'ZHSZ',
-        variants: ['标准型', '增强型', '微型站', '网关型'],
-        nodeTypes: ['直连设备', '直连设备', '直连设备', '网关设备'],
+        category: '直饮水机',
+        prefix: 'ZYSSJ',
+        variants: ['净水箱清洗工艺型'],
+        nodeTypes: ['直连设备'],
     },
 ];
 

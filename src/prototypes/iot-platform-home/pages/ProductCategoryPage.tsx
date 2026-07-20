@@ -38,7 +38,7 @@ const INITIAL_CATEGORIES: CategoryRecord[] = [
     { id: 'hubiao', parentId: 'water', name: '户表', code: 'P25uk', businessType: 'household_meter', updatedAt: '2024-7-9 15:47:34', remark: '居民及商业户用远传水表' },
     { id: 'yaliji', parentId: 'water', name: '压力计', code: 'P25uk', businessType: 'pressure_gauge', updatedAt: '2024-7-9 15:47:34', remark: '管网压力监测设备' },
     { id: 'shuizhiyi', parentId: 'water', name: '水质仪', code: 'P25uk', businessType: 'water_quality', updatedAt: '2024-7-9 15:47:34', remark: '水质在线监测设备' },
-    { id: 'zhihuishuizhan', parentId: 'water', name: '智慧水站', code: 'P25uk', businessType: 'smart_station', updatedAt: '2024-7-9 15:47:34', remark: '集成监测与供水的智慧水站' },
+    { id: 'zhihuishuizhan', parentId: 'water', name: '直饮水机', code: 'P25uk', businessType: 'smart_station', updatedAt: '2024-7-9 15:47:34', remark: '提供过滤、净化与直饮供水的一体化设备' },
 ];
 
 type CategoryFormState = {

@@ -79,6 +79,7 @@ export default defineConfig(({ command }) => {
     ].filter(Boolean) as Plugin[],
 
     root: 'src',
+    envDir: projectRoot,
     publicDir: false,
     appType: 'mpa',
 

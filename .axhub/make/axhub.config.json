@@ -1,38 +1,4 @@
 {
-  "server": {
-    "host": "localhost",
-    "enableCommandAPI": false
-  },
-  "projectDefaults": {
-    "defaultTheme": null
-  },
-  "projectInfo": {
-    "description": null
-  },
-  "cloudPublishing": {
-    "vercel": {
-      "token": "",
-      "projectName": "",
-      "teamId": ""
-    },
-    "cloudflarePages": {
-      "apiToken": "",
-      "accountId": "",
-      "projectName": "",
-      "productionBranch": "main"
-    },
-    "githubPages": {
-      "repository": "",
-      "branch": "gh-pages",
-      "sourceDirectory": "/"
-    },
-    "publishSettings": {
-      "includeSource": false,
-      "visibleTargets": [
-        "axhub"
-      ]
-    }
-  },
   "versionCollaboration": {
     "remote": {
       "url": "https://github.com/heguoshun/zifeng.git"

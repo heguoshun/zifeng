@@ -61,7 +61,7 @@ export function createInitialDictionaries(): DictTypeRecord[] {
                 { id: 'item-pt-2', name: '户表', dataValue: 'household_meter', description: '', sort: 2, enabled: true },
                 { id: 'item-pt-3', name: '压力计', dataValue: 'pressure_gauge', description: '', sort: 3, enabled: true },
                 { id: 'item-pt-4', name: '水质仪', dataValue: 'water_quality', description: '', sort: 4, enabled: true },
-                { id: 'item-pt-5', name: '智慧水站', dataValue: 'smart_station', description: '', sort: 5, enabled: true },
+                { id: 'item-pt-5', name: '直饮水机', dataValue: 'smart_station', description: '', sort: 5, enabled: true },
             ],
         },
         {

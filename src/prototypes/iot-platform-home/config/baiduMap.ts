@@ -1,5 +1,7 @@
 /** 百度地图 AK，可在项目根目录 .env 中配置 VITE_BAIDU_MAP_AK；Referer 白名单本地调试可填 * 或 *localhost:51720* */
-export const BAIDU_MAP_AK = import.meta.env.VITE_BAIDU_MAP_AK ?? '';
+const rawAk = import.meta.env.VITE_BAIDU_MAP_AK;
+console.log('[BaiduMap Config] VITE_BAIDU_MAP_AK:', rawAk ? `${rawAk.slice(0, 8)}...` : 'undefined');
+export const BAIDU_MAP_AK = rawAk ?? '';
 
 export const BAIDU_MAP_DEFAULT_CENTER = {
     longitude: 118.796877,

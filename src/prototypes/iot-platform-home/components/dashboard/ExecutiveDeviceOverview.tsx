@@ -316,7 +316,7 @@ function csvEscape(value: string | number) {
 function downloadDrilldownCsv(templates: DrilldownRow[], total: number, exportName: string) {
     if (!templates.length || total <= 0) return;
 
-    const headers = ['设备名称', '设备编号', '产品', '状态', '位置'];
+    const headers = ['设备名称', '设备编号', '产品', '状态', '安装位置'];
     const lines = [headers.map(csvEscape).join(',')];
     for (let index = 0; index < total; index += 1) {
         const row = materializeDrilldownRow(templates, index);
@@ -578,7 +578,7 @@ function ExecutiveDeviceOverview({
                                         ]} />
                     <div className="edo-title-row">
                         <h1>设备综合视图</h1>
-                        <span className="edo-status"><i /> 数据运行正常</span>
+                        <span className="edo-status"><i /> 正常</span>
                     </div>
                     <p>掌握设备资产、运行健康与处置闭环，快速定位需要关注的问题。</p>
                 </div>
